@@ -36,6 +36,20 @@ export function handleDataUpdate(pType, pServer, pData) {
     }
 }
 
+export function hasConnections(pServer, pType) {
+    for (const id in connections) {
+        if (Object.hasOwnProperty(id)) continue;
+
+        const client = connections[id];
+
+        if (client.type === pType && client.server === pServer) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function _prepareData(pData) {
     const json = JSON.stringify(pData);
 
