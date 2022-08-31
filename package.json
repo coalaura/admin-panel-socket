@@ -1,0 +1,18 @@
+{
+    "name": "admin-panel-socket",
+    "version": "1.0.0",
+    "description": "",
+    "type": "module",
+    "main": "main.js",
+    "scripts": {
+        "test": "echo \"Error: no test specified\" && exit 1"
+    },
+    "author": "",
+    "license": "ISC",
+    "dependencies": {
+        "axios": "^0.27.2",
+        "pako": "^2.0.4",
+        "socket.io": "^4.5.1",
+        "uuid": "^8.3.2"
+    }
+}
