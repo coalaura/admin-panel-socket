@@ -1,5 +1,6 @@
 import {v4} from "uuid";
 import pako from "pako";
+import chalk from "chalk";
 
 let connections = {};
 
@@ -11,12 +12,12 @@ export function handleConnection(pClient, pServer, pType) {
         type: pType
     };
 
-    console.log(`Connected {${self.id}} ${self.server}/${self.type}`);
+    console.log(`${chalk.greenBright("Connected")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(self.server + "/" + self.type)} - ${chalk.black(chalk.bgYellow(countConnections(self.server, self.type)))}`);
 
     self.client.on("disconnect", () => {
         delete connections[self.id];
 
-        console.log(`Disconnected {${self.id}} ${self.server}/${self.type}`);
+        console.log(`${chalk.redBright("Disconnected")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(self.server + "/" + self.type)} - ${chalk.black(chalk.bgYellow(countConnections(self.server, self.type)))}`);
     });
 
     connections[self.id] = self;
@@ -36,18 +37,20 @@ export function handleDataUpdate(pType, pServer, pData) {
     }
 }
 
-export function hasConnections(pServer, pType) {
+export function countConnections(pServer, pType) {
+    let total = 0;
+
     for (const id in connections) {
         if (Object.hasOwnProperty(id)) continue;
 
         const client = connections[id];
 
         if (client.type === pType && client.server === pServer) {
-            return true;
+            total++;
         }
     }
 
-    return false;
+    return total;
 }
 
 function _prepareData(pData) {

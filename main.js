@@ -3,6 +3,7 @@ import {handleConnection, handleDataUpdate} from "./client.js";
 
 import {createServer} from "http";
 import {Server} from "socket.io";
+import chalk from 'chalk';
 
 init(handleDataUpdate);
 
@@ -19,7 +20,7 @@ io.on("connection", client => {
     if (!('server' in query) || !('token' in query) || !('type' in query) || !isValidToken(query.server, query.token) || !isValidType(query.type)) {
         client.disconnect(true);
 
-        console.log(`Rejected connection from [${client.handshake.address}]`);
+        console.log(`${chalk.redBright("Rejected connection")} ${chalk.gray("from " + client.handshake.address)}`);
 
         return;
     }
@@ -29,4 +30,4 @@ io.on("connection", client => {
 
 io.listen(9999);
 
-console.log("Listening for sockets...");
+console.log(chalk.blueBright("Listening for sockets..."));

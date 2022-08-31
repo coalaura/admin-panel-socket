@@ -1,10 +1,11 @@
 import config from "./_config.json" assert {type: "json"};
 import {updateWorldJSON} from "./world.js";
 import {updateStaffJSON} from "./staff.js";
-import {hasConnections} from "./client.js";
+import {countConnections} from "./client.js";
 
 import {join as pathJoin} from "path";
 import {existsSync, readFileSync} from "fs";
+import chalk from "chalk";
 
 async function worldJSON(pServer, pDataCallback) {
     try {
@@ -14,7 +15,7 @@ async function worldJSON(pServer, pDataCallback) {
 
         setTimeout(worldJSON, 1000, pServer, pDataCallback);
     } catch (e) {
-        console.error(`${pServer.server}: Failed to load world.json: ${e}`);
+        console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/world.json")}: ${chalk.gray(e)}`);
 
         setTimeout(worldJSON, 10000, pServer, pDataCallback);
     }
@@ -22,7 +23,7 @@ async function worldJSON(pServer, pDataCallback) {
 
 async function staffJSON(pServer, pDataCallback) {
     try {
-        if (hasConnections(pServer.server, "staff")) {
+        if (countConnections(pServer.server, "staff") > 0) {
             const clientData = await updateStaffJSON(pServer);
 
             pDataCallback("staff", pServer.server, clientData);
@@ -30,7 +31,7 @@ async function staffJSON(pServer, pDataCallback) {
 
         setTimeout(staffJSON, 3000, pServer, pDataCallback);
     } catch (e) {
-        console.error(`${pServer.server}: Failed to load staffChat.json: ${e}`);
+        console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/staffChat.json")}: ${chalk.gray(e)}`);
 
         setTimeout(staffJSON, 10000, pServer, pDataCallback);
     }
