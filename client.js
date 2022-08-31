@@ -16,7 +16,7 @@ export function handleConnection(pClient, pServer, pType) {
     self.client.on("disconnect", () => {
         delete connections[self.id];
 
-        console.log(`Connected {${self.id}} ${self.server}/${self.type}`);
+        console.log(`Disconnected {${self.id}} ${self.server}/${self.type}`);
     });
 
     connections[self.id] = self;

@@ -22,7 +22,7 @@ async function worldJSON(pServer, pDataCallback) {
 
 async function staffJSON(pServer, pDataCallback) {
     try {
-        if (hasConnections(pServer, "staff")) {
+        if (hasConnections(pServer.server, "staff")) {
             const clientData = await updateStaffJSON(pServer);
 
             pDataCallback("staff", pServer.server, clientData);
