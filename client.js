@@ -12,6 +12,8 @@ export function handleConnection(pClient, pServer, pType) {
         type: pType
     };
 
+    connections[self.id] = self;
+
     console.log(`${chalk.greenBright("Connected")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(self.server + "/" + self.type)} - ${chalk.black(chalk.bgYellow(countConnections(self.server, self.type)))}`);
 
     self.client.on("disconnect", () => {
@@ -19,8 +21,6 @@ export function handleConnection(pClient, pServer, pType) {
 
         console.log(`${chalk.redBright("Disconnected")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(self.server + "/" + self.type)} - ${chalk.black(chalk.bgYellow(countConnections(self.server, self.type)))}`);
     });
-
-    connections[self.id] = self;
 }
 
 export function handleDataUpdate(pType, pServer, pData) {
