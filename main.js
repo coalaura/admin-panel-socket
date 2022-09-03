@@ -1,4 +1,4 @@
-import {init, isValidToken, isValidType} from "./data-loop.js";
+import {init, isValidSteam, isValidToken, isValidType} from "./data-loop.js";
 import {handleConnection, handleDataUpdate} from "./client.js";
 import {initRoutes} from "./routes.js";
 
@@ -29,7 +29,7 @@ const io = new Server(server, {
 io.on("connection", client => {
     const query = client.handshake.query;
 
-    if (!('server' in query) || !('token' in query) || !('type' in query) || !isValidToken(query.server, query.token) || !isValidType(query.type)) {
+    if (!('server' in query) || !('token' in query) || !('type' in query) || !('steam' in query) || !isValidToken(query.server, query.token) || !isValidType(query.type) || !isValidSteam(query.steam)) {
         client.disconnect(true);
 
         console.log(`${chalk.redBright("Rejected connection")} ${chalk.gray("from " + client.handshake.address)}`);
@@ -37,7 +37,7 @@ io.on("connection", client => {
         return;
     }
 
-    handleConnection(client, query.server, query.type);
+    handleConnection(client, query.server, query.type, query.steam);
 });
 
 server.listen(9999, () => {

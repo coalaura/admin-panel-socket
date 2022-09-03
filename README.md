@@ -1,7 +1,3 @@
-### TODOs
-- Historic Data
-- Track who is currently watching
-
 ### NPM & Node install
 ```bash
 apt update

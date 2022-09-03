@@ -1,4 +1,4 @@
-import {isValidToken} from "./data-loop.js";
+import {isValidSteam, isValidToken} from "./data-loop.js";
 import {resolveHistoricData} from "./historic.js";
 
 export function initRoutes(pApp) {
@@ -13,7 +13,7 @@ export function initRoutes(pApp) {
             from = 'from' in params ? parseInt(params.from) : false,
             till = 'till' in params ? parseInt(params.till) : false;
 
-        if (!isValidToken(server, token) || !steam || !steam.match(/^[a-z0-9]{15}$/gm) || !from || from < 0 || !till || till < 0) {
+        if (!isValidToken(server, token) || !steam || !isValidSteam(steam, true) || !from || from < 0 || !till || till < 0) {
             resp.json({
                 status: false,
                 error: "Invalid request"

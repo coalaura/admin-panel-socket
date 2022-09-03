@@ -4,12 +4,13 @@ import chalk from "chalk";
 
 let connections = {};
 
-export function handleConnection(pClient, pServer, pType) {
+export function handleConnection(pClient, pServer, pType, pSteam) {
     const self = {
         id: v4(),
         client: pClient,
         server: pServer,
-        type: pType
+        type: pType,
+        steam: pSteam
     };
 
     connections[self.id] = self;
@@ -21,6 +22,22 @@ export function handleConnection(pClient, pServer, pType) {
 
         console.log(`${chalk.redBright("Disconnected")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(self.server + "/" + self.type)} - ${chalk.black(chalk.bgYellow(countConnections(self.server, self.type)))}`);
     });
+}
+
+export function getActiveViewers(pServer, pType) {
+    let viewers = [];
+
+    for (const id in connections) {
+        if (Object.hasOwnProperty(id)) continue;
+
+        const client = connections[id];
+
+        if (client.type === pType && client.server === pServer) {
+            viewers.push(client.steam);
+        }
+    }
+
+    return viewers;
 }
 
 export function handleDataUpdate(pType, pServer, pData) {

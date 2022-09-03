@@ -1,7 +1,7 @@
 import config from "./_config.json" assert {type: "json"};
 import {updateWorldJSON} from "./world.js";
 import {updateStaffJSON} from "./staff.js";
-import {countConnections} from "./client.js";
+import {countConnections, getActiveViewers} from "./client.js";
 
 import {join as pathJoin} from "path";
 import {existsSync, readFileSync} from "fs";
@@ -11,7 +11,10 @@ async function worldJSON(pServer, pDataCallback) {
     try {
         const clientData = await updateWorldJSON(pServer);
 
-        pDataCallback("world", pServer.server, clientData);
+        pDataCallback("world", pServer.server, {
+            p: clientData,
+            v: getActiveViewers(pServer.server, "world")
+        });
 
         setTimeout(worldJSON, 1000, pServer, pDataCallback);
     } catch (e) {
@@ -72,6 +75,14 @@ export function isValidToken(pServer, pToken) {
     }
 
     return false;
+}
+
+export function isValidSteam(pSteam, pNoSteamColon) {
+    if (!pNoSteamColon) {
+        pSteam = pSteam.replace("steam:", "");
+    }
+
+    return pSteam.match(/^[a-z0-9]{15}$/gm);
 }
 
 export function isValidType(pType) {
