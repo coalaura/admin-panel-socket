@@ -1,6 +1,8 @@
 import {requestOpFwApi} from "./http.js";
 import {formatNumber} from "./helper.js";
 import {loadOnDutyData} from "./duty.js";
+import {trackHistoricData} from "./historic.js";
+import chalk from "chalk";
 
 export async function updateWorldJSON(pServer) {
     const dutyMap = await loadOnDutyData(pServer);
@@ -9,7 +11,15 @@ export async function updateWorldJSON(pServer) {
 
     let clientData = [];
     for (let x = 0; x < data.players.length; x++) {
-        clientData.push(_compressPlayer(data.players[x], dutyMap));
+        const player = data.players[x];
+
+        try {
+            trackHistoricData(pServer, player);
+        } catch (e) {
+            console.error(`${chalk.yellowBright("Failed to track historic data")}: ${chalk.gray(e)}`);
+        }
+
+        clientData.push(_compressPlayer(player, dutyMap));
     }
 
     return clientData;
