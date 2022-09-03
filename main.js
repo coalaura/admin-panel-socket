@@ -1,13 +1,25 @@
 import {init, isValidToken, isValidType} from "./data-loop.js";
 import {handleConnection, handleDataUpdate} from "./client.js";
+import {initRoutes} from "./routes.js";
 
+import express from "express";
 import {createServer} from "http";
 import {Server} from "socket.io";
 import chalk from 'chalk';
+import cors from "cors";
 
 init(handleDataUpdate);
 
-const io = new Server(createServer(), {
+const app = express(),
+    server = createServer(app);
+
+app.use(cors({
+    origin: '*'
+}));
+
+initRoutes(app);
+
+const io = new Server(server, {
     cors: {
         origin: "*",
         methods: ["GET", "POST"]
@@ -28,6 +40,6 @@ io.on("connection", client => {
     handleConnection(client, query.server, query.type);
 });
 
-io.listen(9999);
-
-console.log(chalk.blueBright("Listening for sockets..."));
+server.listen(9999, () => {
+    console.log(chalk.blueBright("Listening for sockets..."));
+});

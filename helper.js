@@ -8,29 +8,41 @@ export function formatNumber(pNumber, pDecimals) {
     return str.replace(/\.?0+$/gm, "");
 }
 
-export function readLastHistoricEntry(pPath) {
+export function readLines(pPath, pCallback) {
     let inStream = createReadStream(pPath),
         outStream = new Writable();
 
     return new Promise((resolve, reject) => {
         const rl = createInterface(inStream, outStream);
 
-        let lastLine = false;
-
         rl.on('line', (line) => {
-            if (line) {
-                line = line.trim().replace(/^\d+,/gm, "");
-
-                if (!line.endsWith("*")) {
-                    lastLine = line;
-                }
+            if (pCallback(line ? line.trim() : line) === false) {
+                rl.close();
             }
         });
 
         rl.on('error', reject);
 
         rl.on('close', () => {
-            resolve(lastLine);
+            resolve();
         });
-    })
+    });
+}
+
+export function readLastHistoricEntry(pPath) {
+    return new Promise((resolve, reject) => {
+        let lastLine = false;
+
+        readLines(pPath, (line) => {
+            if (line) {
+                line = line.replace(/^\d+,/gm, "");
+
+                if (!line.endsWith("*")) {
+                    lastLine = line;
+                }
+            }
+        }).then(() => {
+            resolve(lastLine);
+        }).catch(reject);
+    });
 }
