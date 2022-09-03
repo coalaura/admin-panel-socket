@@ -14,7 +14,7 @@ export async function trackHistoricData(pServer, pPlayer) {
 
     const coords = pPlayer.coords,
         prefix = `${moment().unix()}`,
-        entry = `${character.id},${formatNumber(coords.x, 1)},${formatNumber(coords.y, 1)},${formatNumber(coords.z, 1)},${formatNumber(pPlayer.heading, 1)},${character.flags}`;
+        entry = `${character.id},${formatNumber(coords.x, 1)},${formatNumber(coords.y, 1)},${formatNumber(coords.z, 1)},${formatNumber(pPlayer.heading, 1)},${character.flags},${pPlayer.flags}`;
 
     await _ensureHistoricEntry(pServer, pPlayer, prefix, entry);
 }
@@ -92,7 +92,7 @@ function _isInvisible(pFlags) {
 }
 
 function _parseHistoricEntry(pLine) {
-    const regex = /^(\d+),(\d+),(-?\d+\.?\d+),(-?\d+\.?\d+),(-?\d+\.?\d+),(-?\d+\.?\d+),(\d+)$/gm,
+    const regex = /^(\d+),(\d+),(-?\d+\.?\d+),(-?\d+\.?\d+),(-?\d+\.?\d+),(-?\d+\.?\d+),(\d+),(\d+)$/gm,
         match = pLine.matchAll(regex).next(),
         value = match && match.value ? match.value : false;
 
@@ -104,7 +104,8 @@ function _parseHistoricEntry(pLine) {
             y: parseFloat(value[4]),
             z: parseFloat(value[5]),
             heading: parseFloat(value[6]),
-            flags: parseInt(value[7])
+            flags: parseInt(value[7]),
+            userFlags: parseInt(value[8])
         };
     }
 

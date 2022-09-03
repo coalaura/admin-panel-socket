@@ -16,10 +16,7 @@ echo Cleanup historic data...
 find ./history/c2s1/* -type d -mtime +10 | xargs rm -rf
 find ./history/c3s1/* -type d -mtime +10 | xargs rm -rf
 find ./history/c4s1/* -type d -mtime +10 | xargs rm -rf
-
-find ./history/c8s1/* -type d -mtime +10 | xargs rm -rf
-find ./history/c10s1/* -type d -mtime +10 | xargs rm -rf
-find ./history/c13s1/* -type d -mtime +10 | xargs rm -rf
-find ./history/c15s1/* -type d -mtime +10 | xargs rm -rf
+find ./history/c5s1/* -type d -mtime +10 | xargs rm -rf
+find ./history/c16s1/* -type d -mtime +10 | xargs rm -rf
 
 echo Completed
