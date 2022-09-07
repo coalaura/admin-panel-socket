@@ -70,6 +70,20 @@ export function countConnections(pServer, pType) {
     return total;
 }
 
+export function isAlreadyConnected(pServer, pType, pSteam) {
+    for (const id in connections) {
+        if (Object.hasOwnProperty(id)) continue;
+
+        const client = connections[id];
+
+        if (client.type === pType && client.server === pServer && client.steam === pSteam) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 function _prepareData(pData) {
     const json = JSON.stringify(pData);
 

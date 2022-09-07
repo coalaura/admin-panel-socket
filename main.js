@@ -1,5 +1,5 @@
 import {init, isValidSteam, isValidToken, isValidType} from "./data-loop.js";
-import {handleConnection, handleDataUpdate} from "./client.js";
+import {handleConnection, handleDataUpdate, isAlreadyConnected} from "./client.js";
 import {initRoutes} from "./routes.js";
 
 import express from "express";
@@ -33,6 +33,12 @@ io.on("connection", client => {
         client.disconnect(true);
 
         console.log(`${chalk.redBright("Rejected connection")} ${chalk.gray("from " + client.handshake.address)}`);
+
+        return;
+    } else if (isAlreadyConnected(query.server, query.type, query.steam)) {
+        client.disconnect(true);
+
+        console.log(`${chalk.redBright("Rejected connection")} ${chalk.gray("from " + client.handshake.address + " (already connected)")}`);
 
         return;
     }
