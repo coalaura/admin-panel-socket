@@ -1,5 +1,5 @@
 import {isValidSteam, isValidToken} from "./data-loop.js";
-import {resolveHistoricData} from "./historic.js";
+import {resolveHistoricData, resolveTimestamp} from "./resolve.js";
 
 export function initRoutes(pApp) {
     pApp.get("/historic/:server/:steam/:from/:till", async (req, resp) => {
@@ -24,6 +24,39 @@ export function initRoutes(pApp) {
 
         try {
             const data = await resolveHistoricData(server, steam, from, till);
+
+            resp.json({
+                status: true,
+                data: data
+            });
+        } catch (e) {
+            resp.json({
+                status: false,
+                error: e + ""
+            });
+        }
+    });
+
+    pApp.get("/timestamp/:server/:timestamp", async (req, resp) => {
+        const params = req.params,
+            query = req.query;
+
+        const token = 'token' in query ? query.token : false;
+
+        const server = 'server' in params ? params.server : false,
+            timestamp = 'timestamp' in params ? parseInt(params.timestamp) : false;
+
+        if (!isValidToken(server, token) || !Number.isInteger(timestamp) || timestamp < 0) {
+            resp.json({
+                status: false,
+                error: "Invalid request"
+            });
+
+            return;
+        }
+
+        try {
+            const data = await resolveTimestamp(server, timestamp);
 
             resp.json({
                 status: true,

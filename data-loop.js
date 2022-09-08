@@ -53,7 +53,7 @@ export function isValidToken(pServer, pToken) {
         return false;
     }
 
-    if (!pToken.match(/^[a-z0-9]{30}$/m)) {
+    if (!pToken || !pToken.match(/^[a-z0-9]{30}$/m)) {
         return false;
     }
 
