@@ -8,20 +8,57 @@ export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
     const fromDate = moment.unix(pFrom).utc().format("DD-MM-YYYY"),
         tillDate = moment.unix(pTill).utc().format("DD-MM-YYYY");
 
-    if (fromDate !== tillDate) {
-        throw Error("From and till have to be on the same day");
-    }
-
     const path = join("historic", pServer, fromDate, pSteam + ".csv");
 
-    if (!existsSync(path)) {
-        throw Error("No data for this day");
+    let data = {};
+
+    await _readHistoricFile(path, parsed => {
+        if (parsed && parsed.timestamp >= pFrom) {
+            if (parsed.timestamp > pTill) {
+                return false;
+            }
+
+            data[parsed.timestamp] = {
+                x: parsed.x,
+                y: parsed.y,
+                i: _isInvisible(parsed.flags)
+            };
+        }
+    });
+
+    if (fromDate !== tillDate) {
+        const tillPath = join("historic", pServer, tillDate, pSteam + ".csv");
+
+        await _readHistoricFile(tillPath, parsed => {
+            if (parsed && parsed.timestamp >= pFrom) {
+                if (parsed.timestamp > pTill) {
+                    return false;
+                }
+
+                data[parsed.timestamp] = {
+                    x: parsed.x,
+                    y: parsed.y,
+                    i: _isInvisible(parsed.flags)
+                };
+            }
+        });
     }
 
-    let data = {},
-        previousLine = false;
+    if (Object.values(data).length === 0) {
+        throw Error("No data for the selected period");
+    }
 
-    await readLines(path, (line) => {
+    return data;
+}
+
+async function _readHistoricFile(pPath, pCallback) {
+    if (!existsSync(pPath)) {
+        return;
+    }
+
+    let previousLine = false;
+
+    await readLines(pPath, (line) => {
         if (line && !line.startsWith("Timestamp")) {
             if (line.endsWith("*")) {
                 const split = line.split(",");
@@ -37,25 +74,9 @@ export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
 
             const parsed = _parseHistoricEntry(line);
 
-            if (parsed && parsed.timestamp >= pFrom) {
-                if (parsed.timestamp > pTill) {
-                    return false;
-                }
-
-                data[parsed.timestamp] = {
-                    x: parsed.x,
-                    y: parsed.y,
-                    i: _isInvisible(parsed.flags)
-                };
-            }
+            return pCallback(parsed);
         }
     });
-
-    if (Object.values(data).length === 0) {
-        throw Error("No data for this day");
-    }
-
-    return data;
 }
 
 export async function resolveTimestamp(pServer, pTimestamp) {
