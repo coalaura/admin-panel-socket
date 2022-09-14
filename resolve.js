@@ -18,10 +18,15 @@ export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
                 return false;
             }
 
+            const flags = _parseCharacterFlags(parsed.flags);
+
             data[parsed.timestamp] = {
                 x: parsed.x,
                 y: parsed.y,
-                i: _isInvisible(parsed.flags)
+                z: parsed.z,
+                i: flags.invisible,
+                c: flags.invincible,
+                f: flags.frozen
             };
         }
     });
@@ -35,10 +40,15 @@ export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
                     return false;
                 }
 
+                const flags = _parseCharacterFlags(parsed.flags);
+
                 data[parsed.timestamp] = {
                     x: parsed.x,
                     y: parsed.y,
-                    i: _isInvisible(parsed.flags)
+                    z: parsed.z,
+                    i: flags.invisible,
+                    c: flags.invincible,
+                    f: flags.frozen
                 };
             }
         });
