@@ -116,10 +116,15 @@ export async function resolveTimestamp(pServer, pTimestamp) {
 
                     if (parsed) {
                         if (parsed.timestamp === pTimestamp) {
+                            const flags = _parseCharacterFlags(parsed.flags);
+
                             data[file.replace(".csv", "")] = {
                                 x: parsed.x,
                                 y: parsed.y,
-                                i: _isInvisible(parsed.flags)
+                                z: parsed.z,
+                                i: flags.invisible,
+                                c: flags.invincible,
+                                f: flags.frozen
                             };
 
                             return false;
@@ -139,8 +144,18 @@ export async function resolveTimestamp(pServer, pTimestamp) {
     return data;
 }
 
-function _isInvisible(pFlags) {
+function _parseCharacterFlags(pFlags) {
     pFlags = pFlags ? pFlags : 0;
+
+    const frozen = pFlags / 32 >= 1
+    if (frozen) {
+        pFlags -= 32
+    }
+
+    const invincible = pFlags / 16 >= 1
+    if (invincible) {
+        pFlags -= 16
+    }
 
     const invisible = pFlags / 8 >= 1
     if (invisible) {
@@ -154,7 +169,11 @@ function _isInvisible(pFlags) {
 
     const trunk = pFlags / 2 >= 1
 
-    return invisible && !trunk && !shell;
+    return {
+        invisible: invisible && !trunk && !shell,
+        invincible: invincible,
+        frozen: frozen
+    };
 }
 
 function _parseHistoricEntry(pLine) {
