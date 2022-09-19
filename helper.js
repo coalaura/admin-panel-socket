@@ -4,24 +4,33 @@ import {Writable} from "stream";
 import {execSync} from "child_process";
 
 export function findFiles(pPath, pStartWith) {
-    const out = execSync(`grep -rnw '${pPath}' -e '^${pStartWith}'`).toString(),
-        lines = out.trim().split("\n");
+    try {
+        const out = execSync(`grep -rnw '${pPath}' -e '^${pStartWith}'`).toString(),
+            lines = out.trim().split("\n");
 
-    let result = [];
+        let result = [];
 
-    for (let x = 0; x < lines.length; x++) {
-        const line = lines[x].split(":");
+        for (let x = 0; x < lines.length; x++) {
+            const line = lines[x].split(":");
 
-        if (line.length === 3) {
-            result.push({
-                file: line[0],
-                line: line[1],
-                content: line[2].trim()
-            });
+            if (line.length === 3) {
+                result.push({
+                    file: line[0],
+                    line: line[1],
+                    content: line[2]
+                });
+            }
         }
-    }
 
-    return result;
+        return result;
+    } catch (e) {
+        const error = e.stderr ? e.stderr.toString().trim() : "Something went wrong";
+        if (error === "") {
+            return [];
+        }
+
+        throw Error(error);
+    }
 }
 
 export function formatNumber(pNumber, pDecimals) {
