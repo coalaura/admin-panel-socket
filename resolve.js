@@ -95,7 +95,7 @@ export async function resolveTimestamp(pServer, pTimestamp) {
     const path = join("historic", pServer, date);
 
     if (!existsSync(path)) {
-        throw Error("No data for this day");
+        throw Error("No data for this timestamp");
     }
 
     let data = {};
@@ -158,7 +158,7 @@ export async function resolveTimestamp(pServer, pTimestamp) {
     }
 
     if (Object.values(data).length === 0) {
-        throw Error("No data for this day");
+        throw Error("No data for this timestamp");
     }
 
     return data;
