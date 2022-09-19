@@ -1,5 +1,6 @@
 import {isValidSteam, isValidToken} from "./data-loop.js";
 import {resolveHistoricData, resolveTimestamp} from "./resolve.js";
+import chalk from "chalk";
 
 export function initRoutes(pApp) {
     pApp.get("/historic/:server/:steam/:from/:till", async (req, resp) => {
@@ -21,6 +22,8 @@ export function initRoutes(pApp) {
 
             return;
         }
+
+        console.log(chalk.blueBright("GET") + " " + chalk.gray(`/historic/${server}/${steam}/${from}/${till}`));
 
         try {
             const data = await resolveHistoricData(server, steam, from, till);
@@ -54,6 +57,8 @@ export function initRoutes(pApp) {
 
             return;
         }
+
+        console.log(chalk.blueBright("GET") + " " + chalk.gray(`/timestamp/${server}/${timestamp}`));
 
         try {
             const data = await resolveTimestamp(server, timestamp);

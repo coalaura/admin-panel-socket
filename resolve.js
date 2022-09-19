@@ -1,8 +1,8 @@
 import moment from "moment";
-import {join} from "path";
-import {existsSync, readdirSync} from "fs";
+import {join, basename} from "path";
+import {existsSync} from "fs";
 
-import {readLines} from "./helper.js";
+import {findFiles, readLines} from "./helper.js";
 
 export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
     const fromDate = moment.unix(pFrom).utc().format("DD-MM-YYYY"),
@@ -100,15 +100,38 @@ export async function resolveTimestamp(pServer, pTimestamp) {
 
     let data = {};
 
-    const files = readdirSync(path);
+    const addParsedEntry = (pFile, pParsed) => {
+        if (pParsed) {
+            if (pParsed.timestamp === pTimestamp) {
+                pFile = basename(pFile);
+
+                const flags = _parseCharacterFlags(pParsed.flags);
+
+                data[pFile.replace(".csv", "")] = {
+                    x: pParsed.x,
+                    y: pParsed.y,
+                    z: pParsed.z,
+                    i: flags.invisible,
+                    c: flags.invincible,
+                    f: flags.frozen
+                };
+
+                return false;
+            } else if (pParsed.timestamp > pTimestamp) {
+                return false;
+            }
+        }
+    };
+
+    const files = findFiles(path, pTimestamp);
 
     for (let x = 0; x < files.length; x++) {
         const file = files[x];
 
-        if (file && file.endsWith(".csv")) {
+        if (file.content.endsWith("*")) {
             let previousLine = false;
 
-            await readLines(join(path, file), (line) => {
+            await readLines(file.file, (line) => {
                 if (line && !line.startsWith("Timestamp")) {
                     if (line.endsWith("*")) {
                         const split = line.split(",");
@@ -124,26 +147,13 @@ export async function resolveTimestamp(pServer, pTimestamp) {
 
                     const parsed = _parseHistoricEntry(line);
 
-                    if (parsed) {
-                        if (parsed.timestamp === pTimestamp) {
-                            const flags = _parseCharacterFlags(parsed.flags);
-
-                            data[file.replace(".csv", "")] = {
-                                x: parsed.x,
-                                y: parsed.y,
-                                z: parsed.z,
-                                i: flags.invisible,
-                                c: flags.invincible,
-                                f: flags.frozen
-                            };
-
-                            return false;
-                        } else if (parsed.timestamp > pTimestamp) {
-                            return false;
-                        }
-                    }
+                    return addParsedEntry(file.file, parsed);
                 }
             });
+        } else {
+            const parsed = _parseHistoricEntry(file.content);
+
+            addParsedEntry(file.file, parsed);
         }
     }
 

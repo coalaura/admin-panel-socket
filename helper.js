@@ -1,6 +1,28 @@
 import {createReadStream} from "fs";
 import {createInterface} from "readline";
 import {Writable} from "stream";
+import {execSync} from "child_process";
+
+export function findFiles(pPath, pStartWith) {
+    const out = execSync(`grep -rnw '${pPath}' -e '^${pStartWith}'`).toString(),
+        lines = out.trim().split("\n");
+
+    let result = [];
+
+    for (let x = 0; x < lines.length; x++) {
+        const line = lines[x].split(":");
+
+        if (line.length === 3) {
+            result.push({
+                file: line[0],
+                line: line[1],
+                content: line[2].trim()
+            });
+        }
+    }
+
+    return result;
+}
 
 export function formatNumber(pNumber, pDecimals) {
     const str = pNumber.toFixed(pDecimals);
