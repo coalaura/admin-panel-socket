@@ -5,6 +5,10 @@ import {existsSync} from "fs";
 import {findFiles, readLines} from "./helper.js";
 
 export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
+    if (pTill < pFrom) {
+        throw Error("From must be before till");
+    }
+
     const fromDate = moment.unix(pFrom).utc().format("DD-MM-YYYY"),
         tillDate = moment.unix(pTill).utc().format("DD-MM-YYYY");
 
