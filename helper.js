@@ -1,4 +1,6 @@
-import {readFileSync} from "fs";
+import {createReadStream} from "fs";
+import {createInterface} from "readline";
+import {Writable} from "stream";
 import {execSync} from "child_process";
 
 export function findFiles(pPath, pStartWith) {
@@ -37,15 +39,25 @@ export function formatNumber(pNumber, pDecimals) {
     return str.replace(/\.?0+$/gm, "");
 }
 
-export async function readLines(pPath, pCallback) {
-    const contents = readFileSync(pPath).toString(),
-        lines = contents.split(/\r?\n/g);
+export function readLines(pPath, pCallback) {
+    let inStream = createReadStream(pPath),
+        outStream = new Writable();
 
-    for (const line of lines) {
-        if (pCallback(line ? line.trim() : line) === false) {
-            break;
-        }
-    }
+    return new Promise((resolve, reject) => {
+        const rl = createInterface(inStream, outStream);
+
+        rl.on('line', (line) => {
+            if (pCallback(line ? line.trim() : line) === false) {
+                rl.close();
+            }
+        });
+
+        rl.on('error', reject);
+
+        rl.on('close', () => {
+            resolve();
+        });
+    });
 }
 
 export function readLastHistoricEntry(pPath) {
