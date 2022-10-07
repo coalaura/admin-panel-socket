@@ -30,7 +30,8 @@ export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
                 z: parsed.z,
                 i: flags.invisible,
                 c: flags.invincible,
-                f: flags.frozen
+                f: flags.frozen,
+                d: flags.dead
             };
         }
     });
@@ -52,7 +53,8 @@ export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
                     z: parsed.z,
                     i: flags.invisible,
                     c: flags.invincible,
-                    f: flags.frozen
+                    f: flags.frozen,
+                    d: flags.dead
                 };
             }
         });
@@ -117,7 +119,8 @@ export async function resolveTimestamp(pServer, pTimestamp) {
                     z: pParsed.z,
                     i: flags.invisible,
                     c: flags.invincible,
-                    f: flags.frozen
+                    f: flags.frozen,
+                    d: flags.dead
                 };
 
                 return false;
@@ -192,11 +195,15 @@ function _parseCharacterFlags(pFlags) {
     }
 
     const trunk = pFlags / 2 >= 1
+    if (trunk) {
+        pFlags -= 2;
+    }
 
     return {
         invisible: invisible && !trunk && !shell,
-        invincible: invincible,
-        frozen: frozen
+        invincible: invincible && pFlags === 0,
+        frozen: frozen,
+        dead: pFlags === 1
     };
 }
 
