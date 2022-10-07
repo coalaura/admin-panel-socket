@@ -208,7 +208,7 @@ function _parseCharacterFlags(pFlags) {
 }
 
 function _parseHistoricEntry(pLine) {
-    const regex = /^(\d+),(\d+),(-?\d+\.?\d+),(-?\d+\.?\d+),(-?\d+\.?\d+),(-?\d+\.?\d+),(\d+),(\d+)$/gm,
+    const regex = /^(\d+),(\d+),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(\d+),(\d+)$/gm,
         match = pLine.matchAll(regex).next(),
         value = match && match.value ? match.value : false;
 
@@ -217,12 +217,14 @@ function _parseHistoricEntry(pLine) {
             timestamp: parseInt(value[1]),
             cid: parseInt(value[2]),
             x: parseFloat(value[3]),
-            y: parseFloat(value[4]),
-            z: parseFloat(value[5]),
-            heading: parseFloat(value[6]),
-            flags: parseInt(value[7]),
-            userFlags: parseInt(value[8])
+            y: parseFloat(value[5]),
+            z: parseFloat(value[7]),
+            heading: parseFloat(value[9]),
+            flags: parseInt(value[11]),
+            userFlags: parseInt(value[12])
         };
+    } else {
+        console.log("Failed to parse line `" + pLine + "`");
     }
 
     return false;
