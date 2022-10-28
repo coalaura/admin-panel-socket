@@ -48,6 +48,10 @@ export function init(pDataCallback) {
     }
 }
 
+function getClusterFromServer(pServer) {
+    return pServer.replace("s1", "");
+}
+
 export function isValidToken(pServer, pToken) {
     if (!_isValidServer(pServer)) {
         return false;
@@ -57,7 +61,7 @@ export function isValidToken(pServer, pToken) {
         return false;
     }
 
-    const sessionFile = pathJoin(config.panel, "storage", "framework", "session_storage", pServer.substring(0, 2) + pToken + ".session");
+    const sessionFile = pathJoin(config.panel, "storage", "framework", "session_storage", getClusterFromServer(pServer) + pToken + ".session");
 
     if (!existsSync(sessionFile)) {
         return false;

@@ -32,7 +32,7 @@ export function getActiveViewers(pServer, pType) {
 
         const client = connections[id];
 
-        if (client.type === pType && client.server === pServer) {
+        if (client.type === pType && client.server === pServer && !viewers.includes(client.steam)) {
             viewers.push(client.steam);
         }
     }

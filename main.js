@@ -35,12 +35,6 @@ io.on("connection", client => {
         console.log(`${chalk.redBright("Rejected connection")} ${chalk.gray("from " + client.handshake.address)}`);
 
         return;
-    } else if (isAlreadyConnected(query.server, query.type, query.steam)) {
-        client.disconnect(true);
-
-        console.log(`${chalk.redBright("Rejected connection")} ${chalk.gray("from " + client.handshake.address + " (already connected)")}`);
-
-        return;
     }
 
     handleConnection(client, query.server, query.type, query.steam);

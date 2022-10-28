@@ -7,7 +7,7 @@ import chalk from "chalk";
 export async function updateWorldJSON(pServer) {
     const dutyMap = await loadOnDutyData(pServer);
 
-    const data = await requestOpFwApi(`https://${"url" in pServer ? pServer.url : pServer.server + ".op-framework.com"}/op-framework/world.json`, pServer.token);
+    const data = await requestOpFwApi(`${"url" in pServer ? pServer.url : "https://" + pServer.server + ".op-framework.com"}/op-framework/world.json`, pServer.token);
 
     let clientData = [];
     for (let x = 0; x < data.players.length; x++) {
