@@ -184,45 +184,15 @@ export async function resolveTimestamp(pServer, pTimestamp) {
 function _parseCharacterFlags(pFlags) {
     pFlags = pFlags ? pFlags : 0;
 
-    const spawned = pFlags / 64 >= 1;
-    if (spawned) {
-        pFlags -= 64;
-    }
-
-    const frozen = pFlags / 32 >= 1;
-    if (frozen) {
-        pFlags -= 32;
-    }
-
-    const invincible = pFlags / 16 >= 1;
-    if (invincible) {
-        pFlags -= 16;
-    }
-
-    const invisible = pFlags / 8 >= 1;
-    if (invisible) {
-        pFlags -= 8;
-    }
-
-    const shell = pFlags / 4 >= 1;
-    if (shell) {
-        pFlags -= 4;
-    }
-
-    const trunk = pFlags / 2 >= 1;
-    if (trunk) {
-        pFlags -= 2;
-    }
-
     return {
-        invisible: invisible && !trunk && !shell,
-        invincible: invincible && pFlags === 0,
-        frozen: frozen,
-        dead: pFlags === 1,
-        trunk: trunk,
-        shell: shell,
-        spawned: spawned
-    };
+        spawned: !!(pFlags & 64),
+        frozen: !!(pFlags & 32),
+        invincible: !!(pFlags & 16),
+        invisible: !!(pFlags & 8),
+        shell: !!(pFlags & 4),
+        trunk: !!(pFlags & 2),
+        dead: !!(pFlags & 1)
+    }
 }
 
 function _parseHistoricEntry(pLine) {
