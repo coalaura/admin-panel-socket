@@ -24,6 +24,10 @@ export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
 
             const flags = _parseCharacterFlags(parsed.flags);
 
+            if (!flags.spawned) {
+                return;
+            }
+
             data[parsed.timestamp] = {
                 x: parsed.x,
                 y: parsed.y,
@@ -46,6 +50,10 @@ export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
                 }
 
                 const flags = _parseCharacterFlags(parsed.flags);
+
+                if (!flags.spawned) {
+                    return;
+                }
 
                 data[parsed.timestamp] = {
                     x: parsed.x,
@@ -113,15 +121,17 @@ export async function resolveTimestamp(pServer, pTimestamp) {
 
                 const flags = _parseCharacterFlags(pParsed.flags);
 
-                data[pFile.replace(".csv", "")] = {
-                    x: pParsed.x,
-                    y: pParsed.y,
-                    z: pParsed.z,
-                    i: flags.invisible,
-                    c: flags.invincible,
-                    f: flags.frozen,
-                    d: flags.dead
-                };
+                if (flags.spawned) {
+                    data[pFile.replace(".csv", "")] = {
+                        x: pParsed.x,
+                        y: pParsed.y,
+                        z: pParsed.z,
+                        i: flags.invisible,
+                        c: flags.invincible,
+                        f: flags.frozen,
+                        d: flags.dead
+                    };
+                }
 
                 return false;
             } else if (pParsed.timestamp > pTimestamp) {
@@ -174,27 +184,32 @@ export async function resolveTimestamp(pServer, pTimestamp) {
 function _parseCharacterFlags(pFlags) {
     pFlags = pFlags ? pFlags : 0;
 
-    const frozen = pFlags / 32 >= 1
+    const spawned = pFlags / 64 >= 1;
+    if (spawned) {
+        pFlags -= 64;
+    }
+
+    const frozen = pFlags / 32 >= 1;
     if (frozen) {
-        pFlags -= 32
+        pFlags -= 32;
     }
 
-    const invincible = pFlags / 16 >= 1
+    const invincible = pFlags / 16 >= 1;
     if (invincible) {
-        pFlags -= 16
+        pFlags -= 16;
     }
 
-    const invisible = pFlags / 8 >= 1
+    const invisible = pFlags / 8 >= 1;
     if (invisible) {
-        pFlags -= 8
+        pFlags -= 8;
     }
 
-    const shell = pFlags / 4 >= 1
+    const shell = pFlags / 4 >= 1;
     if (shell) {
-        pFlags -= 4
+        pFlags -= 4;
     }
 
-    const trunk = pFlags / 2 >= 1
+    const trunk = pFlags / 2 >= 1;
     if (trunk) {
         pFlags -= 2;
     }
@@ -203,7 +218,10 @@ function _parseCharacterFlags(pFlags) {
         invisible: invisible && !trunk && !shell,
         invincible: invincible && pFlags === 0,
         frozen: frozen,
-        dead: pFlags === 1
+        dead: pFlags === 1,
+        trunk: trunk,
+        shell: shell,
+        spawned: spawned
     };
 }
 
