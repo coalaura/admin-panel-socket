@@ -70,11 +70,7 @@ export function isValidToken(pServer, pToken) {
     try {
         const contents = readFileSync(sessionFile);
 
-        if (contents) {
-            const data = JSON.parse(contents.toString());
-
-            return data && 'user' in data && data.user;
-        }
+        return contents === "yes";
     } catch (e) {
     }
 
