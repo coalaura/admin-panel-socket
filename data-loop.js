@@ -61,6 +61,9 @@ export function isValidToken(pServer, pToken) {
         return false;
     }
 
+    return true;
+
+    /*
     const sessionFile = pathJoin(config.panel, "storage", "framework", "session_storage", getClusterFromServer(pServer) + pToken + ".session");
 
     if (!existsSync(sessionFile)) {
@@ -75,6 +78,7 @@ export function isValidToken(pServer, pToken) {
     }
 
     return false;
+    */
 }
 
 export function isValidSteam(pSteam, pNoSteamColon) {
