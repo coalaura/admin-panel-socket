@@ -1,0 +1,16 @@
+[Unit]
+Description=OP-FW Socket Server
+After=network.target
+StartLimitBurst=10
+StartLimitIntervalSec=60
+
+[Service]
+Type=simple
+Restart=always
+RestartSec=3
+User=root
+WorkingDirectory=/var/www/socket-v2
+ExecStart=node --experimental-json-modules main.js
+
+[Install]
+WantedBy=multi-user.target
