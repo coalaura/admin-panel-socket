@@ -1,22 +1,24 @@
 import config from "./_config.json" assert {type: "json"};
-import {updateWorldJSON} from "./world.js";
-import {updateStaffJSON} from "./staff.js";
-import {countConnections, getActiveViewers} from "./client.js";
+import { updateWorldJSON } from "./world.js";
+import { updateStaffJSON } from "./staff.js";
+import { countConnections, getActiveViewers } from "./client.js";
+import { getServer, validateSession } from "./server.js";
 
-import {join as pathJoin} from "path";
-import {existsSync, readFileSync} from "fs";
 import chalk from "chalk";
 
 async function worldJSON(pServer, pDataCallback) {
     try {
-        const clientData = await updateWorldJSON(pServer);
+        const start = Date.now(),
+            clientData = await updateWorldJSON(pServer);
+
+        const timeout = Math.max(1000 - (Date.now() - start), 500);
 
         pDataCallback("world", pServer.server, {
             p: clientData,
             v: getActiveViewers(pServer.server, "world")
         });
 
-        setTimeout(worldJSON, 1000, pServer, pDataCallback);
+        setTimeout(worldJSON, timeout, pServer, pDataCallback);
     } catch (e) {
         console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/world.json")}: ${chalk.gray(e)}`);
 
@@ -42,43 +44,32 @@ async function staffJSON(pServer, pDataCallback) {
 
 export function init(pDataCallback) {
     for (let x = 0; x < config.servers.length; x++) {
-        setTimeout(worldJSON, 1000, config.servers[x], pDataCallback);
+        const server = getServer(config.servers[x]);
 
-        setTimeout(staffJSON, 1000, config.servers[x], pDataCallback);
+        setTimeout(worldJSON, 1000, server, pDataCallback);
+
+        setTimeout(staffJSON, 1000, server, pDataCallback);
     }
 }
 
-function getClusterFromServer(pServer) {
-    return pServer.replace("s1", "");
-}
-
-export function isValidToken(pServer, pToken) {
-    if (!_isValidServer(pServer)) {
+export async function isValidToken(pServer, pToken) {
+    if (!getServer(pServer)) {
+        console.log("Invalid server: " + pServer);
         return false;
     }
 
     if (!pToken || !pToken.match(/^[a-z0-9]{30}$/m)) {
-        return false;
-    }
-
-    return true;
-
-    /*
-    const sessionFile = pathJoin(config.panel, "storage", "framework", "session_storage", getClusterFromServer(pServer) + pToken + ".session");
-
-    if (!existsSync(sessionFile)) {
+        console.log("no token");
         return false;
     }
 
     try {
-        const contents = readFileSync(sessionFile);
-
-        return contents === "yes";
+        return await validateSession(pServer, pToken);
     } catch (e) {
+        console.error(`${chalk.yellowBright("Failed to validate session")} ${chalk.cyanBright(pServer.server)}: ${chalk.gray(e)}`);
     }
 
     return false;
-    */
 }
 
 export function isValidSteam(pSteam, pNoSteamColon) {
@@ -91,16 +82,4 @@ export function isValidSteam(pSteam, pNoSteamColon) {
 
 export function isValidType(pType) {
     return ["world", "staff"].includes(pType);
-}
-
-function _isValidServer(pServer) {
-    for (let x = 0; x < config.servers.length; x++) {
-        const server = config.servers[x];
-
-        if (server.server === pServer) {
-            return true;
-        }
-    }
-
-    return false;
 }
