@@ -1,7 +1,7 @@
 import { init, isValidSteam, isValidToken, isValidType } from "./data-loop.js";
 import { handleConnection, handleDataUpdate } from "./client.js";
 import { initRoutes } from "./routes.js";
-import { initServers } from "./server.js";
+import { initServers, getServer } from "./server.js";
 
 import express from "express";
 import { createServer } from "http";
@@ -42,6 +42,16 @@ io.on("connection", client => {
         return;
     }
 
+    const server = getServer(query.server);
+
+    if (!server) {
+        client.emit("message", "Invalid server");
+
+        client.disconnect(true);
+
+        console.log(`${chalk.redBright("Invalid server")} ${chalk.gray("from " + client.handshake.address)}`);
+    }
+
     isValidToken(query.server, query.token).then(valid => {
         if (!valid) {
             client.emit("message", "Invalid session");
@@ -53,7 +63,7 @@ io.on("connection", client => {
             return;
         }
 
-        handleConnection(client, query.server, query.type, query.steam);
+        handleConnection(client, server.server, query.type, query.steam);
     });
 });
 
