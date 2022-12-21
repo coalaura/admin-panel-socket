@@ -32,8 +32,6 @@ const io = new Server(server, {
 io.on("connection", client => {
     const query = client.handshake.query;
 
-	console.log(query);
-
     if (!('server' in query) || !('token' in query) || !('type' in query) || !('license' in query) || !isValidType(query.type) || !isValidLicense(query.license)) {
         client.emit("message", "Invalid request");
 
