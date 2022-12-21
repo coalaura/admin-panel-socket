@@ -29,8 +29,8 @@ function _compressPlayer(pPlayer, pDutyMap) {
     const character = pPlayer.character,
         vehicle = pPlayer.vehicle;
 
-    const steam = pPlayer.steamIdentifier,
-        duty = steam in pDutyMap ? pDutyMap[steam] : false;
+    const license = pPlayer.licenseIdentifier,
+        duty = license in pDutyMap ? pDutyMap[license] : false;
 
     return _cleanup({
         a: pPlayer.afkSince,
@@ -47,7 +47,7 @@ function _compressPlayer(pPlayer, pDutyMap) {
         }) : false,
         f: pPlayer.name,
         g: pPlayer.source,
-        h: steam,
+        h: license,
         i: vehicle ? _cleanup({
             a: vehicle.driving,
             b: vehicle.id,

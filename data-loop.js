@@ -72,12 +72,12 @@ export async function isValidToken(pServer, pToken) {
     return false;
 }
 
-export function isValidSteam(pSteam, pNoSteamColon) {
-    if (!pNoSteamColon) {
-        pSteam = pSteam.replace("steam:", "");
+export function isValidLicense(pLicense, pNoLicenseColon) {
+    if (!pNoLicenseColon) {
+        pLicense = pLicense.replace("license:", "");
     }
 
-    return pSteam.match(/^[a-z0-9]{15}$/gm);
+    return pLicense.match(/^[a-z0-9]{40}$/gm);
 }
 
 export function isValidType(pType) {

@@ -4,13 +4,13 @@ import chalk from "chalk";
 
 let connections = {};
 
-export function handleConnection(pClient, pServer, pType, pSteam) {
+export function handleConnection(pClient, pServer, pType, pLicense) {
     const self = {
         id: v4(),
         client: pClient,
         server: pServer,
         type: pType,
-        steam: pSteam
+        license: pLicense
     };
 
     connections[self.id] = self;
@@ -32,8 +32,8 @@ export function getActiveViewers(pServer, pType) {
 
         const client = connections[id];
 
-        if (client.type === pType && client.server === pServer && !viewers.includes(client.steam)) {
-            viewers.push(client.steam);
+        if (client.type === pType && client.server === pServer && !viewers.includes(client.license)) {
+            viewers.push(client.license);
         }
     }
 
@@ -70,13 +70,13 @@ export function countConnections(pServer, pType) {
     return total;
 }
 
-export function isAlreadyConnected(pServer, pType, pSteam) {
+export function isAlreadyConnected(pServer, pType, pLicense) {
     for (const id in connections) {
         if (Object.hasOwnProperty(id)) continue;
 
         const client = connections[id];
 
-        if (client.type === pType && client.server === pServer && client.steam === pSteam) {
+        if (client.type === pType && client.server === pServer && client.license === pLicense) {
             return true;
         }
     }

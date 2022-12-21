@@ -13,7 +13,7 @@ export async function loadOnDutyData(pServer) {
 
             entry.type = "police";
 
-            map[entry.steamIdentifier] = entry;
+            map[entry.licenseIdentifier] = entry;
         }
     }
 
@@ -25,7 +25,7 @@ export async function loadOnDutyData(pServer) {
 
             entry.type = "medical";
 
-            map[entry.steamIdentifier] = entry;
+            map[entry.licenseIdentifier] = entry;
         }
     }
 

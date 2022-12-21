@@ -21,9 +21,9 @@ export async function trackHistoricData(pServer, pPlayer) {
 
 async function _ensureHistoricEntry(pServer, pPlayer, pPrefix, pEntry) {
     const date = moment().utc().format("DD-MM-YYYY"),
-        steam = pPlayer.steamIdentifier.replace("steam:", "");
+        license = pPlayer.licenseIdentifier.replace("license:", "");
 
-    const path = join("historic", pServer.server, date, steam + ".csv"),
+    const path = join("historic", pServer.server, date, license + ".csv"),
         dir = dirname(path);
 
     if (!existsSync(dir)) {
@@ -35,7 +35,7 @@ async function _ensureHistoricEntry(pServer, pPlayer, pPrefix, pEntry) {
     if (!existsSync(path)) {
         writeFileSync(path, `Timestamp,Character ID,X,Y,Z,Heading,Flags\n${pPrefix},${pEntry}`);
     } else {
-        const key = `${pServer.server}_${steam}`,
+        const key = `${pServer.server}_${license}`,
             lastEntry = key in LastEntries ? LastEntries[key] : await readLastHistoricEntry(path);
 
         if (lastEntry) {

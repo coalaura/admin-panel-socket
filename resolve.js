@@ -4,7 +4,7 @@ import {existsSync} from "fs";
 
 import {findFiles, readLines} from "./helper.js";
 
-export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
+export async function resolveHistoricData(pServer, pLicense, pFrom, pTill) {
     if (pTill < pFrom) {
         throw Error("From must be before till");
     }
@@ -12,7 +12,7 @@ export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
     const fromDate = moment.unix(pFrom).utc().format("DD-MM-YYYY"),
         tillDate = moment.unix(pTill).utc().format("DD-MM-YYYY");
 
-    const path = join("historic", pServer, fromDate, pSteam + ".csv");
+    const path = join("historic", pServer, fromDate, pLicense + ".csv");
 
     let data = {};
 
@@ -41,7 +41,7 @@ export async function resolveHistoricData(pServer, pSteam, pFrom, pTill) {
     });
 
     if (fromDate !== tillDate) {
-        const tillPath = join("historic", pServer, tillDate, pSteam + ".csv");
+        const tillPath = join("historic", pServer, tillDate, pLicense + ".csv");
 
         await _readHistoricFile(tillPath, parsed => {
             if (parsed && parsed.timestamp >= pFrom) {

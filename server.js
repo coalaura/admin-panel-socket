@@ -87,8 +87,6 @@ export function validateSession(pServer, pToken) {
                     } catch (e) { }
                 }
 
-                console.log("nope");
-
                 resolve(false);
             });
         });
@@ -99,6 +97,10 @@ export function getServer(pServer) {
     if (typeof pServer !== "string") {
         return null;
     }
+
+	if (pServer === "localhost:30120") {
+		pServer = "c1";
+	}
 
     if (pServer.match(/^c\d+s\d+$/)) {
         pServer = pServer.split("s")[0];

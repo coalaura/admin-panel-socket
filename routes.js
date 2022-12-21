@@ -1,22 +1,22 @@
-import { isValidSteam, isValidToken } from "./data-loop.js";
+import { isValidLicense, isValidToken } from "./data-loop.js";
 import { resolveHistoricData, resolveTimestamp } from "./resolve.js";
 import { getServer } from "./server.js";
 
 import chalk from "chalk";
 
 export function initRoutes(pApp) {
-    pApp.get("/historic/:server/:steam/:from/:till", async (req, resp) => {
+    pApp.get("/historic/:server/:license/:from/:till", async (req, resp) => {
         const params = req.params,
             query = req.query;
 
         const token = 'token' in query ? query.token : false;
 
         const server = 'server' in params ? params.server : false,
-            steam = 'steam' in params ? params.steam : false,
+            license = 'license' in params ? params.license : false,
             from = 'from' in params ? parseInt(params.from) : false,
             till = 'till' in params ? parseInt(params.till) : false;
 
-        if (!isValidToken(server, token) || !steam || !isValidSteam(steam, true) || !from || from < 0 || !till || till < 0) {
+        if (!isValidToken(server, token) || !license || !isValidLicense(license, true) || !from || from < 0 || !till || till < 0) {
             resp.json({
                 status: false,
                 error: "Invalid request"
@@ -34,10 +34,10 @@ export function initRoutes(pApp) {
             });
         }
 
-        console.log(chalk.blueBright("GET") + " " + chalk.gray(`/historic/${srv.server}/${steam}/${from}/${till}`));
+        console.log(chalk.blueBright("GET") + " " + chalk.gray(`/historic/${srv.server}/${license}/${from}/${till}`));
 
         try {
-            const data = await resolveHistoricData(srv.server, steam, from, till);
+            const data = await resolveHistoricData(srv.server, license, from, till);
 
             resp.json({
                 status: true,
