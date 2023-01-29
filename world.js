@@ -2,12 +2,13 @@ import {requestOpFwApi} from "./http.js";
 import {formatNumber} from "./helper.js";
 import {loadOnDutyData} from "./duty.js";
 import {trackHistoricData} from "./historic.js";
+import {decompressPlayers} from "./decompressor.js";
 import chalk from "chalk";
 
 export async function updateWorldJSON(pServer) {
     const dutyMap = await loadOnDutyData(pServer);
 
-    const data = await requestOpFwApi(`${pServer.url}/op-framework/world.json`, pServer.token);
+    const data = decompressPlayers(await requestOpFwApi(`${pServer.url}/op-framework/world.json?compress=1`, pServer.token));
 
     let clientData = [];
     for (let x = 0; x < data.players.length; x++) {
@@ -67,7 +68,7 @@ function _movementData(pPlayer) {
     const x = formatNumber(coords.x, 1),
         y = formatNumber(coords.y, 1),
         z = formatNumber(coords.z, 1),
-        h = formatNumber(pPlayer.heading, 1);
+        h = formatNumber(coords.w, 1);
 
     let data = `${x},${y},${z},${h}`;
 
