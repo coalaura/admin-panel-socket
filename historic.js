@@ -14,7 +14,7 @@ export async function trackHistoricData(pServer, pPlayer) {
 
     const coords = pPlayer.coords,
         prefix = `${moment().unix()}`,
-        entry = `${character.id},${formatNumber(coords.x, 1)},${formatNumber(coords.y, 1)},${formatNumber(coords.z, 1)},${formatNumber(pPlayer.heading, 1)},${character.flags},${pPlayer.flags}`;
+        entry = `${character.id},${formatNumber(coords.x, 1)},${formatNumber(coords.y, 1)},${formatNumber(coords.z, 1)},${formatNumber(coords.w, 1)},${character.flags},${pPlayer.flags}`;
 
     await _ensureHistoricEntry(pServer, pPlayer, prefix, entry);
 }
