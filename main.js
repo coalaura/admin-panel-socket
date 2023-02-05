@@ -25,6 +25,8 @@ app.use(cors({
 	origin: '*'
 }));
 
+app.use(express.json());
+
 initRoutes(app);
 
 const io = new Server(server, {
