@@ -1,8 +1,29 @@
+function _encodeIntegerAlphabetically(pCurrent) {
+	let newKey = pCurrent + 1;
+
+	if (newKey === 0) {
+		return "a";
+	}
+
+	let keyString = "";
+
+	while (newKey > 0) {
+		let quotient = Math.floor(newKey / 26);
+		let remainder = newKey % 26;
+
+		keyString = String.fromCharCode(remainder + 97) + keyString;
+
+		newKey = quotient;
+	}
+
+	return keyString;
+}
+
 function _reconstructValue(pValue) {
 	const valueType = typeof pValue;
 
-	if (valueType === "string" && pValue.match(/^-?\d+(\.\d+)?(;-?\d+(\.\d+)?)+$/m)) {
-		const values = pValue.split(";").map(pNumber => parseFloat(pNumber));
+	if (valueType === "string" && pValue.match(/^-?\d+(\.\d+)?(:-?\d+(\.\d+)?)+$/m)) {
+		const values = pValue.split(":").map(pNumber => parseFloat(pNumber));
 
 		let result = {
 			x: values[0],
@@ -24,6 +45,19 @@ function _reconstructValue(pValue) {
 }
 
 function _resolveDuplicates(pDuplicateMap, pData) {
+	let duplicateMap = {};
+
+	let current = -1;
+	let duplicatePairs = pDuplicateMap.split(";");
+
+	for (const duplicate of duplicatePairs) {
+		let replacement = _encodeIntegerAlphabetically(current);
+
+		duplicateMap[replacement] = duplicate;
+
+		current++;
+	}
+
 	let resolve = pValue => {
 		const valueType = typeof pValue;
 
@@ -37,7 +71,7 @@ function _resolveDuplicates(pDuplicateMap, pData) {
 			}
 		} else if (valueType === "string" && pValue.startsWith("_")) {
 			const key = pValue.substring(1),
-				original = pDuplicateMap[key];
+				original = duplicateMap[key];
 
 			if (original) {
 				return original;
@@ -47,17 +81,22 @@ function _resolveDuplicates(pDuplicateMap, pData) {
 		return pValue;
 	};
 
-	return resolve(pData)
+	return resolve(pData);
 }
 
 function _resolveKeys(pKeyMap, pData) {
 	let keyMap = {};
 
-	pKeyMap.split(";").forEach(pPair => {
-		const pair = pPair.split(":");
+	let current = -1;
+	let keyPairs = pKeyMap.split(";");
 
-		keyMap[pair[1]] = pair[0];
-	});
+	for (const key of keyPairs) {
+		const replacement = _encodeIntegerAlphabetically(current);
+
+		keyMap[replacement] = key;
+
+		current++;
+	}
 
 	let resolve = pValue => {
 		const valueType = typeof pValue;
@@ -110,7 +149,7 @@ export function decompressPlayers(pData) {
 	decompressed.world.baseTime = decompressed.world.baseTime || 0;
 	decompressed.world.weather = decompressed.world.weather || "";
 
-	decompressed.players = decompressed.players.map(pPlayer => {
+	decompressed.players = decompressed.players ? decompressed.players.map(pPlayer => {
 		const character = pPlayer.character,
 			vehicle = pPlayer.vehicle;
 
@@ -141,7 +180,7 @@ export function decompressPlayers(pData) {
 			instanceId: pPlayer.instanceId || 0,
 			afkSince: pPlayer.afkSince || false
 		};
-	});
+	}) : [];
 
 	return decompressed;
 }
