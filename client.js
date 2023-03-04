@@ -2,6 +2,8 @@ import {v4} from "uuid";
 import pako from "pako";
 import chalk from "chalk";
 
+import {getLastServerError} from "./data-loop.js";
+
 let connections = {};
 
 export function handleConnection(pClient, pServer, pType, pLicense) {
@@ -22,6 +24,16 @@ export function handleConnection(pClient, pServer, pType, pLicense) {
 
         console.log(`${chalk.redBright("Disconnected")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(self.server + "/" + self.type)} - ${chalk.black(chalk.bgYellow(countConnections(self.server, self.type)))}`);
     });
+
+	const error = getLastServerError(pServer);
+
+	if (error) {
+		const data = _prepareData({
+			error: error
+		});
+
+		self.client.emit("message", Uint8Array.from(data).buffer);
+	}
 }
 
 export function getActiveViewers(pServer, pType) {

@@ -6,12 +6,20 @@ import { getServer, validateSession } from "./server.js";
 
 import chalk from "chalk";
 
+const lastError = {};
+
+export function getLastServerError(pServer) {
+	return lastError[pServer];
+}
+
 async function worldJSON(pServer, pDataCallback) {
     try {
         const start = Date.now(),
             clientData = await updateWorldJSON(pServer);
 
         const timeout = Math.max(1000 - (Date.now() - start), 500);
+
+		lastError[pServer.server] = null;
 
         pDataCallback("world", pServer.server, {
             p: clientData,
@@ -21,6 +29,8 @@ async function worldJSON(pServer, pDataCallback) {
         setTimeout(worldJSON, timeout, pServer, pDataCallback);
     } catch (e) {
         console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/world.json")}: ${chalk.gray(e)}`);
+
+		lastError[pServer.server] = e;
 
         setTimeout(worldJSON, 10000, pServer, pDataCallback);
     }
