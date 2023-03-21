@@ -8,137 +8,149 @@ import chalk from "chalk";
 let servers = {};
 
 export async function initServers() {
-    for (let x = 0; x < config.servers.length; x++) {
-        const server = config.servers[x];
+	for (let x = 0; x < config.servers.length; x++) {
+		const server = config.servers[x];
 
-        console.log(chalk.blueBright(`Connecting to ${server}...`));
+		console.log(chalk.blueBright(`Connecting to ${server}...`));
 
-        const envPath = join(config.panel, "envs", server, ".env"),
-            env = dotenv.config({
-                path: envPath,
-                override: true
-            });
+		const envPath = join(config.panel, "envs", server, ".env"),
+			env = dotenv.config({
+				path: envPath,
+				override: true
+			});
 
-        if (env.error) {
-            throw env.error;
-        }
+		if (env.error) {
+			throw env.error;
+		}
 
-        const cfg = env.parsed;
+		const cfg = env.parsed;
 
-        const srv = {
-            server: server,
-            url: getServerUrl(cfg.OP_FW_SERVERS),
-            token: cfg.OP_FW_TOKEN,
+		const ips = cfg.OP_FW_SERVERS.split(",");
 
-            pool: createPool({
-                connectionLimit: 5,
+		for (let i = 0; i < ips.length; i++) {
+			const serverName = server + (i > 0 ? 's' + (i + 1) : '');
 
-                host: cfg.DB_HOST,
-                port: cfg.DB_PORT,
-                user: cfg.DB_USERNAME,
-                password: cfg.DB_PASSWORD,
-                database: cfg.DB_DATABASE
-            })
-        };
+			const srv = {
+				server: serverName,
+				url: getServerUrl(ips[i]),
+				token: cfg.OP_FW_TOKEN,
 
-        await testConnection(srv);
+				pool: createPool({
+					connectionLimit: 5,
 
-        servers[server] = srv;
-    }
+					host: cfg.DB_HOST,
+					port: cfg.DB_PORT,
+					user: cfg.DB_USERNAME,
+					password: cfg.DB_PASSWORD,
+					database: cfg.DB_DATABASE
+				})
+			};
+
+			await testConnection(srv);
+
+			servers[serverName] = srv;
+		}
+	}
+}
+
+export function getServers() {
+	return servers;
 }
 
 export function validateSession(pServer, pToken) {
-    return new Promise((resolve, reject) => {
-        const server = getServer(pServer);
+	return new Promise((resolve, reject) => {
+		const server = getServer(pServer);
 
-        if (!server) {
-            resolve(false);
+		if (!server) {
+			resolve(false);
 
-            return;
-        }
+			return;
+		}
 
-        server.pool.getConnection((pError, pConnection) => {
-            if (pError) {
-                reject(pError);
+		server.pool.getConnection((pError, pConnection) => {
+			if (pError) {
+				reject(pError);
 
-                return;
-            }
+				return;
+			}
 
-            pConnection.query("SELECT `data` FROM webpanel_sessions WHERE `key` = ?", [pToken], (pError, pResults) => {
-                pConnection.release();
+			pConnection.query("SELECT `data` FROM webpanel_sessions WHERE `key` = ?", [pToken], (pError, pResults) => {
+				pConnection.release();
 
-                if (pError) {
-                    reject(pError);
+				if (pError) {
+					reject(pError);
 
-                    return;
-                }
+					return;
+				}
 
-                if (pResults.length > 0) {
-                    const result = pResults[0];
+				if (pResults.length > 0) {
+					const result = pResults[0];
 
-                    try {
-                        const data = JSON.parse(result.data);
+					try {
+						const data = JSON.parse(result.data);
 
-                        if (data && data.user) {
-                            resolve(true);
+						if (data && data.user) {
+							resolve(true);
 
-                            return;
-                        }
-                    } catch (e) { }
-                }
+							return;
+						}
+					} catch (e) { }
+				}
 
-                resolve(false);
-            });
-        });
-    });
+				resolve(false);
+			});
+		});
+	});
 }
 
 export function getServer(pServer) {
-    if (typeof pServer !== "string") {
-        return null;
-    }
-
-	if (pServer === "localhost:30120") {
-		pServer = "c1";
+	if (typeof pServer !== "string") {
+		return null;
 	}
 
-    if (pServer.match(/^c\d+s\d+$/)) {
-        pServer = pServer.split("s")[0];
-    } else if (!pServer.match(/^c\d+$/)) {
-        return null;
-    }
+	if (pServer === "localhost:30120") {
+		pServer = "c1s1";
+	}
 
-    return servers[pServer];
+	if (!pServer.match(/^c\d+s\d+$/)) {
+		return null;
+	}
+
+	if (pServer.endsWith("s1")) {
+		pServer = pServer.replace("s1", "");
+	}
+
+	return servers[pServer];
 }
 
 function testConnection(pServer) {
-    return new Promise((resolve, reject) => {
-        pServer.pool.getConnection((pError, pConnection) => {
-            if (pError) {
-                reject(pError);
+	return new Promise((resolve, reject) => {
+		pServer.pool.getConnection((pError, pConnection) => {
+			if (pError) {
+				reject(pError);
 
-                return;
-            }
+				return;
+			}
 
-            pConnection.query("SELECT 1", (pError, pResults) => {
-                pConnection.release();
+			pConnection.query("SELECT 1", (pError, pResults) => {
+				pConnection.release();
 
-                if (pError) {
-                    reject(pError);
+				if (pError) {
+					reject(pError);
 
-                    return;
-                }
+					return;
+				}
 
-                resolve(true);
-            });
-        });
-    });
+				resolve(true);
+			});
+		});
+	});
 }
 
 function getServerUrl(pServer) {
-    if (pServer.match(/^[0-9.]+(:[0-9]+)?$/gm)) {
-        return "http://" + pServer;
-    }
+	if (pServer.match(/^[0-9.]+(:[0-9]+)?$/gm)) {
+		return "http://" + pServer;
+	}
 
-    return "https://" + pServer;
+	return "https://" + pServer;
 }

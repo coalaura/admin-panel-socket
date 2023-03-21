@@ -1,8 +1,7 @@
-import config from "./_config.json" assert {type: "json"};
 import { updateWorldJSON } from "./world.js";
 import { updateStaffJSON } from "./staff.js";
 import { countConnections, getActiveViewers } from "./client.js";
-import { getServer, validateSession } from "./server.js";
+import { getServer, validateSession, getServers } from "./server.js";
 
 import chalk from "chalk";
 
@@ -53,8 +52,10 @@ async function staffJSON(pServer, pDataCallback) {
 }
 
 export function init(pDataCallback) {
-    for (let x = 0; x < config.servers.length; x++) {
-        const server = getServer(config.servers[x]);
+	const servers = getServers();
+
+    for (const name in servers) {
+        const server = servers[name];
 
         setTimeout(worldJSON, 1000, server, pDataCallback);
 
