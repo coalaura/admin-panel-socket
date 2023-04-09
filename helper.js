@@ -62,7 +62,7 @@ export function formatTime(pMilliseconds) {
 		time.push(seconds + "s");
 	}
 
-	return time.join(" ");
+	return time.join("");
 }
 
 export function readLines(pPath, pCallback) {
