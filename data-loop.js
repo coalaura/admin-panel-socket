@@ -2,6 +2,7 @@ import { updateWorldJSON } from "./world.js";
 import { updateStaffJSON } from "./staff.js";
 import { countConnections, getActiveViewers } from "./client.js";
 import { getServer, validateSession, getServers } from "./server.js";
+import { formatTime } from "./helper.js";
 
 import chalk from "chalk";
 
@@ -43,7 +44,7 @@ async function worldJSON(pServer, pDataCallback) {
     } catch (e) {
 		const delay = _getDelay(pServer.server);
 
-        console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/world.json")} (${chalk.gray(Math.floor(delay / 1000))}s): ${chalk.gray(e)}`);
+        console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/world.json")} (${chalk.gray(formatTime(delay))}): ${chalk.gray(e)}`);
 
 		lastError[pServer.server] = e;
 
@@ -63,7 +64,7 @@ async function staffJSON(pServer, pDataCallback) {
     } catch (e) {
 		const delay = _getDelay(pServer.server);
 
-        console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/staffChat.json")} (${chalk.gray(Math.floor(delay / 1000))}s): ${chalk.gray(e)}`);
+        console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/staffChat.json")} (${chalk.gray(formatTime(delay))}): ${chalk.gray(e)}`);
 
         setTimeout(staffJSON, delay, pServer, pDataCallback);
     }

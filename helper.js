@@ -39,6 +39,32 @@ export function formatNumber(pNumber, pDecimals) {
     return str.replace(/\.?0+$/gm, "");
 }
 
+export function formatTime(pMilliseconds) {
+	let seconds = Math.floor(pMilliseconds / 1000);
+
+	let minutes = Math.floor(seconds / 60);
+	seconds = seconds % 60;
+
+	let hours = Math.floor(minutes / 60);
+	minutes = minutes % 60;
+
+	let time = [];
+
+	if (hours > 0) {
+		time.push(hours + "h");
+	}
+
+	if (minutes > 0) {
+		time.push(minutes + "m");
+	}
+
+	if (seconds > 0 || time.length === 0) {
+		time.push(seconds + "s");
+	}
+
+	return time.join(" ");
+}
+
 export function readLines(pPath, pCallback) {
     let inStream = createReadStream(pPath),
         outStream = new Writable();
