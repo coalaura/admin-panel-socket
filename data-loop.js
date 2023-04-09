@@ -13,7 +13,11 @@ export function getLastServerError(pServer) {
 }
 
 function _getDelay(pServer) {
-	const delay = Math.min((lastWait[pServer.server] || 10000) * 3, 30 * 60 * 1000);
+	let delay = 10000;
+
+	if (pServer.server in lastWait) {
+		delay = Math.min(lastWait[pServer.server] * 3, 30 * 60 * 1000);
+	}
 
 	lastWait[pServer.server] = delay;
 
