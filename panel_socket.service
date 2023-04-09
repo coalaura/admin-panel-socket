@@ -11,6 +11,8 @@ RestartSec=3
 User=root
 WorkingDirectory=/var/www/admin-panel-socket
 ExecStart=node --experimental-json-modules main.js
+StandardOutput=append:/var/log/panel_socket.log
+StandardError=append:/var/log/panel_socket.log
 
 [Install]
 WantedBy=multi-user.target
