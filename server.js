@@ -11,7 +11,7 @@ export async function initServers() {
 	for (let x = 0; x < config.servers.length; x++) {
 		const server = config.servers[x];
 
-		process.stdout.write(chalk.blueBright(`Connecting to ${server}...`));
+		process.stdout.write(chalk.blueBright(`Database for ${server.padEnd(3, ".")}...`));
 
 		const envPath = join(config.panel, "envs", server, ".env"),
 			env = dotenv.config({
@@ -51,9 +51,9 @@ export async function initServers() {
 
 				servers[serverName] = srv;
 
-				console.log(chalk.greenBright(`SUCCESS`));
+				console.log(chalk.greenBright(`works!`));
 			} catch (e) {
-				console.log(chalk.redBright(`FAILED`));
+				console.log(chalk.redBright(`failed :(`));
 
 				console.log(chalk.redBright(`Failed establish database connection with ${serverName}!`));
 				console.log(chalk.red(e.message));
