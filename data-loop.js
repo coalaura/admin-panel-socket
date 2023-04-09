@@ -5,10 +5,19 @@ import { getServer, validateSession, getServers } from "./server.js";
 
 import chalk from "chalk";
 
-const lastError = {};
+const lastError = {},
+	lastWait = {};
 
 export function getLastServerError(pServer) {
 	return lastError[pServer];
+}
+
+function _getDelay(pServer) {
+	const delay = Math.min((lastWait[pServer.server] || 10000) * 3, 30 * 60 * 1000);
+
+	lastWait[pServer.server] = delay;
+
+	return delay;
 }
 
 async function worldJSON(pServer, pDataCallback) {
@@ -19,6 +28,7 @@ async function worldJSON(pServer, pDataCallback) {
         const timeout = Math.max(1000 - (Date.now() - start), 500);
 
 		lastError[pServer.server] = null;
+		lastWait[pServer.server] = null;
 
         pDataCallback("world", pServer.server, {
             p: clientData,
@@ -27,11 +37,13 @@ async function worldJSON(pServer, pDataCallback) {
 
         setTimeout(worldJSON, timeout, pServer, pDataCallback);
     } catch (e) {
-        console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/world.json")}: ${chalk.gray(e)}`);
+		const delay = _getDelay(pServer.server);
+
+        console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/world.json")} (${chalk.gray(Math.floor(delay / 1000))}s): ${chalk.gray(e)}`);
 
 		lastError[pServer.server] = e;
 
-        setTimeout(worldJSON, 10000, pServer, pDataCallback);
+        setTimeout(worldJSON, delay, pServer, pDataCallback);
     }
 }
 
@@ -45,9 +57,11 @@ async function staffJSON(pServer, pDataCallback) {
 
         setTimeout(staffJSON, 3000, pServer, pDataCallback);
     } catch (e) {
-        console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/staffChat.json")}: ${chalk.gray(e)}`);
+		const delay = _getDelay(pServer.server);
 
-        setTimeout(staffJSON, 10000, pServer, pDataCallback);
+        console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/staffChat.json")} (${chalk.gray(Math.floor(delay / 1000))}s): ${chalk.gray(e)}`);
+
+        setTimeout(staffJSON, delay, pServer, pDataCallback);
     }
 }
 
