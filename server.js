@@ -46,9 +46,14 @@ export async function initServers() {
 				})
 			};
 
-			await testConnection(srv);
+			try {
+				await testConnection(srv);
 
-			servers[serverName] = srv;
+				servers[serverName] = srv;
+			} catch (e) {
+				console.log(chalk.redBright(`Failed establish database connection with ${serverName}!`));
+				console.log(chalk.red(e.message));
+			}
 		}
 	}
 }
