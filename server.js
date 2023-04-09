@@ -30,23 +30,23 @@ export async function initServers() {
 		for (let i = 0; i < ips.length; i++) {
 			const serverName = server + (i > 0 ? 's' + (i + 1) : '');
 
-			const srv = {
-				server: serverName,
-				url: getServerUrl(ips[i]),
-				token: cfg.OP_FW_TOKEN,
-
-				pool: createPool({
-					connectionLimit: 5,
-
-					host: cfg.DB_HOST,
-					port: cfg.DB_PORT,
-					user: cfg.DB_USERNAME,
-					password: cfg.DB_PASSWORD,
-					database: cfg.DB_DATABASE
-				})
-			};
-
 			try {
+				const srv = {
+					server: serverName,
+					url: getServerUrl(ips[i]),
+					token: cfg.OP_FW_TOKEN,
+
+					pool: createPool({
+						connectionLimit: 5,
+
+						host: cfg.DB_HOST,
+						port: cfg.DB_PORT,
+						user: cfg.DB_USERNAME,
+						password: cfg.DB_PASSWORD,
+						database: cfg.DB_DATABASE
+					})
+				};
+
 				await testConnection(srv);
 
 				servers[serverName] = srv;
