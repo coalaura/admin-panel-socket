@@ -26,6 +26,16 @@ export async function updateWorldJSON(pServer) {
     return clientData;
 }
 
+export async function checkIfServerIsUp(pServer) {
+    try {
+        const data = await requestOpFwApi(`${pServer.url}/op-framework/api.json`, pServer.token);
+
+        return typeof data.serverVersion === "string";
+    } catch (e) {
+        return false;
+    }
+}
+
 function _compressPlayer(pPlayer, pDutyMap) {
     const character = pPlayer.character,
         vehicle = pPlayer.vehicle;

@@ -157,7 +157,7 @@ function testConnection(pServer) {
 }
 
 function getServerUrl(pServer) {
-	if (pServer.match(/^[0-9.]+(:[0-9]+)?$/gm)) {
+	if (pServer.match(/^[0-9.]+(:[0-9]+)?$/gm) || pServer.startsWith("localhost")) {
 		return "http://" + pServer;
 	}
 
