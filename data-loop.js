@@ -89,7 +89,7 @@ export function init(pDataCallback) {
 
 export async function isValidToken(pServer, pToken) {
     if (!getServer(pServer)) {
-        console.log("Invalid server: " + pServer);
+        console.log("Invalid server: '" + pServer + "'");
         return false;
     }
 
@@ -101,7 +101,7 @@ export async function isValidToken(pServer, pToken) {
     try {
         return await validateSession(pServer, pToken);
     } catch (e) {
-        console.error(`${chalk.yellowBright("Failed to validate session")} ${chalk.cyanBright(pServer.server)}: ${chalk.gray(e)}`);
+        console.error(`${chalk.yellowBright("Failed to validate session")} ${chalk.cyanBright(pServer)}: ${chalk.gray(e)}`);
     }
 
     return false;

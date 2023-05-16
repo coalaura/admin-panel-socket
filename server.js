@@ -117,6 +117,8 @@ export function getServer(pServer) {
 		return null;
 	}
 
+	pServer = pServer.toLowerCase().trim();
+
 	if (pServer === "localhost:30120") {
 		pServer = "c1s1";
 	}
