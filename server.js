@@ -11,53 +11,63 @@ export async function initServers() {
 	for (let x = 0; x < config.servers.length; x++) {
 		const server = config.servers[x];
 
-		process.stdout.write(chalk.blueBright(`Database for ${server.padEnd(3, ".")}...`));
+		await initServer(server);
+	}
+}
 
-		const envPath = join(config.panel, "envs", server, ".env"),
-			env = dotenv.config({
-				path: envPath,
-				override: true
-			});
+async function initServer(pServer) {
+	process.stdout.write(chalk.blueBright(`Database for ${pServer.padEnd(3, ".")}...`));
 
-		if (env.error) {
-			throw env.error;
-		}
+	const envPath = join(config.panel, "envs", pServer, ".env"),
+		env = dotenv.config({
+			path: envPath,
+			override: true
+		});
 
-		const cfg = env.parsed;
+	if (env.error) {
+		throw env.error;
+	}
 
-		const ips = cfg.OP_FW_SERVERS.split(",");
+	const cfg = env.parsed;
 
-		for (let i = 0; i < ips.length; i++) {
-			const serverName = server + (i > 0 ? 's' + (i + 1) : '');
+	const ips = cfg.OP_FW_SERVERS.split(",");
 
-			try {
-				const srv = {
-					server: serverName,
-					url: getServerUrl(ips[i]),
-					token: cfg.OP_FW_TOKEN,
+	for (let i = 0; i < ips.length; i++) {
+		const serverName = pServer + (i > 0 ? 's' + (i + 1) : '');
 
-					pool: createPool({
-						connectionLimit: 5,
+		try {
+			const srv = {
+				server: serverName,
+				url: getServerUrl(ips[i]),
+				token: cfg.OP_FW_TOKEN,
 
-						host: cfg.DB_HOST,
-						port: cfg.DB_PORT,
-						user: cfg.DB_USERNAME,
-						password: cfg.DB_PASSWORD,
-						database: cfg.DB_DATABASE
-					})
-				};
+				pool: createPool({
+					connectionLimit: 5,
 
-				await testConnection(srv);
+					host: cfg.DB_HOST,
+					port: cfg.DB_PORT,
+					user: cfg.DB_USERNAME,
+					password: cfg.DB_PASSWORD,
+					database: cfg.DB_DATABASE
+				})
+			};
 
-				servers[serverName] = srv;
+			await testConnection(srv);
 
-				console.log(chalk.greenBright(`works!`));
-			} catch (e) {
-				console.log(chalk.redBright(`failed :(`));
+			servers[serverName] = srv;
 
-				console.log(chalk.redBright(`Failed establish database connection with ${serverName}!`));
-				console.log(chalk.red(e.message));
-			}
+			console.log(chalk.greenBright(`works!`));
+		} catch (e) {
+			console.log(chalk.redBright(`failed :(`));
+
+			console.log(chalk.redBright(`Failed establish database connection with ${serverName}!`));
+			console.log(chalk.red(e.message));
+
+			servers[serverName] = {
+				failed: true
+			};
+
+			setTimeout(initServer, 15000, pServer);
 		}
 	}
 }

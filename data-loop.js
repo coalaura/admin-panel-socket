@@ -14,7 +14,7 @@ export function getLastServerError(pServer) {
 async function worldJSON(pServer, pDataCallback) {
     let timeout = 1000;
 
-    if (!pServer.down) {
+    if (!pServer.down && !pServer.failed) {
         try {
             const start = Date.now(),
                 clientData = await updateWorldJSON(pServer);
@@ -40,7 +40,7 @@ async function worldJSON(pServer, pDataCallback) {
 }
 
 async function staffJSON(pServer, pDataCallback) {
-    if (!pServer.down) {
+    if (!pServer.down && !pServer.failed) {
         try {
             if (countConnections(pServer.server, "staff") > 0) {
                 const clientData = await updateStaffJSON(pServer);
