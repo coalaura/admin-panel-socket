@@ -41,7 +41,7 @@ try {
 
 			executeServiceRestart = true;
 		} else {
-			console.log(chalk.whiteBright(` - ${serverName}: `) + chalk.redBright("ok"));
+			console.log(chalk.whiteBright(` - ${serverName}: `) + chalk.greenBright("ok"));
 		}
 	}
 } catch (e) {
