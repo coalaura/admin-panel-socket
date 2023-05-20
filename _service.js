@@ -1,5 +1,6 @@
 import https from "https";
 import axios from "axios";
+import chalk from "chalk";
 
 import { execSync } from "child_process";
 
@@ -28,7 +29,7 @@ async function getStatus() {
 let executeServiceRestart = false;
 
 try {
-	console.log("Checking socket health...");
+	console.log(chalk.gray("Checking socket health..."));
 
 	const status = await getStatus();
 
@@ -36,23 +37,23 @@ try {
 		const health = status[serverName];
 
 		if (health.failed) {
-			console.log(` - ${serverName}: failed`);
+			console.log(chalk.whiteBright(` - ${serverName}: `) + chalk.redBright("failed"));
 
 			executeServiceRestart = true;
 		} else {
-			console.log(` - ${serverName}: ok`);
+			console.log(chalk.whiteBright(` - ${serverName}: `) + chalk.redBright("ok"));
 		}
 	}
 } catch (e) {
-	console.log(`Socket health check failed: ${e}`);
+	console.log(chalk.gray("Socket health check failed: ") + chalk.redBright(e.message));
 
 	executeServiceRestart = true;
 }
 
 if (!executeServiceRestart) {
-	console.log("Service health check passed");
+	console.log(chalk.greenBright("Service health check passed"));
 } else {
-	console.log("Service health check failed, restarting...");
+	console.log(chalk.redBright("Service health check failed, restarting..."));
 
 	try {
 		execSync("service panel_socket restart", {
@@ -60,8 +61,8 @@ if (!executeServiceRestart) {
 			detached: true
 		});
 
-		console.log("Service restarted");
+		console.log(chalk.gray("Service restarted"));
 	} catch (e) {
-		console.log(`Failed to restart service: ${e}`);
+		console.log(chalk.gray("Failed to restart service: ") + chalk.redBright(e.message));
 	}
 }
