@@ -15,6 +15,23 @@ export async function initServers() {
 	}
 }
 
+export function getServerHealths() {
+	const healthData = {};
+
+	for (const serverName in servers) {
+		const server = servers[serverName];
+
+		const data = {
+			database: server.failed ? "down" : "up",
+			server: server.down ? "down" : "up"
+		};
+
+		healthData[serverName] = data;
+	}
+
+	return healthData;
+}
+
 async function initServer(pServer) {
 	process.stdout.write(chalk.blueBright(`Database for ${pServer.padEnd(3, ".")}...`));
 

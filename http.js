@@ -1,5 +1,5 @@
 import https from "https";
-import axios from 'axios';
+import axios from "axios";
 
 export async function requestOpFwApi(pUrl, pToken) {
     const httpsAgent = new https.Agent({

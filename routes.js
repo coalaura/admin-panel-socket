@@ -1,7 +1,7 @@
 import { isValidLicense, isValidToken } from "./data-loop.js";
 import { resolveHistoricData, resolveTimestamp } from "./resolve.js";
 import { collectBans } from "./experimental.js";
-import { getServer } from "./server.js";
+import { getServer, getServerHealths } from "./server.js";
 
 import chalk from "chalk";
 
@@ -137,5 +137,11 @@ export function initRoutes(pApp) {
                 error: e + ""
             });
         }
+    });
+
+    pApp.get("/socket-health", async (req, resp) => {
+        const health = getServerHealths();
+
+        resp.json(health);
     });
 }
