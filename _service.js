@@ -50,7 +50,7 @@ try {
 	executeServiceRestart = true;
 }
 
-console.log(chalk.greenBright("Service health check: ") + (executeServiceRestart ? chalk.redBright("failed") : chalk.greenBright("passed")));
+console.log(chalk.gray("Service health check: ") + (executeServiceRestart ? chalk.redBright("failed") : chalk.greenBright("passed")));
 
 if (executeServiceRestart) {
 	console.log(chalk.gray("Restarting panel_socket..."));
