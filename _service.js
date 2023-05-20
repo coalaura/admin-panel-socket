@@ -50,10 +50,10 @@ try {
 	executeServiceRestart = true;
 }
 
-if (!executeServiceRestart) {
-	console.log(chalk.greenBright("Service health check passed"));
-} else {
-	console.log(chalk.redBright("Service health check failed, restarting..."));
+console.log(chalk.greenBright("Service health check: ") + (executeServiceRestart ? chalk.redBright("failed") : chalk.greenBright("passed"));
+
+if (executeServiceRestart) {
+	console.log(chalk.gray("Restarting panel_socket..."));
 
 	try {
 		execSync("service panel_socket restart", {
