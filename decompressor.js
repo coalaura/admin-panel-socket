@@ -148,6 +148,7 @@ export function decompressPlayers(pData) {
 
 	decompressed.world.baseTime = decompressed.world.baseTime || 0;
 	decompressed.world.weather = decompressed.world.weather || "";
+	decompressed.world.instance = decompressed.world.instance || 0;
 
 	decompressed.players = decompressed.players ? decompressed.players.map(pPlayer => {
 		const character = pPlayer.character,
