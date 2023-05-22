@@ -25,7 +25,7 @@ export async function updateWorldJSON(pServer) {
 
     return {
         players: clientData,
-        instance: data.instance
+        instance: data.world?.instance
     };
 }
 
