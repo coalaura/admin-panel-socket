@@ -23,7 +23,10 @@ export async function updateWorldJSON(pServer) {
         clientData.push(_compressPlayer(player, dutyMap));
     }
 
-    return clientData;
+    return {
+        players: clientData,
+        instance: data.instance
+    };
 }
 
 export async function checkIfServerIsUp(pServer) {

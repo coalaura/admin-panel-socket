@@ -24,7 +24,8 @@ async function worldJSON(pServer, pDataCallback) {
             lastError[pServer.server] = null;
 
             pDataCallback("world", pServer.server, {
-                p: clientData,
+                p: clientData.players,
+                i: clientData.instance,
                 v: getActiveViewers(pServer.server, "world")
             });
         } catch (e) {
