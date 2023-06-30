@@ -108,15 +108,21 @@ let cachedVersion = false;
 
 export function getCommitVersion() {
     if (!cachedVersion) {
-        let out = execSync("git rev-list --all --count");
+        try {
+            let out = execSync("git rev-list --all --count");
 
-        if (out instanceof Buffer) {
-            out = out.toString();
+            if (out instanceof Buffer) {
+                out = out.toString();
+            }
+
+            const number = parseInt(out.trim());
+
+            cachedVersion = number || false;
+        } catch (e) {
+            console.log("Could not get commit version", e);
+
+            cachedVersion = false;
         }
-
-        const number = parseInt(out.trim());
-
-        cachedVersion = number || false;
     }
 
     return cachedVersion;
