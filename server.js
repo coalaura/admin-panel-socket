@@ -22,7 +22,7 @@ export function getServerHealths() {
 		const server = servers[serverName];
 
 		const data = {
-			database: server.failed ? "down" : "up",
+			database: server.database ? "up" : "down",
 			server: server.down ? "down" : "up"
 		};
 
@@ -30,6 +30,30 @@ export function getServerHealths() {
 	}
 
 	return healthData;
+}
+
+async function healthCheck(pServerName) {
+	const server = servers[pServerName];
+
+	if (!server) {
+		return;
+	}
+
+	try {
+		await testConnection(server);
+
+		if (!server.database) {
+			console.log(chalk.greenBright(`Database for ${pServerName} works again!`));
+		}
+
+		server.database = true;
+	} catch(e) {
+		server.database = false;
+
+		console.log(chalk.redBright(`Failed database health-check for ${pServerName}!`));
+	}
+
+	setTimeout(healthCheck, 10000, pServerName);
 }
 
 async function initServer(pServer) {
@@ -66,12 +90,14 @@ async function initServer(pServer) {
 					user: cfg.DB_USERNAME,
 					password: cfg.DB_PASSWORD,
 					database: cfg.DB_DATABASE
-				})
+				}),
+
+				database: true
 			};
 
-			await testConnection(srv);
-
 			servers[serverName] = srv;
+
+			await healthCheck(serverName);
 
 			console.log(chalk.greenBright(`works!`));
 		} catch (e) {
