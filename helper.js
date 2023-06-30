@@ -108,7 +108,7 @@ let cachedVersion = false;
 
 export function getCommitVersion() {
     if (!cachedVersion) {
-        let out = child_process.execSync("git rev-list --all --count");
+        let out = execSync("git rev-list --all --count");
 
         if (out instanceof Buffer) {
             out = out.toString();
