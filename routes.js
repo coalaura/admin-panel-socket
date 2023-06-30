@@ -2,6 +2,7 @@ import { isValidLicense, isValidToken } from "./data-loop.js";
 import { resolveHistoricData, resolveTimestamp } from "./resolve.js";
 import { collectBans } from "./experimental.js";
 import { getServer, getServerHealths } from "./server.js";
+import { getCommitVersion } from "./helper.js";
 
 import chalk from "chalk";
 
@@ -143,5 +144,19 @@ export function initRoutes(pApp) {
         const health = getServerHealths();
 
         resp.json(health);
+    });
+
+    pApp.get("/socket-version", async (req, resp) => {
+        const version = getCommitVersion();
+
+        resp.type("text/plain");
+
+        if (!version) {
+            resp.send("Failed to get version");
+
+            return;
+        }
+
+        resp.send(`v1-${version}`);
     });
 }

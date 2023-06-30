@@ -103,3 +103,21 @@ export function readLastHistoricEntry(pPath) {
         }).catch(reject);
     });
 }
+
+let cachedVersion = false;
+
+export function getCommitVersion() {
+    if (!cachedVersion) {
+        let out = child_process.execSync("git rev-list --all --count");
+
+        if (out instanceof Buffer) {
+            out = out.toString();
+        }
+
+        const number = parseInt(out.trim());
+
+        cachedVersion = number || false;
+    }
+
+    return cachedVersion;
+}
