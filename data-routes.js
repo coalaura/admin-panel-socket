@@ -32,7 +32,7 @@ export function initDataRoutes(pApp) {
 
         resp.json({
             status: true,
-            server: version
+            data: version
         });
     });
 }
