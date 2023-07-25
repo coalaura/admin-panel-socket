@@ -45,4 +45,6 @@ export function cleanupHistoricData() {
 	}
 
 	console.log(`Cleanup complete (${removed} files removed)`);
+
+	setTimeout(cleanupHistoricData, 2 * 60 * 60 * 1000);
 }

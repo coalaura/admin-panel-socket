@@ -92,7 +92,12 @@ async function initServer(pServer) {
 					database: cfg.DB_DATABASE
 				}),
 
-				database: true
+				database: true,
+				failed: false,
+				down: false,
+
+				version: "",
+				players: []
 			};
 
 			servers[serverName] = srv;
@@ -149,10 +154,11 @@ export function validateSession(pServer, pToken) {
 					const result = pResults[0];
 
 					try {
-						const data = JSON.parse(result.data);
+						const data = JSON.parse(result.data),
+							name = data?.user?.player?.player_name;
 
-						if (data && data.user) {
-							resolve(true);
+						if (name) {
+							resolve(name);
 
 							return;
 						}

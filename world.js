@@ -23,6 +23,8 @@ export async function updateWorldJSON(pServer) {
         clientData.push(_compressPlayer(player, dutyMap));
     }
 
+    pServer.players = data.players;
+
     return {
         players: clientData,
         instance: data.world?.instance
@@ -33,7 +35,11 @@ export async function checkIfServerIsUp(pServer) {
     try {
         const data = await requestOpFwApi(`${pServer.url}/op-framework/api.json`, pServer.token);
 
-        return typeof data.serverVersion === "string";
+        if (typeof data.serverVersion !== "string") {
+            return false;
+        }
+
+        pServer.version = data.serverVersion;
     } catch (e) {
         return false;
     }

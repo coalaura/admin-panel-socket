@@ -61,14 +61,12 @@ async function staffJSON(pServer, pDataCallback) {
 }
 
 async function downChecker(pServer) {
-    if (pServer.down) {
-        const isUp = await checkIfServerIsUp(pServer);
+    const isUp = await checkIfServerIsUp(pServer);
 
-        if (isUp) {
-            console.error(`${chalk.greenBright("Server back up")} ${chalk.cyanBright(pServer.server)}`);
+    if (pServer.down && isUp) {
+        console.error(`${chalk.greenBright("Server back up")} ${chalk.cyanBright(pServer.server)}`);
 
-            pServer.down = false;
-        }
+        pServer.down = false;
     }
 
     setTimeout(downChecker, 10000, pServer);
@@ -84,7 +82,7 @@ export function init(pDataCallback) {
 
         setTimeout(staffJSON, 1000, server, pDataCallback);
 
-        setTimeout(downChecker, 10000, server);
+        downChecker(server);
     }
 }
 
@@ -108,8 +106,8 @@ export async function isValidToken(pServer, pToken) {
     return false;
 }
 
-export function isValidLicense(pLicense, pNoLicenseColon) {
-    if (!pNoLicenseColon) {
+export function isValidLicense(pLicense) {
+    if (pLicense.includes("license:")) {
         pLicense = pLicense.replace("license:", "");
     }
 

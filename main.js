@@ -1,8 +1,10 @@
-import { init, isValidLicense, isValidToken, isValidType } from "./data-loop.js";
+import { init, isValidLicense, isValidType } from "./data-loop.js";
 import { handleConnection, handleDataUpdate } from "./client.js";
 import { initRoutes } from "./routes.js";
-import { initServers, getServer } from "./server.js";
+import { initDataRoutes } from "./data-routes.js";
+import { initServers } from "./server.js";
 import { cleanupHistoricData } from "./cleanup.js";
+import { checkAuth } from "./auth.js";
 
 import express from "express";
 import { createServer } from "http";
@@ -16,8 +18,6 @@ init(handleDataUpdate);
 
 cleanupHistoricData();
 
-setInterval(cleanupHistoricData, 2 * 60 * 60 * 1000);
-
 const app = express(),
 	server = createServer(app);
 
@@ -28,6 +28,7 @@ app.use(cors({
 app.use(express.json());
 
 initRoutes(app);
+initDataRoutes(app);
 
 const io = new Server(server, {
 	cors: {
@@ -36,43 +37,30 @@ const io = new Server(server, {
 	}
 });
 
-io.on("connection", client => {
+io.on("connection", async client => {
 	const query = client.handshake.query;
 
-	if (!('server' in query) || !('token' in query) || !('type' in query) || !('license' in query) || !isValidType(query.type) || !isValidLicense(query.license)) {
-		client.emit("message", "Invalid request");
-
-		client.disconnect(true);
-
-		console.log(`${chalk.redBright("Rejected connection")} ${chalk.gray("from " + client.handshake.address)}`);
-
-		return;
-	}
-
-	const server = getServer(query.server);
+	const session = await checkAuth(query, {}),
+		server = session?.server;
 
 	if (!server) {
-		client.emit("message", "Invalid server");
-
-		client.disconnect(true);
-
-		console.log(`${chalk.redBright("Invalid server")} ${chalk.gray("from " + client.handshake.address)}`);
+		return _reject(client, "Unauthorized");
 	}
 
-	isValidToken(query.server, query.token).then(valid => {
-		if (!valid) {
-			client.emit("message", "Invalid session");
+	if (!query.type || !query.license || !isValidType(query.type) || !isValidLicense(query.license)) {
+		return _reject(client, "Invalid request");
+	}
 
-			client.disconnect(true);
-
-			console.log(`${chalk.redBright("Invalid token")} ${chalk.gray("from " + client.handshake.address)}`);
-
-			return;
-		}
-
-		handleConnection(client, server.server, query.type, query.license);
-	});
+	handleConnection(client, server.server, query.type, query.license);
 });
+
+function _reject(pClient, pMessage) {
+	pClient.emit("message", pMessage);
+
+	pClient.disconnect(true);
+
+	console.log(`${chalk.redBright("Rejected connection")} ${chalk.gray("from " + pClient.handshake.address)}`);
+}
 
 server.listen(9999, () => {
 	console.log(chalk.blueBright("Listening for sockets..."));
