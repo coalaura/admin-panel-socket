@@ -23,7 +23,9 @@ export function getServerHealths() {
 
 		const data = {
 			database: server.database ? "up" : "down",
-			server: server.down ? "down" : "up"
+			server: server.down ? "down" : "up",
+
+			failed: server.down || !server.database || server.failed
 		};
 
 		healthData[serverName] = data;
