@@ -26,6 +26,15 @@ export function initDataRoutes(pApp) {
         });
     });
 
+    pApp.get("/data/:server/players/count", authenticate, async (req, resp) => {
+        const server = req.server;
+
+        resp.json({
+            status: true,
+            data: server.players.length
+        });
+    });
+
     pApp.get("/data/:server/uptime", authenticate, async (req, resp) => {
         const server = req.server,
         uptime = !server.down && server.uptime ? server.uptime : false;
