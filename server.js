@@ -73,6 +73,10 @@ async function initServer(pServer) {
 
 	const cfg = env.parsed;
 
+	if (cfg.NO_SOCKET) {
+		return;
+	}
+
 	const ips = cfg.OP_FW_SERVERS.split(",");
 
 	for (let i = 0; i < ips.length; i++) {
