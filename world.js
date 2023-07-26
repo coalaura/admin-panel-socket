@@ -33,13 +33,13 @@ export async function updateWorldJSON(pServer) {
 
 export async function checkIfServerIsUp(pServer) {
     try {
-        const data = await requestOpFwApi(`${pServer.url}/op-framework/api.json`, pServer.token);
+        const data = await requestOpFwApi(`${pServer.url}/op-framework/uptime.json`, pServer.token);
 
-        if (typeof data.serverVersion !== "string") {
+        if (typeof data.uptime !== "number") {
             return false;
         }
 
-        pServer.version = data.serverVersion;
+        pServer.uptime = data.uptime;
     } catch (e) {
         return false;
     }

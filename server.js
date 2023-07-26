@@ -102,7 +102,7 @@ async function initServer(pServer) {
 				failed: false,
 				down: false,
 
-				version: "",
+				uptime: 0,
 				players: []
 			};
 
