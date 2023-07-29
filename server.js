@@ -161,7 +161,7 @@ export function validateSession(pServer, pToken) {
 
 					try {
 						const data = JSON.parse(result.data),
-							name = data?.user?.player?.player_name;
+							name = data?.player_name;
 
 						if (name) {
 							resolve(name);
