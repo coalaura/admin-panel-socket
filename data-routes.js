@@ -1,4 +1,5 @@
 import { authenticate } from "./auth.js";
+import { isValidLicense } from "./data-loop.js";
 
 export function initDataRoutes(pApp) {
     pApp.get("/data/:server/players", authenticate, async (req, resp) => {
@@ -23,6 +24,49 @@ export function initDataRoutes(pApp) {
         resp.json({
             status: true,
             data: players
+        });
+    });
+
+    pApp.get("/data/:server/online/:players", authenticate, async (req, resp) => {
+        const players = req.params.players.split(",")
+            .filter(pPlayer => isValidLicense(pPlayer));
+
+        if (!players.length) {
+            return resp.json({
+                status: false,
+                error: "No players specified"
+            });
+        }
+
+        if (players.length > 20) {
+            return resp.json({
+                status: false,
+                error: "Too many players specified (max 20)"
+            });
+        }
+
+        const server = req.server;
+
+        const online = {};
+
+        for (const license of players) {
+            online[license] = false;
+        }
+
+        for (const player of server.players) {
+            const license = player.licenseIdentifier;
+
+            if (players.includes(license)) {
+                online[license] = {
+                    source: player.source,
+                    character: player.character ? player.character.id : false
+                };
+            }
+        }
+
+        resp.json({
+            status: true,
+            data: online
         });
     });
 
