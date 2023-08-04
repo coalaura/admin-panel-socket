@@ -47,7 +47,7 @@ export function initDataRoutes(pApp) {
 
         const server = req.server;
 
-        const online = {};
+        let online = {};
 
         for (const license of players) {
             online[license] = false;
@@ -62,6 +62,10 @@ export function initDataRoutes(pApp) {
                     character: player.character ? player.character.id : false
                 };
             }
+        }
+
+        if (players.length === 1) {
+            online = online[players[0]];
         }
 
         resp.json({
