@@ -64,10 +64,6 @@ export function initDataRoutes(pApp) {
             }
         }
 
-        if (players.length === 1) {
-            online = online[players[0]];
-        }
-
         resp.json({
             status: true,
             data: online
