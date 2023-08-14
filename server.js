@@ -103,7 +103,8 @@ async function initServer(pServer) {
 				down: false,
 
 				uptime: 0,
-				players: []
+				players: [],
+				models: {}
 			};
 
 			servers[serverName] = srv;

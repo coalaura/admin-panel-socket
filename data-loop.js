@@ -1,5 +1,6 @@
 import { updateWorldJSON, checkIfServerIsUp } from "./world.js";
 import { updateStaffJSON } from "./staff.js";
+import { updateModelsJSON } from "./models.js";
 import { countConnections, getActiveViewers } from "./client.js";
 import { getServer, validateSession, getServers } from "./server.js";
 
@@ -60,6 +61,26 @@ async function staffJSON(pServer, pDataCallback) {
     setTimeout(staffJSON, 3000, pServer, pDataCallback);
 }
 
+async function modelsJSON(pServer) {
+    let timeout = 6 * 60 * 60 * 1000;
+
+    if (!pServer.down && !pServer.failed) {
+        try {
+            await updateModelsJSON(pServer);
+        } catch (e) {
+            pServer.down = true;
+
+            console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/models.json")}: ${chalk.gray(e)}`);
+
+            lastError[pServer.server] = e;
+        }
+    } else {
+        timeout = 10 * 1000;
+    }
+
+    setTimeout(modelsJSON, timeout, pServer);
+}
+
 async function downChecker(pServer) {
     const isUp = await checkIfServerIsUp(pServer);
 
@@ -81,6 +102,8 @@ export function init(pDataCallback) {
         setTimeout(worldJSON, 1000, server, pDataCallback);
 
         setTimeout(staffJSON, 1000, server, pDataCallback);
+
+        setTimeout(modelsJSON, 1000, server);
 
         downChecker(server);
     }
