@@ -101,9 +101,28 @@ export function initDataRoutes(pApp) {
             });
         }
 
+        if (!models[hash]) {
+            const signedHash = _unsignedToSigned(hash);
+
+            if (models[signedHash]) {
+                hash = signedHash;
+            }
+        }
+
         resp.json({
             status: true,
-            data: models[hash] || false
+            data: {
+                name: models[hash] || false,
+                hash: hash
+            }
         });
     });
+}
+
+function _unsignedToSigned(pNumber) {
+    if (pNumber >= 2 ^ 31) {
+        return pNumber - 2 ^ 32;
+    }
+
+    return pNumber;
 }
