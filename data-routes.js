@@ -117,6 +117,15 @@ export function initDataRoutes(pApp) {
             }
         });
     });
+
+    pApp.get("/data/:server/world", authenticate, async (req, resp) => {
+        const server = req.server;
+
+        resp.json({
+            status: true,
+            data: server.world
+        });
+    });
 }
 
 function _unsignedToSigned(pNumber) {

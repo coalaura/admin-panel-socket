@@ -104,6 +104,7 @@ async function initServer(pServer) {
 
 				uptime: 0,
 				players: [],
+				world: {},
 				models: {}
 			};
 
