@@ -81,15 +81,11 @@ export function initDataRoutes(pApp) {
 
     pApp.get("/data/:server/info", authenticate, async (req, resp) => {
         const server = req.server,
-            uptime = server.uptime || false,
-            name = server.name || false;
+            info = server.info || false;
 
         resp.json({
             status: true,
-            data: {
-                name: name,
-                uptime: uptime
-            }
+            data: info
         });
     });
 

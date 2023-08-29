@@ -35,6 +35,7 @@ export async function updateWorldJSON(pServer) {
 export async function checkIfServerIsUp(pServer) {
     let uptime = false,
         name = false,
+        logo = false,
         success = false;
 
     try {
@@ -48,11 +49,18 @@ export async function checkIfServerIsUp(pServer) {
             name = data.communityName;
         }
 
+        if (typeof data.communityLogo === "string") {
+            logo = data.communityLogo;
+        }
+
         success = data.serverReady === true;
     } catch (e) {}
 
-    pServer.uptime = uptime;
-    pServer.name = name;
+    pServer.info = {
+        uptime: uptime,
+        name: name,
+        logo: logo
+    };
 
     return success;
 }

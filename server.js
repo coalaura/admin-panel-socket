@@ -103,8 +103,7 @@ async function initServer(pServer) {
 				down: false,
 
 				// Data cache
-				uptime: 0,
-				name: "",
+				info: false,
 				players: [],
 				world: {},
 				models: {}
