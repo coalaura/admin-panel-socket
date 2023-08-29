@@ -33,17 +33,28 @@ export async function updateWorldJSON(pServer) {
 }
 
 export async function checkIfServerIsUp(pServer) {
-    try {
-        const data = await requestOpFwApi(`${pServer.url}/op-framework/uptime.json`, pServer.token);
+    let uptime = false,
+        name = false,
+        success = false;
 
-        if (typeof data.uptime !== "number") {
-            return false;
+    try {
+        const data = await requestOpFwApi(`${pServer.url}/op-framework/variables.json`, pServer.token);
+
+        if (typeof data.serverUptimeMilliseconds === "number") {
+            uptime = data.serverUptimeMilliseconds;
         }
 
-        pServer.uptime = data.uptime;
-    } catch (e) {
-        return false;
-    }
+        if (typeof data.communityName === "string") {
+            name = data.communityName;
+        }
+
+        success = data.serverReady === true;
+    } catch (e) {}
+
+    pServer.uptime = uptime;
+    pServer.name = name;
+
+    return success;
 }
 
 function _compressPlayer(pPlayer, pDutyMap) {

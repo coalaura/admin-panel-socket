@@ -79,13 +79,17 @@ export function initDataRoutes(pApp) {
         });
     });
 
-    pApp.get("/data/:server/uptime", authenticate, async (req, resp) => {
+    pApp.get("/data/:server/info", authenticate, async (req, resp) => {
         const server = req.server,
-            uptime = !server.down && server.uptime ? server.uptime : false;
+            uptime = server.uptime || false,
+            name = server.name || false;
 
         resp.json({
             status: true,
-            data: uptime
+            data: {
+                name: name,
+                uptime: uptime
+            }
         });
     });
 
