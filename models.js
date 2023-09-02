@@ -5,8 +5,8 @@ export async function updateModelsJSON(pServer) {
 
     pServer.models = models.models;
 
-    for (const weaponHash in pServer.weapons) {
-        const weaponName = pServer.weapons[weaponHash];
+    for (const weaponHash in models.weapons) {
+        const weaponName = models.weapons[weaponHash];
 
         pServer.models[weaponHash] = weaponName;
     }
