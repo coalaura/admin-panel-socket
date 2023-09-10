@@ -91,8 +91,9 @@ export function initDataRoutes(pApp) {
 
     pApp.get("/data/:server/hash/:hash", authenticate, async (req, resp) => {
         const server = req.server,
-            models = server.models || {},
-            hash = parseInt(req.params.hash);
+            models = server.models || {};
+
+        let hash = parseInt(req.params.hash);
 
         if (!Number.isInteger(hash)) {
             return resp.json({
