@@ -1,6 +1,7 @@
 import {v4} from "uuid";
 import pako from "pako";
 import chalk from "chalk";
+import { pack } from "msgpackr";
 
 import {getLastServerError} from "./data-loop.js";
 
@@ -97,7 +98,7 @@ export function isAlreadyConnected(pServer, pType, pLicense) {
 }
 
 function _prepareData(pData) {
-    const json = JSON.stringify(pData);
+    const serialized = pack(pData);
 
-    return pako.gzip(json);
+    return pako.gzip(serialized);
 }
