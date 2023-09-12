@@ -73,6 +73,8 @@ async function modelsJSON(pServer) {
             console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/models.json")}: ${chalk.gray(e)}`);
 
             lastError[pServer.server] = e;
+
+            timeout = 10 * 1000;
         }
     } else {
         timeout = 10 * 1000;
