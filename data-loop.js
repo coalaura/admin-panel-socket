@@ -20,8 +20,6 @@ async function worldJSON(pServer, pDataCallback) {
             const start = Date.now(),
                 clientData = await updateWorldJSON(pServer);
 
-            timeout = Math.max(1000 - (Date.now() - start), 1);
-
             lastError[pServer.server] = null;
 
             pDataCallback("world", pServer.server, {
@@ -29,6 +27,8 @@ async function worldJSON(pServer, pDataCallback) {
                 i: clientData.instance || false,
                 v: getActiveViewers(pServer.server, "world")
             });
+
+            timeout = Math.max(1000 - (Date.now() - start), 1);
         } catch (e) {
             pServer.down = true;
 
