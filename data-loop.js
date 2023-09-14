@@ -20,7 +20,7 @@ async function worldJSON(pServer, pDataCallback) {
             const start = Date.now(),
                 clientData = await updateWorldJSON(pServer);
 
-            timeout = Math.max(1000 - (Date.now() - start), 250);
+            timeout = Math.max(1000 - (Date.now() - start), 1);
 
             lastError[pServer.server] = null;
 
