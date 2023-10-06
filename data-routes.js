@@ -93,29 +93,42 @@ export function initDataRoutes(pApp) {
         const server = req.server,
             models = server.models || {};
 
-        let hash = parseInt(req.params.hash);
+        const result = {},
+            hashes = req.params.hash.split(",");
 
-        if (!Number.isInteger(hash)) {
+        if (!hashes.length) {
             return resp.json({
                 status: false,
-                error: "Invalid hash"
+                error: "No hashes specified"
             });
         }
 
-        if (!models[hash]) {
-            const signedHash = _unsignedToSigned(hash);
+        for (let hash of hashes) {
+            hash = parseInt(hash);
 
-            if (models[signedHash]) {
-                hash = signedHash;
+            if (!Number.isInteger(hash)) continue;
+
+            let search = hash;
+
+            if (!models[search]) {
+                const signedHash = _unsignedToSigned(search);
+
+                if (models[signedHash]) {
+                    search = signedHash;
+                }
             }
+
+            const name = models[search] || false;
+
+            result[hash] = name ? {
+                name: name,
+                hash: search
+            } : false;
         }
 
         resp.json({
             status: true,
-            data: {
-                name: models[hash] || false,
-                hash: hash
-            }
+            data: result
         });
     });
 
