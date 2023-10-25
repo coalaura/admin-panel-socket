@@ -14,7 +14,7 @@ export async function trackHistoricData(pServer, pPlayer) {
 
     const coords = pPlayer.coords,
         prefix = `${moment().unix()}`,
-        entry = `${character.id},${formatNumber(coords.x, 1)},${formatNumber(coords.y, 1)},${formatNumber(coords.z, 1)},${formatNumber(coords.w, 1)},${character.flags},${pPlayer.flags}`;
+        entry = `${character.id},${formatNumber(coords.x, 1)},${formatNumber(coords.y, 1)},${formatNumber(coords.z, 1)},${formatNumber(coords.w, 1)},${character.flags},${pPlayer.flags},${Math.floor(character.speed}`;
 
     await _ensureHistoricEntry(pServer, pPlayer, prefix, entry);
 }
@@ -33,7 +33,7 @@ async function _ensureHistoricEntry(pServer, pPlayer, pPrefix, pEntry) {
     }
 
     if (!existsSync(path)) {
-        writeFileSync(path, `Timestamp,Character ID,X,Y,Z,Heading,Flags\n${pPrefix},${pEntry}`);
+        writeFileSync(path, `Timestamp,Character ID,X,Y,Z,Heading,Flags,Speed\n${pPrefix},${pEntry}`);
     } else {
         const key = `${pServer.server}_${license}`,
             lastEntry = key in LastEntries ? LastEntries[key] : await readLastHistoricEntry(path);
