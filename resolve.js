@@ -202,7 +202,7 @@ function _parseHistoricEntry(pLine) {
         value = match && match.value ? match.value : false;
 
     if (value) {
-        const speed = match[13]?.replace(",", "") || 0;
+        const speed = match[13]?.substr(1) || "0";
 
         return {
             timestamp: parseInt(value[1]),
@@ -211,7 +211,7 @@ function _parseHistoricEntry(pLine) {
             y: parseFloat(value[5]),
             z: parseFloat(value[7]),
             heading: parseFloat(value[9]),
-            speed: parseFloat(speed),
+            speed: parseInt(speed),
             flags: parseInt(value[11]),
             userFlags: parseInt(value[12])
         };
