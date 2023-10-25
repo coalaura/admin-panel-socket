@@ -32,6 +32,7 @@ export async function resolveHistoricData(pServer, pLicense, pFrom, pTill) {
                 x: parsed.x,
                 y: parsed.y,
                 z: parsed.z,
+                s: parsed.speed || 0,
                 i: flags.invisible,
                 c: flags.invincible,
                 f: flags.frozen,
@@ -196,11 +197,13 @@ function _parseCharacterFlags(pFlags) {
 }
 
 function _parseHistoricEntry(pLine) {
-    const regex = /^(\d+),(\d+),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(\d+),(\d+)$/gm,
+    const regex = /^(\d+),(\d+),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(\d+),(\d+)(,\d+)?$/gm,
         match = pLine.matchAll(regex).next(),
         value = match && match.value ? match.value : false;
 
     if (value) {
+        const speed = match[13]?.replace(",", "") || 0;
+
         return {
             timestamp: parseInt(value[1]),
             cid: parseInt(value[2]),
@@ -208,6 +211,7 @@ function _parseHistoricEntry(pLine) {
             y: parseFloat(value[5]),
             z: parseFloat(value[7]),
             heading: parseFloat(value[9]),
+            speed: parseFloat(speed),
             flags: parseInt(value[11]),
             userFlags: parseInt(value[12])
         };
