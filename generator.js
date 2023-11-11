@@ -1,4 +1,4 @@
-import { mkdir, writeFile, rmdir } from "fs/promises";
+import { mkdir, writeFile, rmdir, chmod } from "fs/promises";
 import { existsSync } from "fs";
 import { join } from "path";
 
@@ -11,15 +11,33 @@ export async function regenerateWorld(pServer) {
     }
 
     // count.json
-    await writeFile(join(dir, "count.json"), JSON.stringify({
-        players: pServer.players.length
-    }));
+    {
+        const json = join(dir, "count.json");
+
+        await writeFile(json, JSON.stringify({
+            players: pServer.players.length
+        }));
+
+        await chmod(json, 0o777);
+    }
 
     // info.json
-    await writeFile(join(dir, "info.json"), JSON.stringify(pServer.info));
+    {
+        const json = join(dir, "info.json");
+
+        await writeFile(json, JSON.stringify(pServer.info));
+
+        await chmod(json, 0o777);
+    }
 
     // world.json
-    await writeFile(join(dir, "world.json"), JSON.stringify(pServer.world));
+    {
+        const json = join(dir, "world.json");
+
+        await writeFile(json, JSON.stringify(pServer.world));
+
+        await chmod(json, 0o777);
+    }
 }
 
 export async function clearGenerated(pServer) {
