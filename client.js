@@ -1,9 +1,9 @@
-import {v4} from "uuid";
+import { v4 } from "uuid";
 import pako from "pako";
 import chalk from "chalk";
 import { pack } from "msgpackr";
 
-import {getLastServerError} from "./data-loop.js";
+import { getLastServerError } from "./data-loop.js";
 
 let connections = {};
 
@@ -13,7 +13,9 @@ export function handleConnection(pClient, pServer, pType, pLicense) {
         client: pClient,
         server: pServer,
         type: pType,
-        license: pLicense
+        license: pLicense,
+
+        paused: false
     };
 
     connections[self.id] = self;
@@ -26,15 +28,25 @@ export function handleConnection(pClient, pServer, pType, pLicense) {
         console.log(`${chalk.redBright("Disconnected")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(self.server + "/" + self.type)} - ${chalk.black(chalk.bgYellow(countConnections(self.server, self.type)))}`);
     });
 
-	const error = getLastServerError(pServer);
+    const error = getLastServerError(pServer);
 
-	if (error) {
-		const data = _prepareData({
-			error: error
-		});
+    if (error) {
+        const data = _prepareData({
+            error: error
+        });
 
-		self.client.emit("message", Uint8Array.from(data).buffer);
-	}
+        self.client.emit("message", Uint8Array.from(data).buffer);
+    }
+
+    self.client.on("pause", pPause => {
+        self.paused = pPause;
+
+        if (self.paused) {
+            console.log(`${chalk.yellowBright("Paused")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(self.server + "/" + self.type)}`);
+        } else {
+            console.log(`${chalk.greenBright("Resumed")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(self.server + "/" + self.type)}`);
+        }
+    });
 }
 
 export function getActiveViewers(pServer, pType) {
@@ -61,7 +73,7 @@ export function handleDataUpdate(pType, pServer, pData) {
 
         const client = connections[id];
 
-        if (client.type === pType && client.server === pServer) {
+        if (!client.paused && client.type === pType && client.server === pServer) {
             client.client.emit("message", Uint8Array.from(pData).buffer);
         }
     }
