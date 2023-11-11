@@ -2,6 +2,31 @@ import { authenticate } from "./auth.js";
 import { isValidLicense } from "./data-loop.js";
 
 export function initDataRoutes(pApp) {
+    pApp.get("/data/:server/players", authenticate, async (req, resp) => {
+        const server = req.server;
+
+        const players = server.players.map(pPlayer => {
+            const character = pPlayer.character;
+
+            return {
+                source: pPlayer.source,
+                name: pPlayer.name,
+                license: pPlayer.licenseIdentifier,
+                flags: pPlayer.flags,
+                character: character ? {
+                    id: character.id,
+                    name: character.fullName,
+                    flags: character.flags
+                } : false
+            };
+        });
+
+        resp.json({
+            status: true,
+            data: players
+        });
+    });
+
     pApp.get("/data/:server/online/:players", authenticate, async (req, resp) => {
         const players = req.params.players.split(",")
             .filter(pPlayer => isValidLicense(pPlayer));

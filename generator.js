@@ -10,28 +10,6 @@ export async function regenerateWorld(pServer) {
         await mkdir(dir, { recursive: true });
     }
 
-    // players.json
-    const players = pServer.players.map(pPlayer => {
-        const character = pPlayer.character;
-
-        return {
-            source: pPlayer.source,
-            name: pPlayer.name,
-            license: pPlayer.licenseIdentifier,
-            flags: pPlayer.flags,
-            character: character ? {
-                id: character.id,
-                name: character.fullName,
-                flags: character.flags
-            } : false
-        };
-    });
-
-    await writeFile(join(dir, "players.json"), JSON.stringify(players));
-
-    // world.json
-    await writeFile(join(dir, "world.json"), JSON.stringify(pServer.world));
-
     // count.json
     await writeFile(join(dir, "count.json"), JSON.stringify({
         players: pServer.players.length
@@ -39,6 +17,9 @@ export async function regenerateWorld(pServer) {
 
     // info.json
     await writeFile(join(dir, "info.json"), JSON.stringify(pServer.info));
+
+    // world.json
+    await writeFile(join(dir, "world.json"), JSON.stringify(pServer.world));
 }
 
 export async function clearGenerated(pServer) {
