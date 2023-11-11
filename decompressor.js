@@ -5,18 +5,17 @@ function _encodeIntegerAlphabetically(pCurrent) {
 		return "a";
 	}
 
-	let keyString = "";
+	let characters = [];
 
 	while (newKey > 0) {
-		let quotient = Math.floor(newKey / 26);
-		let remainder = newKey % 26;
+		const remainder = newKey % 26;
 
-		keyString = String.fromCharCode(remainder + 97) + keyString;
+		characters.push(String.fromCharCode(remainder + 97));
 
-		newKey = quotient;
+		newKey = Math.floor(newKey / 26);
 	}
 
-	return keyString;
+	return characters.reverse().join('');
 }
 
 function _reconstructValue(pValue) {
