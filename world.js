@@ -1,8 +1,9 @@
-import {requestOpFwApi} from "./http.js";
-import {formatNumber} from "./helper.js";
-import {loadOnDutyData} from "./duty.js";
-import {trackHistoricData} from "./historic.js";
-import {decompressPlayers} from "./decompressor.js";
+import { requestOpFwApi } from "./http.js";
+import { formatNumber } from "./helper.js";
+import { loadOnDutyData } from "./duty.js";
+import { trackHistoricData } from "./historic.js";
+import { decompressPlayers } from "./decompressor.js";
+import { regenerateWorld } from "./generator.js";
 import chalk from "chalk";
 
 export async function updateWorldJSON(pServer) {
@@ -25,6 +26,8 @@ export async function updateWorldJSON(pServer) {
 
     pServer.players = data.players;
     pServer.world = data.world;
+
+    regenerateWorld(pServer);
 
     return {
         players: clientData,
@@ -54,7 +57,7 @@ export async function checkIfServerIsUp(pServer) {
         }
 
         success = data.serverReady === true;
-    } catch (e) {}
+    } catch (e) { }
 
     pServer.info = {
         uptime: uptime,

@@ -3,6 +3,7 @@ import { updateStaffJSON } from "./staff.js";
 import { updateModelsJSON } from "./models.js";
 import { countConnections, getActiveViewers } from "./client.js";
 import { getServer, validateSession, getServers } from "./server.js";
+import { clearGenerated } from "./generator.js";
 
 import chalk from "chalk";
 
@@ -35,6 +36,8 @@ async function worldJSON(pServer, pDataCallback) {
             console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/world.json")}: ${chalk.gray(e)}`);
 
             lastError[pServer.server] = e;
+
+            clearGenerated(pServer);
         }
     }
 
