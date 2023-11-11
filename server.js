@@ -81,11 +81,13 @@ async function initServer(pServer) {
 	const ips = cfg.OP_FW_SERVERS.split(",");
 
 	for (let i = 0; i < ips.length; i++) {
-		const serverName = pServer + (i > 0 ? 's' + (i + 1) : '');
+		const fullName = pServer + 's' + (i + 1),
+			serverName = i === 0 ? pServer : fullName;
 
 		try {
 			const srv = {
 				server: serverName,
+				fullName: fullName,
 				url: getServerUrl(ips[i]),
 				token: cfg.OP_FW_TOKEN,
 

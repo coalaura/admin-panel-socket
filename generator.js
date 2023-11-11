@@ -3,7 +3,7 @@ import { existsSync } from "fs";
 import { join } from "path";
 
 export async function regenerateWorld(pServer) {
-    const name = pServer.server,
+    const name = pServer.fullName,
         dir = join("generated", name);
 
     if (!existsSync(dir)) {

@@ -1,3 +1,5 @@
+import { resolve } from "path";
+import { existsSync } from "fs";
 import { authenticate } from "./auth.js";
 import { isValidLicense } from "./data-loop.js";
 
@@ -111,6 +113,25 @@ export function initDataRoutes(pApp) {
             status: true,
             data: result
         });
+    });
+
+    // Fallback for non-nginx setups
+    // Serve generated files in /generated
+    pApp.get("/generated/:server/:file", async (req, resp) => {
+        const server = req.params.server?.replace(/[^a-z0-9]/gi, ""),
+            file = req.params.file?.replace(/[^a-z0-9.]/gi, "");
+
+        if (!server || !file) {
+            return resp.status(404).send("Not found");
+        }
+
+        const path = resolve(`generated/${server}/${file}`);
+
+        if (!existsSync(path)) {
+            return resp.status(404).send("Not found");
+        }
+
+        resp.sendFile(path);
     });
 }
 
