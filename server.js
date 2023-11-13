@@ -2,7 +2,7 @@ import config from "./_config.json" assert {type: "json"};
 
 import { join } from "path";
 import * as dotenv from "dotenv";
-import { createPool } from "mysql";
+import { createPool } from "mysql2";
 import chalk from "chalk";
 
 let servers = {};
