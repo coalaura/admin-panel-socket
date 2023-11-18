@@ -2,8 +2,8 @@ import { formatNumber, readLastHistoricEntry } from "./helper.js";
 
 import moment from "moment";
 import { join, dirname } from "path";
-import { existsSync } from "node:fs";
-import { appendFile, mkdir } from "node:fs/promises";
+import { existsSync } from "fs";
+import { appendFile, mkdir } from "fs/promises";
 
 const LastEntries = {};
 
