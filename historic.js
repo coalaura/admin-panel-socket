@@ -1,5 +1,6 @@
 import { formatNumber, readLastHistoricEntry } from "./helper.js";
 
+import * as Bun from "bun";
 import moment from "moment";
 import { join, dirname } from "path";
 import { existsSync } from "fs";

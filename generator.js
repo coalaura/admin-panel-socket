@@ -1,3 +1,4 @@
+import * as Bun from "bun";
 import { mkdir, rmdir, chmod } from "fs/promises";
 import { existsSync } from "fs";
 import { join } from "path";

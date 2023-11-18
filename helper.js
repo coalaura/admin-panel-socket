@@ -1,6 +1,7 @@
-import {createInterface} from "readline";
-import {Writable} from "stream";
-import {execSync} from "child_process";
+import * as Bun from "bun";
+import { createInterface } from "readline";
+import { Writable } from "stream";
+import { execSync } from "child_process";
 
 export function findFiles(pPath, pStartWith) {
     try {
@@ -39,29 +40,29 @@ export function formatNumber(pNumber, pDecimals) {
 }
 
 export function formatTime(pMilliseconds) {
-	let seconds = Math.floor(pMilliseconds / 1000);
+    let seconds = Math.floor(pMilliseconds / 1000);
 
-	let minutes = Math.floor(seconds / 60);
-	seconds = seconds % 60;
+    let minutes = Math.floor(seconds / 60);
+    seconds = seconds % 60;
 
-	let hours = Math.floor(minutes / 60);
-	minutes = minutes % 60;
+    let hours = Math.floor(minutes / 60);
+    minutes = minutes % 60;
 
-	let time = [];
+    let time = [];
 
-	if (hours > 0) {
-		time.push(hours + "h");
-	}
+    if (hours > 0) {
+        time.push(hours + "h");
+    }
 
-	if (minutes > 0) {
-		time.push(minutes + "m");
-	}
+    if (minutes > 0) {
+        time.push(minutes + "m");
+    }
 
-	if (seconds > 0 || time.length === 0) {
-		time.push(seconds + "s");
-	}
+    if (seconds > 0 || time.length === 0) {
+        time.push(seconds + "s");
+    }
 
-	return time.join("");
+    return time.join("");
 }
 
 export function readLines(pPath, pCallback) {
