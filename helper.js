@@ -1,4 +1,4 @@
-import * as Bun from "bun";
+import { createReadStream } from "fs";
 import { createInterface } from "readline";
 import { Writable } from "stream";
 import { execSync } from "child_process";
@@ -66,7 +66,7 @@ export function formatTime(pMilliseconds) {
 }
 
 export function readLines(pPath, pCallback) {
-    let inStream = Bun.file(pPath).stream(),
+    let inStream = createReadStream(pPath),
         outStream = new Writable();
 
     return new Promise((resolve, reject) => {
