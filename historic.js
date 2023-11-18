@@ -2,8 +2,8 @@ import { formatNumber, readLastHistoricEntry } from "./helper.js";
 
 import moment from "moment";
 import { join, dirname } from "path";
-import { mkdir, appendFile } from "node:fs";
-import { existsSync } from "fs";
+import { existsSync } from "node:fs";
+import { appendFile, mkdir } from "node:fs/promises";
 
 const LastEntries = {};
 
@@ -28,7 +28,7 @@ async function _ensureHistoricEntry(pServer, pPlayer, pPrefix, pEntry) {
         dir = dirname(path);
 
     if (!existsSync(dir)) {
-        mkdir(dir, {
+        await mkdir(dir, {
             recursive: true
         });
     }
@@ -47,14 +47,6 @@ async function _ensureHistoricEntry(pServer, pPlayer, pPrefix, pEntry) {
             }
         }
 
-        await (new Promise((pResolve, pReject) => {
-            appendFile(path, `\n${pPrefix},${pEntry}`, (pError) => {
-                if (pError) {
-                    pReject(pError);
-                } else {
-                    pResolve();
-                }
-            });
-        }));
+        await appendFile(path, `\n${pPrefix},${pEntry}`);
     }
 }
