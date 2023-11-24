@@ -1,10 +1,9 @@
 import { formatNumber, readLastHistoricEntry } from "./helper.js";
 
-import * as Bun from "bun";
 import moment from "moment";
 import { join, dirname } from "path";
 import { existsSync } from "fs";
-import { appendFile, mkdir } from "fs/promises";
+import { appendFile, mkdir, writeFile } from "fs/promises";
 
 const LastEntries = {};
 
@@ -35,7 +34,7 @@ async function _ensureHistoricEntry(pServer, pPlayer, pPrefix, pEntry) {
     }
 
     if (!existsSync(path)) {
-        await Bun.write(path, `Timestamp,Character ID,X,Y,Z,Heading,Flags,Speed\n${pPrefix},${pEntry}`);
+        await writeFile(path, `Timestamp,Character ID,X,Y,Z,Heading,Flags,Speed\n${pPrefix},${pEntry}`);
     } else {
         const key = `${pServer.server}_${license}`,
             lastEntry = key in LastEntries ? LastEntries[key] : await readLastHistoricEntry(path);

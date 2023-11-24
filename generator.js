@@ -1,5 +1,4 @@
-import * as Bun from "bun";
-import { mkdir, rmdir, chmod } from "fs/promises";
+import { mkdir, rmdir, chmod, writeFile } from "fs/promises";
 import { existsSync } from "fs";
 import { join } from "path";
 
@@ -15,7 +14,7 @@ export async function regenerateWorld(pServer) {
     {
         const json = join(dir, "count.json");
 
-        await Bun.write(json, JSON.stringify({
+        await writeFile(json, JSON.stringify({
             players: pServer.players.length
         }));
 
@@ -26,7 +25,7 @@ export async function regenerateWorld(pServer) {
     {
         const json = join(dir, "info.json");
 
-        await Bun.write(json, JSON.stringify(pServer.info));
+        await writeFile(json, JSON.stringify(pServer.info));
 
         await chmod(json, 0o777);
     }
@@ -35,7 +34,7 @@ export async function regenerateWorld(pServer) {
     {
         const json = join(dir, "world.json");
 
-        await Bun.write(json, JSON.stringify(pServer.world));
+        await writeFile(json, JSON.stringify(pServer.world));
 
         await chmod(json, 0o777);
     }
