@@ -34,7 +34,7 @@ export function getServerHealths() {
 	return healthData;
 }
 
-async function healthCheck(pServerName) {
+async function healthCheck(pServerName, pThrow = false) {
 	const server = servers[pServerName];
 
 	if (!server) {
@@ -51,6 +51,8 @@ async function healthCheck(pServerName) {
 		server.database = true;
 	} catch(e) {
 		server.database = false;
+
+		if (pThrow) throw e;
 
 		console.error(e.message);
 		console.log(chalk.redBright(`Failed database health-check for ${pServerName}!`));
