@@ -52,7 +52,7 @@ async function healthCheck(pServerName) {
 	} catch(e) {
 		server.database = false;
 
-		console.error(e);
+		console.error(e.message);
 		console.log(chalk.redBright(`Failed database health-check for ${pServerName}!`));
 	}
 
