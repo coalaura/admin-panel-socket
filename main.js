@@ -3,6 +3,7 @@ import { handleConnection, handleDataUpdate } from "./client.js";
 import { initRoutes } from "./routes.js";
 import { initDataRoutes } from "./data-routes.js";
 import { initServers } from "./server.js";
+import { startTwitchUpdateLoop } from "./twitch.js";
 import { cleanupHistoricData } from "./cleanup.js";
 import { checkAuth } from "./auth.js";
 
@@ -13,6 +14,7 @@ import chalk from "chalk";
 import cors from "cors";
 
 await initServers();
+startTwitchUpdateLoop();
 
 init(handleDataUpdate);
 

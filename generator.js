@@ -40,6 +40,14 @@ export async function regenerateWorld(pServer) {
     }
 }
 
+export async function regenerateStreamers(pStreamers) {
+    const path = join("generated", "streamers.json");
+
+    await writeFile(path, JSON.stringify(pStreamers));
+
+    await chmod(path, 0o777);
+}
+
 export async function clearGenerated(pServer) {
     const name = pServer.server,
         dir = join("generated", name);

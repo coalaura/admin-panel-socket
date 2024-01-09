@@ -133,6 +133,22 @@ export function initDataRoutes(pApp) {
 
         resp.sendFile(path);
     });
+
+    pApp.get("/generated/:file", async (req, resp) => {
+        const file = req.params.file?.replace(/[^a-z0-9.]/gi, "");
+
+        if (!file || !file.endsWith(".json")) {
+            return resp.status(404).send("Not found");
+        }
+
+        const path = resolve(`generated/${file}`);
+
+        if (!existsSync(path)) {
+            return resp.status(404).send("Not found");
+        }
+
+        resp.sendFile(path);
+    });
 }
 
 function _unsignedToSigned(pNumber) {
