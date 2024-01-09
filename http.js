@@ -43,7 +43,7 @@ function getInstance(pUrl) {
         });
 
         instances[origin] = axios.create({
-            timeout: 2000,
+            timeout: 3000,
             httpAgent: agent,
         });
     }
