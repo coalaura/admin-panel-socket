@@ -56,7 +56,7 @@ async function healthCheck(pServerName) {
 		console.log(chalk.red(e.message));
 	}
 
-	setTimeout(healthCheck, 10000, pServerName);
+	setTimeout(healthCheck, 30000, pServerName);
 }
 
 async function initServer(pServer) {
