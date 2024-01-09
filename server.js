@@ -34,7 +34,7 @@ export function getServerHealths() {
 	return healthData;
 }
 
-async function healthCheck(pServerName, pThrow = false) {
+async function healthCheck(pServerName) {
 	const server = servers[pServerName];
 
 	if (!server) {
@@ -52,10 +52,8 @@ async function healthCheck(pServerName, pThrow = false) {
 	} catch(e) {
 		server.database = false;
 
-		if (pThrow) throw e;
-
-		console.error(e.message);
 		console.log(chalk.redBright(`Failed database health-check for ${pServerName}!`));
+		console.log(chalk.red(e.message));
 	}
 
 	setTimeout(healthCheck, 10000, pServerName);
@@ -116,6 +114,10 @@ async function initServer(pServer) {
 
 			servers[serverName] = srv;
 
+			// This throws an error if it fails
+			await testConnection(srv);
+
+			// This just starts the health-check loop
 			await healthCheck(serverName);
 
 			console.log(chalk.greenBright(`works!`));
