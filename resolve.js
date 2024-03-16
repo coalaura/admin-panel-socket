@@ -124,6 +124,7 @@ export async function resolveTimestamp(pServer, pTimestamp) {
 
                 if (flags.spawned) {
                     data[pFile.replace(".csv", "")] = {
+                        _: pParsed.cid,
                         x: pParsed.x,
                         y: pParsed.y,
                         z: pParsed.z,
