@@ -129,10 +129,8 @@ export async function resolveTimestamp(pServer, pTimestamp) {
                         y: pParsed.y,
                         z: pParsed.z,
                         s: pParsed.speed || 0,
-                        i: flags.invisible,
-                        c: flags.invincible,
-                        f: flags.frozen,
-                        d: flags.dead
+
+                        cf: pParsed.flags
                     };
                 }
 
