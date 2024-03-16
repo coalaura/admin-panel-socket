@@ -128,7 +128,9 @@ export async function resolveTimestamp(pServer, pTimestamp) {
                         x: pParsed.x,
                         y: pParsed.y,
                         z: pParsed.z,
-                        s: pParsed.speed || 0,
+
+                        h: pParsed.heading,
+                        s: pParsed.speed,
 
                         cf: pParsed.flags,
                         uf: pParsed.userFlags
