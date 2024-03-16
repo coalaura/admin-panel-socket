@@ -34,7 +34,7 @@ async function _ensureHistoricEntry(pServer, pPlayer, pPrefix, pEntry) {
     }
 
     if (!existsSync(path)) {
-        await writeFile(path, `Timestamp,Character ID,X,Y,Z,Heading,Flags,Speed\n${pPrefix},${pEntry}`);
+        await writeFile(path, `Timestamp,Character ID,X,Y,Z,Heading,Character Flags,Player Flags,Speed\n${pPrefix},${pEntry}`);
     } else {
         const key = `${pServer.server}_${license}`,
             lastEntry = key in LastEntries ? LastEntries[key] : await readLastHistoricEntry(path);

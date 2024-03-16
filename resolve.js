@@ -199,13 +199,11 @@ function _parseCharacterFlags(pFlags) {
 }
 
 function _parseHistoricEntry(pLine) {
-    const regex = /^(\d+),(\d+),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(\d+),(\d+)(,\d+(\.\d+)?)?$/gm,
+    const regex = /^(\d+),(\d+),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(\d+),(\d+),(\d+(\.\d+)?)$/gm,
         match = pLine.matchAll(regex).next(),
         value = match && match.value ? match.value : false;
 
     if (value) {
-        const speed = value[13]?.substr(1) || "0";
-
         return {
             timestamp: parseInt(value[1]),
             cid: parseInt(value[2]),
@@ -213,7 +211,7 @@ function _parseHistoricEntry(pLine) {
             y: parseFloat(value[5]),
             z: parseFloat(value[7]),
             heading: parseFloat(value[9]),
-            speed: parseFloat(speed),
+            speed: parseFloat(value[13]),
             flags: parseInt(value[11]),
             userFlags: parseInt(value[12])
         };
