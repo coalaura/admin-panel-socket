@@ -18,14 +18,21 @@ export function startTwitchUpdateLoop() {
 
 async function updateTwitchData(pApi, pStreamers) {
     const data = (await Promise.all(pStreamers.map(async streamer => {
-        const avatar = await getTwitchStreamer(pApi, streamer);
+        try {
+            const avatar = await getTwitchStreamer(pApi, streamer);
 
-        return {
-            name: streamer,
-            live: !!avatar,
-            avatar: avatar
-        };
-    }))).filter(pStreamer => pStreamer.live);
+            return {
+                name: streamer,
+                live: !!avatar,
+                avatar: avatar
+            };
+        } catch (e) {
+            console.log(chalk.redBright(`Failed to resolve streamer ${streamer}!`));
+		    console.log(chalk.red(e.message));
+        }
+
+        return null;
+    }))).filter(pStreamer => pStreamer && pStreamer.live);
 
     await regenerateStreamers(data);
 
