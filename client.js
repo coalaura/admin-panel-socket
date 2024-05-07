@@ -7,13 +7,13 @@ import { getLastServerError } from "./data-loop.js";
 
 let connections = {};
 
-export function handleConnection(pClient, pServer, pType, pLicense) {
+export function handleConnection(client, server, type, license) {
     const self = {
         id: v4(),
-        client: pClient,
-        server: pServer,
-        type: pType,
-        license: pLicense,
+        client: client,
+        server: server,
+        type: type,
+        license: license,
 
         paused: false
     };
@@ -28,7 +28,7 @@ export function handleConnection(pClient, pServer, pType, pLicense) {
         console.log(`${chalk.redBright("Disconnected")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(self.server + "/" + self.type)} - ${chalk.black(chalk.bgYellow(countConnections(self.server, self.type)))}`);
     });
 
-    const error = getLastServerError(pServer);
+    const error = getLastServerError(server);
 
     if (error) {
         const data = _prepareData({
@@ -49,37 +49,43 @@ export function handleConnection(pClient, pServer, pType, pLicense) {
     });
 }
 
-export function getActiveViewers(pServer, pType) {
+function getActiveViewers(server, type) {
     let viewers = [];
 
     for (const id in connections) {
         if (Object.hasOwnProperty(id)) continue;
 
-        const client = connections[id];
+        const client = connections[id],
+            license = client.license;
 
-        if (client.type === pType && client.server === pServer && !viewers.includes(client.license)) {
-            viewers.push(client.license);
+        if (client.type === type && client.server === server && !viewers.includes(license)) {
+            viewers.push(license);
         }
     }
 
     return viewers;
 }
 
-export function handleDataUpdate(pType, pServer, pData) {
-    pData = _prepareData(pData);
+export function handleDataUpdate(type, server, data) {
+    // We have to add the viewer count here, since the slaves don't know about it
+    if (type === "world") {
+        data.v = getActiveViewers(server, "world");
+    }
+
+    data = _prepareData(data);
 
     for (const id in connections) {
         if (Object.hasOwnProperty(id)) continue;
 
         const client = connections[id];
 
-        if (!client.paused && client.type === pType && client.server === pServer) {
-            client.client.emit("message", Uint8Array.from(pData).buffer);
+        if (!client.paused && client.type === type && client.server === server) {
+            client.client.emit("message", Uint8Array.from(data).buffer);
         }
     }
 }
 
-export function countConnections(pServer, pType) {
+export function countConnections(server, type) {
     let total = 0;
 
     for (const id in connections) {
@@ -87,26 +93,12 @@ export function countConnections(pServer, pType) {
 
         const client = connections[id];
 
-        if (client.type === pType && client.server === pServer) {
+        if (client.type === type && client.server === server) {
             total++;
         }
     }
 
     return total;
-}
-
-export function isAlreadyConnected(pServer, pType, pLicense) {
-    for (const id in connections) {
-        if (Object.hasOwnProperty(id)) continue;
-
-        const client = connections[id];
-
-        if (client.type === pType && client.server === pServer && client.license === pLicense) {
-            return true;
-        }
-    }
-
-    return false;
 }
 
 function _prepareData(pData) {

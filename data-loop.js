@@ -1,147 +1,94 @@
-import { updateWorldJSON, checkIfServerIsUp } from "./world.js";
-import { updateStaffJSON } from "./staff.js";
-import { updateModelsJSON } from "./models.js";
-import { countConnections, getActiveViewers } from "./client.js";
-import { getServer, validateSession, getServers } from "./server.js";
-import { clearGenerated } from "./generator.js";
-
 import chalk from "chalk";
 
-const lastError = {};
+import { updateWorldJSON, checkIfServerIsUp } from "./data.js";
+import { updateStaffJSON } from "./staff.js";
+import { getServers } from "./server.js";
 
-export function getLastServerError(pServer) {
-	return lastError[pServer];
+let lastErrors = {};
+
+export function getLastServerError(server) {
+	return lastErrors[server];
 }
 
-async function worldJSON(pServer, pDataCallback) {
+async function worldJSON(server) {
     let timeout = 1000;
 
-    if (!pServer.down && !pServer.failed) {
+    if (!server.down && !server.failed) {
         try {
             const start = Date.now(),
-                clientData = await updateWorldJSON(pServer);
+                clientData = await updateWorldJSON(server);
 
-            lastError[pServer.server] = null;
+            lastErrors[server.server] = null;
 
-            pDataCallback("world", pServer.server, {
-                p: clientData.players,
-                i: clientData.instance || false,
-                v: getActiveViewers(pServer.server, "world")
-            });
+            process.send({
+                type: "world",
+                server: server.server,
+                data: {
+                    p: clientData.players,
+                    i: clientData.instance || false
+                }
+            })
 
             timeout = Math.max(1000 - (Date.now() - start), 1);
         } catch (e) {
-            pServer.down = true;
+            server.down = true;
 
-            console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/world.json")}: ${chalk.gray(e)}`);
+            console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(server.server + "/world.json")}: ${chalk.gray(e)}`);
 
-            lastError[pServer.server] = e;
-
-            clearGenerated(pServer);
+            lastErrors[server.server] = e;
         }
     }
 
-    setTimeout(worldJSON, timeout, pServer, pDataCallback);
+    setTimeout(worldJSON, timeout, server);
 }
 
-async function staffJSON(pServer, pDataCallback) {
-    if (!pServer.down && !pServer.failed) {
+async function staffJSON(server) {
+    if (!server.down && !server.failed) {
         try {
-            if (countConnections(pServer.server, "staff") > 0) {
-                const clientData = await updateStaffJSON(pServer);
+            const clientData = await updateStaffJSON(server);
 
-                pDataCallback("staff", pServer.server, clientData);
-            }
+            process.send({
+                type: "staff",
+                server: server.server,
+                data: clientData
+            });
         } catch (e) {
-            pServer.down = true;
+            server.down = true;
 
-            console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/staffChat.json")}: ${chalk.gray(e)}`);
+            console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(server.server + "/staffChat.json")}: ${chalk.gray(e)}`);
 
-            lastError[pServer.server] = e;
+            lastErrors[server.server] = e;
         }
     }
 
-    setTimeout(staffJSON, 3000, pServer, pDataCallback);
+    setTimeout(staffJSON, 3000, server);
 }
 
-async function modelsJSON(pServer) {
-    let timeout = 6 * 60 * 60 * 1000;
+async function downChecker(server) {
+    const isUp = await checkIfServerIsUp(server);
 
-    if (!pServer.down && !pServer.failed) {
-        try {
-            await updateModelsJSON(pServer);
-        } catch (e) {
-            pServer.down = true;
+    if (server.down && isUp) {
+        console.error(`${chalk.greenBright("Server back up")} ${chalk.cyanBright(server.server)}`);
 
-            console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(pServer.server + "/models.json")}: ${chalk.gray(e)}`);
-
-            lastError[pServer.server] = e;
-
-            timeout = 10 * 1000;
-        }
-    } else {
-        timeout = 10 * 1000;
+        server.down = false;
     }
 
-    setTimeout(modelsJSON, timeout, pServer);
+    setTimeout(downChecker, 10000, server);
 }
 
-async function downChecker(pServer) {
-    const isUp = await checkIfServerIsUp(pServer);
+export function initDataLoop() {
+    const servers = getServers();
 
-    if (pServer.down && isUp) {
-        console.error(`${chalk.greenBright("Server back up")} ${chalk.cyanBright(pServer.server)}`);
+    for (const serverName in servers) {
+        const server = servers[serverName];
 
-        pServer.down = false;
-    }
-
-    setTimeout(downChecker, 10000, pServer);
-}
-
-export function init(pDataCallback) {
-	const servers = getServers();
-
-    for (const name in servers) {
-        const server = servers[name];
-
-        setTimeout(worldJSON, 1000, server, pDataCallback);
-
-        setTimeout(staffJSON, 1000, server, pDataCallback);
-
-        setTimeout(modelsJSON, 1000, server);
+        setTimeout(worldJSON, 1000, server);
+        setTimeout(staffJSON, 1000, server);
 
         downChecker(server);
     }
 }
 
-export async function isValidToken(pServer, pToken) {
-    if (!getServer(pServer)) {
-        console.log("Invalid server: '" + pServer + "'");
-        return false;
-    }
-
-    if (!pToken || !pToken.match(/^[a-z0-9]{30}$/m)) {
-        console.log("no token");
-        return false;
-    }
-
-    try {
-        return await validateSession(pServer, pToken);
-    } catch (e) {
-        console.error(`${chalk.yellowBright("Failed to validate session")} ${chalk.cyanBright(pServer)}: ${chalk.gray(e)}`);
-    }
-
-    return false;
-}
-
-export function isValidLicense(pLicense) {
-    if (pLicense.includes("license:")) {
-        pLicense = pLicense.replace("license:", "");
-    }
-
-    return pLicense.match(/^[a-z0-9]{40}$/gm);
-}
-
-export function isValidType(pType) {
-    return ["world", "staff"].includes(pType);
+export function isValidType(type) {
+    return type && ["world", "staff"].includes(type);
 }

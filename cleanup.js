@@ -4,10 +4,10 @@ import { readdirSync, lstatSync } from "fs";
 import { join } from "path";
 import { execSync } from "child_process";
 
-function _cleanupServer(pServer) {
+function _cleanupServer(server) {
 	const now = moment();
 
-	const path = join("historic", pServer),
+	const path = join("historic", server),
 		files = readdirSync(path);
 
 	let removed = 0;

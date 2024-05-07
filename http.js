@@ -2,14 +2,16 @@ import https from "https";
 import http from "http";
 import axios from "axios";
 
-const instances = {};
+let agents = {};
 
-export async function requestOpFwApi(pUrl, pToken) {
-    const instance = getInstance(pUrl);
+export async function requestOpFwApi(url, token) {
+    const agent = getInstance(url);
 
-    const response = await instance.get(pUrl, {
+    const response = await axios.get(url, {
+        httpAgent: agent,
+        timeout: 3000,
         headers: {
-            "Authorization": "Bearer " + pToken
+            "Authorization": "Bearer " + token
         }
     });
 
@@ -30,11 +32,11 @@ export async function requestOpFwApi(pUrl, pToken) {
     return json.data;
 }
 
-function getInstance(pUrl) {
-    const url = new URL(pUrl),
+function getInstance(uri) {
+    const url = new URL(uri),
         origin = url.origin;
 
-    if (!(origin in instances)) {
+    if (!(origin in agents)) {
         const agent = url.scheme === "https" ? new https.Agent({
             keepAlive: true,
             rejectUnauthorized: false,
@@ -42,11 +44,8 @@ function getInstance(pUrl) {
             keepAlive: true,
         });
 
-        instances[origin] = axios.create({
-            timeout: 3000,
-            httpAgent: agent,
-        });
+        agents[origin] = agent;
     }
 
-    return instances[origin];
+    return agents[origin];
 }

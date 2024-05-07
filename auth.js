@@ -1,71 +1,116 @@
-import { isValidLicense, isValidToken } from "./data-loop.js";
-import { getServer } from "./server.js";
+import config from "./_config.json" assert {type: "json"};
+import { abort } from "./functions.js";
 
 import chalk from "chalk";
+import { join } from "path";
+import { readFile } from "fs/promises";
+import { existsSync } from "fs";
 
-export async function checkAuth(pQuery, pParams) {
-    const token = _find(pParams, pQuery, "token"),
-        server = _find(pParams, pQuery, "server");
-
-    if (!server || !token) {
+export async function checkAuth(cluster, token) {
+    if (!cluster || !token) {
         return false;
     }
 
-    const playerName = await isValidToken(server, token);
+    const session = await isValidToken(cluster, token);
 
-    if (!playerName) {
+    if (!session) {
         return false;
     }
 
-    const srv = getServer(server);
-
-    if (!srv) {
+    if (!config.servers.includes(cluster)) {
         return false;
     }
+
+    return session;
+}
+
+export function parseServer(server) {
+    if (server && server.match(/^c\d+$/m)) {
+        // We got only the cluster :(
+
+        return {
+            cluster: server
+        };
+    }
+
+    if (!server || !server.match(/^c\d+s\d+$/m)) {
+        return false;
+    }
+
+    const match = server.match(/^(c\d+)s(\d+)$/m),
+        cluster = match[1],
+        shard = parseInt(match[2]);
 
     return {
-        server: srv,
-        name: playerName
+        cluster: cluster,
+        server: cluster + (shard > 1 ? `s${shard}` : "")
     };
 }
 
-export async function authenticate(pReq, pRes, pNext) {
-    const session = await checkAuth(pReq.query, pReq.params);
+export async function authenticate(req, resp, next) {
+    const server = parseServer(req.params.server);
+
+    if (!server) {
+        return abort(resp, "Invalid server");
+    }
+
+    const session = await checkAuth(server.cluster, req.query.token);
 
     if (!session) {
-        return _abort(pRes, "Unauthorized");
+        return abort(resp, "Unauthorized");
     }
 
     // Validation of additional params (if sent)
-    const license = _find(pReq.params, pReq.query, "license");
+    const license = req.params.license;
 
     if (license && !isValidLicense(license)) {
-        return _abort(pRes, "Invalid license");
+        return abort(resp, "Invalid license");
     }
 
-    console.log(chalk.bgGreen(" " + pReq.method + " ") + " " + chalk.cyanBright(session.name) + " - " + chalk.gray(pReq.path));
+    console.log(chalk.bgGreen(" " + req.method + " ") + " " + chalk.cyanBright(session.name) + " - " + chalk.gray(req.path));
 
-    pReq.server = session.server;
-    pReq.license = license;
+    req.cluster = server.cluster;
+    req.server = server.server;
+    req.session = session;
+    req.license = license;
 
-    pNext();
+    next();
 }
 
-function _find(pParams, pQuery, pKey) {
-    if (pKey in pParams && pParams[pKey]) {
-        return pParams[pKey];
+export async function isValidToken(cluster, token) {
+    if (!config.servers.includes(cluster)) {
+        return false;
     }
 
-    if (pKey in pQuery && pQuery[pKey]) {
-        return pQuery[pKey];
+    if (!token || !token.match(/^[a-z0-9]{30}$/m)) {
+        return false;
+    }
+
+    try {
+        const sessionFile = join(config.panel, "storage", "sessions", cluster + ".json");
+
+        if (!existsSync(sessionFile)) {
+            return false;
+        }
+
+        const sessions = JSON.parse(await readFile(sessionFile, "utf8"));
+
+        return token in sessions ? sessions[token] : false;
+    } catch (e) {
+        console.error(`${chalk.yellowBright("Failed to validate session")} ${chalk.cyanBright(cluster)}: ${chalk.gray(e)}`);
     }
 
     return false;
 }
 
-function _abort(pRes, pError) {
-    pRes.json({
-        status: false,
-        error: pError
-    });
+export function isValidLicense(license) {
+    if (!license) {
+        return false;
+    }
+
+    if (license.startsWith("license:")) {
+        license = license.replace("license:", "");
+    }
+
+    return license.match(/^[a-z0-9]{40}$/gm);
 }

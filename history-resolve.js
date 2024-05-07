@@ -1,24 +1,24 @@
 import moment from "moment";
-import {join, basename} from "path";
-import {existsSync} from "fs";
+import { join, basename } from "path";
+import { existsSync } from "fs";
 
-import {findFiles, readLines} from "./helper.js";
+import { findFiles, readLines } from "./history-reader.js";
 
-export async function resolveHistoricData(pServer, pLicense, pFrom, pTill) {
-    if (pTill < pFrom) {
+export async function resolveHistoricData(server, license, from, till) {
+    if (till < from) {
         throw Error("From must be before till");
     }
 
-    const fromDate = moment.unix(pFrom).utc().format("DD-MM-YYYY"),
-        tillDate = moment.unix(pTill).utc().format("DD-MM-YYYY");
+    const fromDate = moment.unix(from).utc().format("DD-MM-YYYY"),
+        tillDate = moment.unix(till).utc().format("DD-MM-YYYY");
 
-    const path = join("historic", pServer, fromDate, pLicense + ".csv");
+    const path = join("historic", server, fromDate, license + ".csv");
 
     let data = {};
 
     await _readHistoricFile(path, parsed => {
-        if (parsed && parsed.timestamp >= pFrom) {
-            if (parsed.timestamp > pTill) {
+        if (parsed && parsed.timestamp >= from) {
+            if (parsed.timestamp > till) {
                 return false;
             }
 
@@ -42,11 +42,11 @@ export async function resolveHistoricData(pServer, pLicense, pFrom, pTill) {
     });
 
     if (fromDate !== tillDate) {
-        const tillPath = join("historic", pServer, tillDate, pLicense + ".csv");
+        const tillPath = join("historic", server, tillDate, license + ".csv");
 
         await _readHistoricFile(tillPath, parsed => {
-            if (parsed && parsed.timestamp >= pFrom) {
-                if (parsed.timestamp > pTill) {
+            if (parsed && parsed.timestamp >= from) {
+                if (parsed.timestamp > till) {
                     return false;
                 }
 
@@ -76,14 +76,14 @@ export async function resolveHistoricData(pServer, pLicense, pFrom, pTill) {
     return data;
 }
 
-async function _readHistoricFile(pPath, pCallback) {
-    if (!existsSync(pPath)) {
+async function _readHistoricFile(path, callback) {
+    if (!existsSync(path)) {
         return;
     }
 
     let previousLine = false;
 
-    await readLines(pPath, (line) => {
+    await readLines(path, line => {
         if (line && !line.startsWith("Timestamp")) {
             if (line.endsWith("*")) {
                 const split = line.split(",");
@@ -99,15 +99,15 @@ async function _readHistoricFile(pPath, pCallback) {
 
             const parsed = _parseHistoricEntry(line);
 
-            return pCallback(parsed);
+            return callback(parsed);
         }
     });
 }
 
-export async function resolveTimestamp(pServer, pTimestamp) {
-    const date = moment.unix(pTimestamp).utc().format("DD-MM-YYYY");
+export async function resolveTimestamp(server, timestamp) {
+    const date = moment.unix(timestamp).utc().format("DD-MM-YYYY");
 
-    const path = join("historic", pServer, date);
+    const path = join("historic", server, date);
 
     if (!existsSync(path)) {
         throw Error("No data for this timestamp");
@@ -115,36 +115,36 @@ export async function resolveTimestamp(pServer, pTimestamp) {
 
     let data = {};
 
-    const addParsedEntry = (pFile, pParsed) => {
-        if (pParsed) {
-            if (pParsed.timestamp === pTimestamp) {
-                pFile = basename(pFile);
+    const addParsedEntry = (file, parsed) => {
+        if (parsed) {
+            if (parsed.timestamp === timestamp) {
+                file = basename(file);
 
-                const flags = _parseCharacterFlags(pParsed.flags);
+                const flags = _parseCharacterFlags(parsed.flags);
 
                 if (flags.spawned) {
-                    data[pFile.replace(".csv", "")] = {
-                        _: pParsed.cid,
-                        x: pParsed.x,
-                        y: pParsed.y,
-                        z: pParsed.z,
+                    data[file.replace(".csv", "")] = {
+                        _: parsed.cid,
+                        x: parsed.x,
+                        y: parsed.y,
+                        z: parsed.z,
 
-                        h: pParsed.heading,
-                        s: pParsed.speed,
+                        h: parsed.heading,
+                        s: parsed.speed,
 
-                        cf: pParsed.flags,
-                        uf: pParsed.userFlags
+                        cf: parsed.flags,
+                        uf: parsed.userFlags
                     };
                 }
 
                 return false;
-            } else if (pParsed.timestamp > pTimestamp) {
+            } else if (parsed.timestamp > timestamp) {
                 return false;
             }
         }
     };
 
-    const files = findFiles(path, pTimestamp);
+    const files = findFiles(path, timestamp);
 
     for (let x = 0; x < files.length; x++) {
         const file = files[x];
@@ -152,7 +152,7 @@ export async function resolveTimestamp(pServer, pTimestamp) {
         if (file.content.endsWith("*")) {
             let previousLine = false;
 
-            await readLines(file.file, (line) => {
+            await readLines(file.file, line => {
                 if (line && !line.startsWith("Timestamp")) {
                     if (line.endsWith("*")) {
                         const split = line.split(",");
@@ -185,23 +185,23 @@ export async function resolveTimestamp(pServer, pTimestamp) {
     return data;
 }
 
-function _parseCharacterFlags(pFlags) {
-    pFlags = pFlags ? pFlags : 0;
+function _parseCharacterFlags(flags) {
+    flags = flags ? flags : 0;
 
     return {
-        spawned: !!(pFlags & 64),
-        frozen: !!(pFlags & 32),
-        invincible: !!(pFlags & 16),
-        invisible: !!(pFlags & 8),
-        shell: !!(pFlags & 4),
-        trunk: !!(pFlags & 2),
-        dead: !!(pFlags & 1)
+        spawned: !!(flags & 64),
+        frozen: !!(flags & 32),
+        invincible: !!(flags & 16),
+        invisible: !!(flags & 8),
+        shell: !!(flags & 4),
+        trunk: !!(flags & 2),
+        dead: !!(flags & 1)
     }
 }
 
-function _parseHistoricEntry(pLine) {
+function _parseHistoricEntry(line) {
     const regex = /^(\d+),(\d+),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(-?\d+(\.\d+)?),(\d+),(\d+),(\d+(\.\d+)?)$/gm,
-        match = pLine.matchAll(regex).next(),
+        match = line.matchAll(regex).next(),
         value = match && match.value ? match.value : false;
 
     if (value) {
@@ -217,7 +217,7 @@ function _parseHistoricEntry(pLine) {
             userFlags: parseInt(value[12])
         };
     } else {
-        console.log("Failed to parse line `" + pLine + "`");
+        console.log("Failed to parse line `" + line + "`");
     }
 
     return false;

@@ -1,69 +1,107 @@
-import { init, isValidLicense, isValidType } from "./data-loop.js";
+import { initDataLoop, isValidType } from "./data-loop.js";
+import { isValidLicense } from "./auth.js";
 import { handleConnection, handleDataUpdate } from "./client.js";
-import { initRoutes } from "./routes.js";
-import { initDataRoutes } from "./data-routes.js";
-import { initServers } from "./server.js";
+import { initSlaveRoutes } from "./slave-routes.js";
+import { initSlaves, initMasterRoutes } from "./master.js";
 import { startTwitchUpdateLoop } from "./twitch.js";
 import { cleanupHistoricData } from "./cleanup.js";
-import { checkAuth } from "./auth.js";
+import { checkAuth, parseServer } from "./auth.js";
+import { getSlaveData } from "./slave.js";
+import { initServer } from "./server.js";
+import { rejectClient } from "./functions.js";
 
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
 import chalk from "chalk";
 import cors from "cors";
+import cluster from "cluster";
 
-await initServers();
-startTwitchUpdateLoop();
+// Master handles all connections
+if (cluster.isPrimary) {
+	// This is only needed once so its on the master too
+	startTwitchUpdateLoop();
+	cleanupHistoricData();
 
-init(handleDataUpdate);
+	// Initialize express server
+	const app = express(),
+		xp = createServer(app);
 
-cleanupHistoricData();
+	app.use(cors({
+		origin: '*'
+	}));
 
-const app = express(),
-	server = createServer(app);
+	app.use(express.json());
 
-app.use(cors({
-	origin: '*'
-}));
+	// Wake up the slaves
+	initSlaves();
 
-app.use(express.json());
+	// Initialize routes
+	initMasterRoutes(app);
 
-initRoutes(app);
-initDataRoutes(app);
+	// Initialize socket.io server
+	const io = new Server(xp, {
+		cors: {
+			origin: "*",
+			methods: ["GET", "POST"]
+		}
+	});
 
-const io = new Server(server, {
-	cors: {
-		origin: "*",
-		methods: ["GET", "POST"]
-	}
-});
+	io.on("connection", async client => {
+		const query = client.handshake.query,
+			server = parseServer(query.server),
+			token = query.token,
+			type = query.type,
+			license = query.license;
 
-io.on("connection", async client => {
-	const query = client.handshake.query;
+		if (!isValidType(type) || !isValidLicense(license) || !token || !server) {
+			return rejectClient(client, "Invalid request");
+		}
 
-	const session = await checkAuth(query, {}),
-		server = session?.server;
+		const session = await checkAuth(server.cluster, token);
 
-	if (!server) {
-		return _reject(client, "Unauthorized");
-	}
+		if (!session) {
+			return rejectClient(client, "Unauthorized");
+		}
 
-	if (!query.type || !query.license || !isValidType(query.type) || !isValidLicense(query.license)) {
-		return _reject(client, "Invalid request");
-	}
+		if (!isValidType(type) || !isValidLicense(license)) {
+			return rejectClient(client, "Invalid request");
+		}
 
-	handleConnection(client, server.server, query.type, query.license);
-});
+		handleConnection(client, server.server, type, license);
+	});
 
-function _reject(pClient, pMessage) {
-	pClient.emit("message", pMessage);
+	// Listen for data from the slaves
+	cluster.on("message", (worker, message) => {
+		const { server, type, data } = message;
 
-	pClient.disconnect(true);
+		handleDataUpdate(type, server, data);
+	});
 
-	console.log(`${chalk.redBright("Rejected connection")} ${chalk.gray("from " + pClient.handshake.address)}`);
+	// Start the server
+	xp.listen(9999, () => {
+		console.log(chalk.blueBright("Listening on port 9999."));
+	});
+} else {
+	// Get slave data first
+	const slave = getSlaveData();
+
+	// Initialize the server
+	await initServer(slave.server);
+
+	// Initialize express server
+	const app = express();
+
+	app.use(express.json());
+
+	// Initialize routes
+	initSlaveRoutes(slave.server, app);
+
+	// Initialize data-loop
+	initDataLoop();
+
+	// Start the server
+	app.listen(slave.port, () => {
+		console.log(chalk.blueBright(`Slave listening on port ${slave.port}.`));
+	})
 }
-
-server.listen(9999, () => {
-	console.log(chalk.blueBright("Listening for sockets..."));
-});

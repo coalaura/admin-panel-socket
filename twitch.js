@@ -3,7 +3,11 @@ import config from "./_config.json" assert {type: "json"};
 import axios from "axios";
 import chalk from "chalk";
 
-import { regenerateStreamers } from "./generator.js";
+let streamerData = {};
+
+export function getStreamerData() {
+    return streamerData;
+}
 
 export function startTwitchUpdateLoop() {
     const api = config.twitch?.api,
@@ -16,10 +20,10 @@ export function startTwitchUpdateLoop() {
     console.log(`${chalk.greenBright("Started Twitch update loop")}`);
 }
 
-async function updateTwitchData(pApi, pStreamers) {
-    const data = (await Promise.all(pStreamers.map(async streamer => {
+async function updateTwitchData(api, streamers) {
+    const data = (await Promise.all(streamers.map(async streamer => {
         try {
-            const avatar = await getTwitchStreamer(pApi, streamer);
+            const avatar = await getTwitchStreamer(api, streamer);
 
             return {
                 name: streamer,
@@ -32,15 +36,15 @@ async function updateTwitchData(pApi, pStreamers) {
         }
 
         return null;
-    }))).filter(pStreamer => pStreamer && pStreamer.live);
+    }))).filter(streamer => streamer && streamer.live);
 
-    await regenerateStreamers(data);
+    streamerData = data;
 
-    setTimeout(updateTwitchData, 60 * 1000, pApi, pStreamers);
+    setTimeout(updateTwitchData, 60 * 1000, api, streamers);
 }
 
-async function getTwitchStreamer(pApi, pStreamer) {
-    const url = pApi.replace("%s", pStreamer);
+async function getTwitchStreamer(api, streamer) {
+    const url = api.replace("%s", streamer);
 
     const response = await axios.get(url),
         json = response.data;

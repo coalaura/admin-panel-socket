@@ -1,68 +1,35 @@
 import config from "./_config.json" assert {type: "json"};
 
-import { join } from "path";
+import { join, parse } from "path";
 import * as dotenv from "dotenv";
 import { createPool } from "mysql2";
 import chalk from "chalk";
+import { parseServer } from "./auth.js";
 
 let servers = {};
 
-export async function initServers() {
-	for (let x = 0; x < config.servers.length; x++) {
-		const server = config.servers[x];
+export function getServer(server, req) {
+	const data = req && req.cluster ? req : parseServer(server);
 
-		await initServer(server);
+	if (!data) {
+		return false;
 	}
+
+	if (data.server && data.server in servers) {
+		return servers[data.server];
+	}
+
+	return servers[data.cluster];
 }
 
-export function getServerHealths() {
-	const healthData = {};
-
-	for (const serverName in servers) {
-		const server = servers[serverName];
-
-		const data = {
-			database: server.database ? "up" : "down",
-			server: server.down ? "down" : "up",
-
-			failed: server.down || !server.database || server.failed
-		};
-
-		healthData[serverName] = data;
-	}
-
-	return healthData;
+export function getServers() {
+	return servers;
 }
 
-async function healthCheck(pServerName) {
-	const server = servers[pServerName];
+export async function initServer(server) {
+	process.stdout.write(chalk.blueBright(`Database for ${server.padEnd(3, ".")}...`));
 
-	if (!server) {
-		return;
-	}
-
-	try {
-		await testConnection(server);
-
-		if (!server.database) {
-			console.log(chalk.greenBright(`Database for ${pServerName} works again!`));
-		}
-
-		server.database = true;
-	} catch(e) {
-		server.database = false;
-
-		console.log(chalk.redBright(`Failed database health-check for ${pServerName}!`));
-		console.log(chalk.red(e.message));
-	}
-
-	setTimeout(healthCheck, 30000, pServerName);
-}
-
-async function initServer(pServer) {
-	process.stdout.write(chalk.blueBright(`Database for ${pServer.padEnd(3, ".")}...`));
-
-	const envPath = join(config.panel, "envs", pServer, ".env"),
+	const envPath = join(config.panel, "envs", server, ".env"),
 		env = dotenv.config({
 			path: envPath,
 			override: true
@@ -81,8 +48,8 @@ async function initServer(pServer) {
 	const ips = cfg.OP_FW_SERVERS.split(",");
 
 	for (let i = 0; i < ips.length; i++) {
-		const fullName = pServer + 's' + (i + 1),
-			serverName = i === 0 ? pServer : fullName;
+		const fullName = server + 's' + (i + 1),
+			serverName = i === 0 ? server : fullName;
 
 		try {
 			const srv = {
@@ -118,7 +85,7 @@ async function initServer(pServer) {
 			await testConnection(srv);
 
 			// This just starts the health-check loop
-			await healthCheck(serverName);
+			await healthCheck(srv);
 
 			console.log(chalk.greenBright(`works!`));
 		} catch (e) {
@@ -131,98 +98,44 @@ async function initServer(pServer) {
 				failed: true
 			};
 
-			setTimeout(initServer, 15000, pServer);
+			setTimeout(initServer, 15000, server);
 		}
 	}
 }
 
-export function getServers() {
-	return servers;
-}
+async function healthCheck(server) {
+	try {
+		await testConnection(server);
 
-export function validateSession(pServer, pToken) {
-	return new Promise((resolve, reject) => {
-		const server = getServer(pServer);
-
-		if (!server) {
-			resolve(false);
-
-			return;
+		if (!server.database) {
+			console.log(chalk.greenBright(`Database for ${server.server} works again!`));
 		}
 
-		server.pool.getConnection((pError, pConnection) => {
-			if (pError) {
-				reject(pError);
+		server.database = true;
+	} catch (e) {
+		server.database = false;
 
-				return;
-			}
+		console.log(chalk.redBright(`Failed database health-check for ${server.server}!`));
+		console.log(chalk.red(e.message));
+	}
 
-			pConnection.query("SELECT `data` FROM webpanel_sessions WHERE `key` = ?", [pToken], (pError, pResults) => {
-				pConnection.release();
-
-				if (pError) {
-					reject(pError);
-
-					return;
-				}
-
-				if (pResults.length > 0) {
-					const result = pResults[0];
-
-					try {
-						const data = JSON.parse(result.data),
-							name = data?.name;
-
-						if (name) {
-							resolve(name);
-
-							return;
-						}
-					} catch (e) { }
-				}
-
-				resolve(false);
-			});
-		});
-	});
+	setTimeout(healthCheck, 30000, server);
 }
 
-export function getServer(pServer) {
-	if (typeof pServer !== "string") {
-		return null;
-	}
-
-	pServer = pServer.toLowerCase().trim();
-
-	if (pServer === "localhost:30120") {
-		pServer = "c1s1";
-	}
-
-	if (!pServer.match(/^c\d+s\d+$/)) {
-		return null;
-	}
-
-	if (pServer.endsWith("s1")) {
-		pServer = pServer.replace("s1", "");
-	}
-
-	return servers[pServer];
-}
-
-function testConnection(pServer) {
+function testConnection(server) {
 	return new Promise((resolve, reject) => {
-		pServer.pool.getConnection((pError, pConnection) => {
-			if (pError) {
-				reject(pError);
+		server.pool.getConnection((err, conn) => {
+			if (err) {
+				reject(err);
 
 				return;
 			}
 
-			pConnection.query("SELECT 1", (pError, pResults) => {
-				pConnection.release();
+			conn.query("SELECT 1", err => {
+				conn.release();
 
-				if (pError) {
-					reject(pError);
+				if (err) {
+					reject(err);
 
 					return;
 				}
@@ -233,10 +146,10 @@ function testConnection(pServer) {
 	});
 }
 
-function getServerUrl(pServer) {
-	if (pServer.match(/^[0-9.]+(:[0-9]+)?$/gm) || pServer.startsWith("localhost")) {
-		return "http://" + pServer;
+function getServerUrl(ip) {
+	if (ip.match(/^[0-9.]+(:[0-9]+)?$/gm) || ip.startsWith("localhost")) {
+		return "http://" + ip;
 	}
 
-	return "https://" + pServer;
+	return "https://" + ip;
 }

@@ -1,5 +1,5 @@
-function _encodeIntegerAlphabetically(pCurrent) {
-	let newKey = pCurrent + 1;
+function _encodeIntegerAlphabetically(current) {
+	let newKey = current + 1;
 
 	if (newKey === 0) {
 		return "a";
@@ -18,11 +18,11 @@ function _encodeIntegerAlphabetically(pCurrent) {
 	return characters.reverse().join('');
 }
 
-function _reconstructValue(pValue) {
-	const valueType = typeof pValue;
+function _reconstructValue(value) {
+	const valueType = typeof value;
 
-	if (valueType === "string" && pValue.match(/^-?\d+(\.\d+)?(:-?\d+(\.\d+)?)+$/m)) {
-		const values = pValue.split(":").map(pNumber => parseFloat(pNumber));
+	if (valueType === "string" && value.match(/^-?\d+(\.\d+)?(:-?\d+(\.\d+)?)+$/m)) {
+		const values = value.split(":").map(num => parseFloat(num));
 
 		let result = {
 			x: values[0],
@@ -40,14 +40,14 @@ function _reconstructValue(pValue) {
 		return result;
 	}
 
-	return pValue;
+	return value;
 }
 
-function _resolveDuplicates(pDuplicateMap, pData) {
+function _resolveDuplicates(rawDuplicateMap, data) {
 	let duplicateMap = {};
 
 	let current = -1;
-	let duplicatePairs = pDuplicateMap.split(";");
+	let duplicatePairs = rawDuplicateMap.split(";");
 
 	for (const duplicate of duplicatePairs) {
 		let replacement = _encodeIntegerAlphabetically(current);
@@ -57,19 +57,19 @@ function _resolveDuplicates(pDuplicateMap, pData) {
 		current++;
 	}
 
-	let resolve = pValue => {
-		const valueType = typeof pValue;
+	const resolve = value => {
+		const valueType = typeof value;
 
 		if (valueType === "object") {
-			if (Array.isArray(pValue)) {
-				return pValue.map(pValue => resolve(pValue));
+			if (Array.isArray(value)) {
+				return value.map(value => resolve(value));
 			} else {
-				for (const key in pValue) {
-					pValue[key] = resolve(pValue[key]);
+				for (const key in value) {
+					value[key] = resolve(value[key]);
 				}
 			}
-		} else if (valueType === "string" && pValue.startsWith("_")) {
-			const key = pValue.substring(1),
+		} else if (valueType === "string" && value.startsWith("_")) {
+			const key = value.substring(1),
 				original = duplicateMap[key];
 
 			if (original) {
@@ -77,13 +77,13 @@ function _resolveDuplicates(pDuplicateMap, pData) {
 			}
 		}
 
-		return pValue;
+		return value;
 	};
 
-	return resolve(pData);
+	return resolve(data);
 }
 
-function _resolveKeys(pKeyMap, pData) {
+function _resolveKeys(pKeyMap, data) {
 	let keyMap = {};
 
 	let current = -1;
@@ -97,53 +97,53 @@ function _resolveKeys(pKeyMap, pData) {
 		current++;
 	}
 
-	let resolve = pValue => {
-		const valueType = typeof pValue;
+	const resolve = value => {
+		const valueType = typeof value;
 
 		if (valueType === "object") {
-			if (Array.isArray(pValue)) {
-				return pValue.map(pValue => resolve(pValue));
+			if (Array.isArray(value)) {
+				return value.map(value => resolve(value));
 			}
 
 			let decompressed = {};
 
-			for (const key in pValue) {
+			for (const key in value) {
 				const newKey = keyMap[key] || key;
 
-				decompressed[newKey] = resolve(pValue[key]);
+				decompressed[newKey] = resolve(value[key]);
 			}
 
 			return decompressed;
 		}
 
-		return _reconstructValue(pValue)
+		return _reconstructValue(value);
 	};
 
-	return resolve(pData);
+	return resolve(data);
 }
 
-function _decompressData(pData) {
-	if (!pData || !pData.d) {
-		return pData;
+function _decompressData(data) {
+	if (!data || !data.d) {
+		return data;
 	}
 
-	const duplicateMap = pData.m;
+	const duplicateMap = data.m;
 
-	let rawData = pData.d;
+	let rawData = data.d;
 
 	if (duplicateMap) {
 		rawData = _resolveDuplicates(duplicateMap, rawData);
 	}
 
-	const keyMap = pData.k || "";
+	const keyMap = data.k || "";
 
 	rawData = _resolveKeys(keyMap, rawData);
 
 	return rawData;
 }
 
-export function decompressPlayers(pData) {
-	const decompressed = _decompressData(pData);
+export function decompressPlayers(data) {
+	const decompressed = _decompressData(data);
 
 	decompressed.world.baseTime = decompressed.world.baseTime || 0;
 	decompressed.world.weather = decompressed.world.weather || "";
