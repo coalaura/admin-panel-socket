@@ -1,6 +1,7 @@
 import cluster from "cluster";
 import { Agent } from "http";
 import axios from "axios";
+import chalk from "chalk";
 
 import { abort } from "./functions.js";
 import { getSlaveRoutes } from "./slave-routes.js";
@@ -17,7 +18,7 @@ export class Slave {
         this.#id = id;
         this.#server = server;
 
-        this.#init();
+        this.#restart();
     }
 
     #init() {
@@ -32,6 +33,28 @@ export class Slave {
             PORT: this.port,
             SERVER: this.#server
         });
+
+        this.#cluster.on("online", () => {
+            console.log(`${chalk.greenBright(`Cluster ${this.#server} online`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+        });
+
+        this.#cluster.on("exit", (code, signal) => {
+            if (signal) {
+                console.log(`${chalk.redBright(`Cluster ${this.#server} killed`)} ${chalk.gray("by signal:")} ${chalk.cyanBright(signal)}`);
+            } else {
+                console.log(`${chalk.redBright(`Cluster ${this.#server} exited`)} ${chalk.gray("with exit code:")} ${chalk.cyanBright(code)}`);
+            }
+
+            this.#restart();
+        });
+    }
+
+    #restart() {
+        if (this.#cluster && this.#cluster.isRunning) {
+            this.#cluster.kill();
+        }
+
+        this.#init();
     }
 
     get port() {
