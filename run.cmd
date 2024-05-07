@@ -1,1 +1,1 @@
-node --experimental-json-modules main.js
+node --no-warnings --experimental-json-modules main.js
