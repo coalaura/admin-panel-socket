@@ -41,6 +41,12 @@ export async function checkIfServerIsUp(server) {
         success = false;
 
     try {
+        // TODO: Replace this with /auth.json instead of /antiCheat.json
+        if (server.down) {
+            // To test if we can do authorized requests
+            await requestOpFwApi(`${server.url}/op-framework/antiCheat.json`, server.token);
+        }
+
         const data = await requestOpFwApi(`${server.url}/op-framework/variables.json`, server.token);
 
         if (typeof data.serverUptimeMilliseconds === "number") {
