@@ -45,3 +45,19 @@ sudo swapon /swapfile
 # /swapfile none swap sw 0 0
 nano /etc/fstab
 ```
+
+## Logrotate Configuration
+```bash
+nano /etc/logrotate.d/panel_socket
+```
+
+```
+/var/log/panel_socket.log {
+    daily
+    missingok
+    rotate 180
+    compress
+    delaycompress
+    notifempty
+}
+```
