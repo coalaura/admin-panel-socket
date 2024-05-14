@@ -55,7 +55,7 @@ nano /etc/logrotate.d/panel_socket
 /var/log/panel_socket.log {
     daily
     missingok
-    rotate 180
+    maxage 7
     compress
     delaycompress
     notifempty
