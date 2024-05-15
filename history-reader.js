@@ -2,7 +2,6 @@ import { createReadStream } from "fs";
 import { createInterface } from "readline";
 import { Writable } from "stream";
 import { execSync } from "child_process";
-import { resolve } from "path";
 
 export function findFiles(path, startWith) {
     try {
