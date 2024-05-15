@@ -7,7 +7,10 @@ StartLimitIntervalSec=60
 [Service]
 Type=simple
 Restart=always
-RestartSec=3
+RuntimeMaxSec=1d
+RestartMaxDelaySec=20
+RestartSteps=5
+RestartSec=5
 User=root
 WorkingDirectory=/var/www/admin-panel-socket
 ExecStart=node --no-warnings main.js
