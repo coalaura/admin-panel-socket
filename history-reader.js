@@ -2,10 +2,12 @@ import { createReadStream } from "fs";
 import { createInterface } from "readline";
 import { Writable } from "stream";
 import { execSync } from "child_process";
+import { resolve } from "path";
 
 export function findFiles(path, startWith) {
     try {
-        const out = execSync(`grep -rnw '${path}' -e '^${startWith}'`).toString(),
+        console.debug(`grep -rnw "${path}" -e "^${startWith}"`)
+        const out = execSync(`grep -rnw "${path}" -e "^${startWith}"`).toString(),
             lines = out.trim().split("\n");
 
         let result = [];
