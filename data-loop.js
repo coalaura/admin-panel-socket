@@ -36,6 +36,8 @@ async function worldJSON(server) {
 
             console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(server.server + "/world.json")}: ${chalk.gray(e)}`);
 
+            server.log(`Failed loading /world.json: ${e.message}`);
+
             lastErrors[server.server] = e;
         }
     }
@@ -58,6 +60,8 @@ async function staffJSON(server) {
             server.downError = e.message;
 
             console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(server.server + "/staffChat.json")}: ${chalk.gray(e)}`);
+
+            server.log(`Failed loading /staffChat.json: ${e.message}`);
 
             lastErrors[server.server] = e;
         }

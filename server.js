@@ -78,7 +78,16 @@ export async function initServer(server, tries = 0) {
 				info: false,
 				players: [],
 				world: {},
-				models: {}
+				models: {},
+
+				logs: [],
+				log: msg => {
+					srv.logs.push(`[${new Date().toISOString()}] ${msg}`);
+
+					if (srv.logs.length > 100) {
+						srv.logs.shift();
+					}
+				}
 			};
 
 			servers[serverName] = srv;
@@ -131,6 +140,8 @@ async function healthCheck(server) {
 
 		console.log(chalk.redBright(`Failed database health-check for ${server.server}!`));
 		console.log(chalk.red(e.message));
+
+		server.log(`Database health-check failed: ${e.message}`);
 
 		if (e.fatal) {
 			console.log(chalk.redBright(`Database error is fatal! Waiting for restart...`));

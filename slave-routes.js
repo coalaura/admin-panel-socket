@@ -123,6 +123,11 @@ export function initSlaveRoutes(server, app) {
         logs.push(srv && !srv.down ? "+ server is up" : `- server is down (${srv?.downError || "Unknown error"})`);
         logs.push(srv && srv.info ? "+ server.info is set" : "- server.info is not set");
 
+        if (srv && srv.logs.length) {
+            logs.push("");
+            logs.push(...srv.logs);
+        }
+
         resp.set("Content-Type", "text/plain");
         resp.send(logs.join("\n"));
     });
