@@ -32,6 +32,7 @@ async function worldJSON(server) {
             timeout = Math.max(1000 - (Date.now() - start), 1);
         } catch (e) {
             server.down = true;
+            server.downError = e.message;
 
             console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(server.server + "/world.json")}: ${chalk.gray(e)}`);
 
@@ -54,6 +55,7 @@ async function staffJSON(server) {
             });
         } catch (e) {
             server.down = true;
+            server.downError = e.message;
 
             console.error(`${chalk.yellowBright("Failed to load")} ${chalk.cyanBright(server.server + "/staffChat.json")}: ${chalk.gray(e)}`);
 
@@ -71,6 +73,7 @@ async function downChecker(server) {
         console.error(`${chalk.greenBright("Server back up")} ${chalk.cyanBright(server.server)}`);
 
         server.down = false;
+        server.downError = null;
     }
 
     setTimeout(downChecker, 10000, server);

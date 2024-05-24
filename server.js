@@ -26,7 +26,7 @@ export function getServers() {
 	return servers;
 }
 
-export async function initServer(server) {
+export async function initServer(server, tries = 0) {
 	const envPath = join(config.panel, "envs", server, ".env"),
 		env = dotenv.config({
 			path: envPath,
@@ -67,8 +67,12 @@ export async function initServer(server) {
 				}),
 
 				database: true,
-				failed: false,
+				databaseError: null,
+
 				down: false,
+				downError: null,
+
+				failed: false,
 
 				// Data cache
 				info: false,
@@ -85,10 +89,12 @@ export async function initServer(server) {
 			// This just starts the health-check loop
 			await healthCheck(srv);
 
-			console.log(chalk.blueBright(`Database for ${server.padEnd(3, ".")}...`) + chalk.greenBright(`works!`));
+			if (tries > 0) {
+				console.log(chalk.greenBright(`Database reconnected after ${tries} tries...`));
+			} else {
+				console.log(chalk.greenBright(`Successfully connected to database for ${serverName}...`));
+			}
 		} catch (e) {
-			console.log(chalk.blueBright(`Database for ${server.padEnd(3, ".")}...`) + chalk.redBright(`failed :(`));
-
 			console.log(chalk.redBright(`Failed establish database connection with ${serverName}!`));
 			console.log(chalk.red(e.message));
 
@@ -96,7 +102,15 @@ export async function initServer(server) {
 				failed: true
 			};
 
-			setTimeout(initServer, 15000, server);
+			if (tries < 3) {
+				console.log(chalk.redBright(`Retrying in 10 seconds...`));
+
+				setTimeout(initServer, 10000, server, tries + 1);
+			} else {
+				console.log(chalk.redBright(`Failed to reconnect 3 times! Waiting for restart...`));
+
+				process.exit(1);
+			}
 		}
 	}
 }
@@ -110,14 +124,22 @@ async function healthCheck(server) {
 		}
 
 		server.database = true;
+		server.databaseError = null;
 	} catch (e) {
 		server.database = false;
+		server.databaseError = e.message;
 
 		console.log(chalk.redBright(`Failed database health-check for ${server.server}!`));
 		console.log(chalk.red(e.message));
+
+		if (e.fatal) {
+			console.log(chalk.redBright(`Database error is fatal! Waiting for restart...`));
+
+			process.exit(1);
+		}
 	}
 
-	setTimeout(healthCheck, 30000, server);
+	setTimeout(healthCheck, 15000, server);
 }
 
 function testConnection(server) {

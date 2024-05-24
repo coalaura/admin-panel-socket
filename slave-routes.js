@@ -13,7 +13,8 @@ export function getSlaveRoutes() {
         // Static routes require no authentication
         static: [
             "/server",
-            "/count"
+            "/count",
+            "/health"
         ]
     };
 }
@@ -106,5 +107,23 @@ export function initSlaveRoutes(server, app) {
             status: true,
             data: srv.info?.players?.length || 0
         });
+    });
+
+    // Get slave health
+    app.get("/health", async (req, resp) => {
+        const srv = getServer(server, req);
+
+        let logs = [];
+
+        logs.push(srv ? "+ server object found" : "- server object not found");
+
+        logs.push(srv && !srv.failed ? "+ server object startup successful" : "- server object startup failed");
+        logs.push(srv && srv.token ? "+ server.token is set" : "- server.token is not set");
+        logs.push(srv && srv.database ? "+ server.database is true" : `- server.database is false (${srv?.databaseError || "Unknown error"})`);
+        logs.push(srv && !srv.down ? "+ server is up" : `- server is down (${srv?.downError || "Unknown error"})`);
+        logs.push(srv && srv.info ? "+ server.info is set" : "- server.info is not set");
+
+        resp.set("Content-Type", "text/plain");
+        resp.send(logs.join("\n"));
     });
 }

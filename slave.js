@@ -45,7 +45,9 @@ export class Slave {
                 console.log(`${chalk.redBright(`Cluster ${this.#server} exited`)} ${chalk.gray("with exit code:")} ${chalk.cyanBright(code)}`);
             }
 
-            this.#restart();
+            console.log(`${chalk.redBright(`Waiting 5 seconds before restarting cluster ${this.#server}...`)}`);
+
+            setTimeout(() => this.#restart(), 5000);
         });
     }
 
