@@ -58,7 +58,7 @@ export function initSlaveRoutes(server, app) {
 
         if (!players.length) return abort(resp, "No players specified");
 
-        if (players.length > 20) return abort(resp, "Too many players specified (max 20)");
+        if (players.length > 50) return abort(resp, "Too many players specified (max 50)");
 
         let online = {};
 
