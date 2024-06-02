@@ -77,9 +77,9 @@ export class Slave {
 
             this.#restarts++;
 
-            setTimeout(60 * 1000, () => {
+            setTimeout(() => {
                 this.#restarts--;
-            });
+            }, 60 * 1000);
 
             this.#init();
         } finally {
