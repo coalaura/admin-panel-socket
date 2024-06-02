@@ -141,7 +141,7 @@ async function healthCheck(server) {
 		console.log(chalk.redBright(`Failed database health-check for ${server.server}!`));
 		console.log(chalk.red(e.message));
 
-		server.log(`Database health-check failed: ${e.message}`);
+		server.log && server.log(`Database health-check failed: ${e.message}`);
 
 		if (e.fatal) {
 			console.log(chalk.redBright(`Database error is fatal! Waiting for restart...`));
