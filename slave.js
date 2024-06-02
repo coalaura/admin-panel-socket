@@ -88,6 +88,12 @@ export class Slave {
             resp.status(status);
             resp.send(data);
         } catch (e) {
+            if (e.message.includes("ECONNREFUSED")) {
+                console.log(`${chalk.redBright(`Cluster ${this.#server} connection refused`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+
+                this.#restart();
+            }
+
             abort(resp, e.message);
         }
     }
