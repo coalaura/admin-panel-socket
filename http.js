@@ -1,3 +1,5 @@
+import config from "./config.js";
+
 import https from "https";
 import http from "http";
 import axios from "axios";
@@ -9,7 +11,7 @@ export async function requestOpFwApi(url, token) {
 
     const response = await axios.get(url, {
         httpAgent: agent,
-        timeout: 3000,
+        timeout: config.timeout || 3000,
         headers: {
             "Authorization": "Bearer " + token
         }

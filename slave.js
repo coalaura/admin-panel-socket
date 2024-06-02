@@ -60,18 +60,14 @@ export class Slave {
     }
 
     async #restart() {
-        if (this.#isRestarting) {
-            console.log(`${chalk.yellowBright(`Restart already in progress for cluster ${this.#server}`)}, skipping...`);
-
-            return;
-        }
+        if (this.#isRestarting) return;
 
         this.#isRestarting = true;
         this.#isUp = false;
         this.#upCallbacks = [];
 
         let timeout = setTimeout(() => {
-            console.log(`${chalk.redBright(`Cluster ${this.#server} restart timeout`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+            console.log(`${chalk.redBright(`Cluster ${this.#server} restart failed`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
 
             this.#isRestarting = false;
 
@@ -100,7 +96,7 @@ export class Slave {
 
                 this.#isRestarting = false;
 
-                console.log(`${chalk.greenBright(`Cluster ${this.#server} startup success`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+                console.log(`${chalk.greenBright(`Cluster ${this.#server} startup succeeded`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
             });
         } catch(e) {}
     }
