@@ -107,6 +107,10 @@ export class Slave {
     }
 
     async get(type, route, options, resp) {
+        if (!this.#isUp) {
+            return abort(resp, "Cluster not up yet");
+        }
+
         if (!routes[type].includes("/" + route)) {
             return abort(resp, "Invalid route");
         }
