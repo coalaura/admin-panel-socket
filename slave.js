@@ -14,6 +14,7 @@ export class Slave {
     #cluster;
     #server;
 
+    #isRestarting = false;
     #restarts = 0;
 
     constructor(id, server) {
@@ -54,20 +55,36 @@ export class Slave {
     }
 
     async #restart() {
-        if (this.#cluster && this.#cluster.isRunning) {
-            this.#cluster.kill();
+        if (this.#isRestarting) {
+            console.log(`${chalk.yellowBright(`Restart already in progress for cluster ${this.#server}`)}`);
+
+            return;
         }
 
-        if (this.#restarts >= 5) {
-            console.log(`${chalk.redBright(`Cluster ${this.#server} restart limit reached`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
-            console.log(`${chalk.redBright(`Waiting 15 minutes before restarting cluster ${this.#server}...`)}`);
+        this.#isRestarting = true;
 
-            await new Promise(resolve => setTimeout(resolve, 15 * 60 * 1000));
+        try {
+            if (this.#cluster && this.#cluster.isRunning) {
+                this.#cluster.kill();
+            }
+
+            if (this.#restarts >= 3) {
+                console.log(`${chalk.redBright(`Cluster ${this.#server} restart limit reached`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+                console.log(`${chalk.redBright(`Waiting 15 minutes before restarting cluster ${this.#server}...`)}`);
+
+                await new Promise(resolve => setTimeout(resolve, 15 * 60 * 1000));
+            }
+
+            this.#restarts++;
+
+            setTimeout(60 * 1000, () => {
+                this.#restarts--;
+            });
+
+            this.#init();
+        } finally {
+            this.#isRestarting = false;
         }
-
-        this.#restarts++;
-
-        this.#init();
     }
 
     get port() {
