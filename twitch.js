@@ -1,4 +1,4 @@
-import config from "./_config.json" assert {type: "json"};
+import config from "./config.js";
 
 import axios from "axios";
 import chalk from "chalk";

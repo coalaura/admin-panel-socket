@@ -1,4 +1,4 @@
-import config from "./_config.json" assert {type: "json"};
+import config from "./config.js";
 
 import { join, parse } from "path";
 import * as dotenv from "dotenv";

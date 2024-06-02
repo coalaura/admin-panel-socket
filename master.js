@@ -1,4 +1,4 @@
-import config from "./_config.json" assert {type: "json"};
+import config from "./config.js";
 import { Slave } from "./slave.js";
 import { authenticate, parseServer } from "./auth.js";
 import { abort } from "./functions.js";
@@ -17,6 +17,10 @@ export function initSlaves() {
 
         id++;
     }
+}
+
+export function getSlave(server) {
+    return slaves[server];
 }
 
 export function initMasterRoutes(app) {

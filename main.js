@@ -2,7 +2,7 @@ import { initDataLoop, isValidType } from "./data-loop.js";
 import { isValidLicense } from "./auth.js";
 import { handleConnection, handleDataUpdate } from "./client.js";
 import { initSlaveRoutes } from "./slave-routes.js";
-import { initSlaves, initMasterRoutes } from "./master.js";
+import { initSlaves, initMasterRoutes, getSlave } from "./master.js";
 import { startTwitchUpdateLoop } from "./twitch.js";
 import { cleanupHistoricData } from "./cleanup.js";
 import { checkAuth, parseServer } from "./auth.js";
@@ -75,6 +75,20 @@ if (cluster.isPrimary) {
 	cluster.on("message", (worker, message) => {
 		const { server, type, data } = message;
 
+		if (type === "slave") {
+			const slave = getSlave(server);
+
+			if (!slave) {
+				console.log(`Slave ${server} sent message but was not found.`);
+
+				return;
+			}
+
+			slave.isUp();
+
+			return
+		}
+
 		handleDataUpdate(type, server, data);
 	});
 
@@ -102,6 +116,9 @@ if (cluster.isPrimary) {
 
 	// Start the server
 	app.listen(slave.port, () => {
-		console.log(chalk.blueBright(`Slave listening on port ${slave.port}.`));
-	})
+		process.send({
+			server: slave.server,
+			type: "slave"
+		});
+	});
 }

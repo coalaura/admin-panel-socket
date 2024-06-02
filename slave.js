@@ -14,7 +14,9 @@ export class Slave {
     #cluster;
     #server;
 
+    #isUp = false;
     #isRestarting = false;
+    #upCallbacks = [];
     #restarts = 0;
 
     constructor(id, server) {
@@ -38,10 +40,13 @@ export class Slave {
         });
 
         this.#cluster.on("online", () => {
-            console.log(`${chalk.greenBright(`Cluster ${this.#server} online`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+            console.log(`${chalk.greenBright(`Cluster ${this.#server} online`)}`);
         });
 
         this.#cluster.on("exit", (code, signal) => {
+            this.#isUp = false;
+            this.#upCallbacks = [];
+
             if (signal) {
                 console.log(`${chalk.redBright(`Cluster ${this.#server} killed`)} ${chalk.gray("by signal:")} ${chalk.cyanBright(signal)}`);
             } else {
@@ -56,12 +61,25 @@ export class Slave {
 
     async #restart() {
         if (this.#isRestarting) {
-            console.log(`${chalk.yellowBright(`Restart already in progress for cluster ${this.#server}`)}`);
+            console.log(`${chalk.yellowBright(`Restart already in progress for cluster ${this.#server}`)}, skipping...`);
 
             return;
         }
 
         this.#isRestarting = true;
+        this.#isUp = false;
+        this.#upCallbacks = [];
+
+        let timeout = setTimeout(() => {
+            console.log(`${chalk.redBright(`Cluster ${this.#server} restart timeout`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+
+            this.#isRestarting = false;
+
+            this.#isUp = false;
+            this.#upCallbacks = [];
+
+            this.#restart();
+        }, 60 * 1000);
 
         try {
             if (this.#cluster && this.#cluster.isRunning) {
@@ -75,16 +93,16 @@ export class Slave {
                 await new Promise(resolve => setTimeout(resolve, 15 * 60 * 1000));
             }
 
-            this.#restarts++;
-
-            setTimeout(() => {
-                this.#restarts--;
-            }, 60 * 1000);
-
             this.#init();
-        } finally {
-            this.#isRestarting = false;
-        }
+
+            this.onUp(() => {
+                clearTimeout(timeout);
+
+                this.#isRestarting = false;
+
+                console.log(`${chalk.greenBright(`Cluster ${this.#server} startup success`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+            });
+        } catch(e) {}
     }
 
     get port() {
@@ -128,6 +146,26 @@ export class Slave {
 
     wait(ms) {
         return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    onUp(callback) {
+        if (this.#isUp) {
+            callback();
+
+            return;
+        }
+
+        this.#upCallbacks.push(callback);
+    }
+
+    isUp() {
+        this.#isUp = true;
+
+        for (const callback of this.#upCallbacks) {
+            callback();
+        }
+
+        this.#upCallbacks = [];
     }
 };
 
