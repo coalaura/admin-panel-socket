@@ -14,6 +14,8 @@ export class Slave {
     #cluster;
     #server;
 
+    #restarts = 0;
+
     constructor(id, server) {
         this.#id = id;
         this.#server = server;
@@ -51,10 +53,19 @@ export class Slave {
         });
     }
 
-    #restart() {
+    async #restart() {
         if (this.#cluster && this.#cluster.isRunning) {
             this.#cluster.kill();
         }
+
+        if (this.#restarts >= 5) {
+            console.log(`${chalk.redBright(`Cluster ${this.#server} restart limit reached`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+            console.log(`${chalk.redBright(`Waiting 15 minutes before restarting cluster ${this.#server}...`)}`);
+
+            await new Promise(resolve => setTimeout(resolve, 15 * 60 * 1000));
+        }
+
+        this.#restarts++;
 
         this.#init();
     }
@@ -96,6 +107,10 @@ export class Slave {
 
             abort(resp, e.message);
         }
+    }
+
+    wait(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
     }
 };
 
