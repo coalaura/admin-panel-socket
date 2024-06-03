@@ -5,7 +5,7 @@ let logs = [],
     file;
 
 export function getLogs() {
-    return logs;
+    return logs.toReversed();
 }
 
 const _consoleLog = console.log;
