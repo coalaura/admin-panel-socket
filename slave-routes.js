@@ -126,8 +126,10 @@ export function initSlaveRoutes(server, app) {
 
         resp.json({
             status: true,
-            info: logs.join("\n"),
-            logs: getLogs().join("\n")
+            data: {
+                info: logs.join("\n"),
+                logs: getLogs().join("\n")
+            }
         });
     });
 }
