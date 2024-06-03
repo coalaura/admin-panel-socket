@@ -41,10 +41,9 @@ export async function checkIfServerIsUp(server) {
         success = false;
 
     try {
-        // TODO: Replace this with /auth.json instead of /antiCheat.json
         if (server.down) {
             // To test if we can do authorized requests
-            await requestOpFwApi(`${server.url}/op-framework/antiCheat.json`, server.token);
+            await requestOpFwApi(`${server.url}/op-framework/auth.json`, server.token);
         }
 
         const data = await requestOpFwApi(`${server.url}/op-framework/variables.json`, server.token);
@@ -63,7 +62,7 @@ export async function checkIfServerIsUp(server) {
 
         success = data.serverReady === true;
     } catch (e) {
-        server.log && server.log(`Failed to check if server is up: ${e.message}`);
+        console.warn(`Failed to check if server is up: ${e.message}`);
     }
 
     server.info = {

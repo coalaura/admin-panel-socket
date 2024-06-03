@@ -1,6 +1,6 @@
 import config from "./config.js";
 
-import { join, parse } from "path";
+import { join } from "path";
 import * as dotenv from "dotenv";
 import { createPool } from "mysql2";
 import chalk from "chalk";
@@ -78,16 +78,7 @@ export async function initServer(server, tries = 0) {
 				info: false,
 				players: [],
 				world: {},
-				models: {},
-
-				logs: [],
-				log: msg => {
-					srv.logs.push(`[${new Date().toISOString()}] ${msg}`);
-
-					if (srv.logs.length > 100) {
-						srv.logs.shift();
-					}
-				}
+				models: {}
 			};
 
 			servers[serverName] = srv;
@@ -140,8 +131,6 @@ async function healthCheck(server) {
 
 		console.log(chalk.redBright(`Failed database health-check for ${server.server}!`));
 		console.log(chalk.red(e.message));
-
-		server.log && server.log(`Database health-check failed: ${e.message}`);
 
 		if (e.fatal) {
 			console.log(chalk.redBright(`Database error is fatal! Waiting for restart...`));

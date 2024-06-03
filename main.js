@@ -9,6 +9,7 @@ import { checkAuth, parseServer } from "./auth.js";
 import { getSlaveData } from "./slave.js";
 import { initServer } from "./server.js";
 import { rejectClient } from "./functions.js";
+import { registerConsole } from "./logging.js";
 
 import express from "express";
 import { createServer } from "http";
@@ -99,6 +100,8 @@ if (cluster.isPrimary) {
 } else {
 	// Get slave data first
 	const slave = getSlaveData();
+
+	registerConsole(slave.server);
 
 	// Initialize the server
 	await initServer(slave.server);

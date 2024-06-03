@@ -43,20 +43,28 @@ export class Slave {
             console.log(`${chalk.greenBright(`Cluster ${this.#server} online`)}`);
         });
 
-        this.#cluster.on("exit", (code, signal) => {
-            this.#isUp = false;
-            this.#upCallbacks = [];
-
-            if (signal) {
-                console.log(`${chalk.redBright(`Cluster ${this.#server} killed`)} ${chalk.gray("by signal:")} ${chalk.cyanBright(signal)}`);
-            } else {
-                console.log(`${chalk.redBright(`Cluster ${this.#server} exited`)} ${chalk.gray("with exit code:")} ${chalk.cyanBright(code)}`);
-            }
-
-            console.log(`${chalk.redBright(`Waiting 5 seconds before restarting cluster ${this.#server}...`)}`);
-
-            setTimeout(() => this.#restart(), 5000);
+        this.#cluster.on("disconnect", (code, signal) => {
+            this.death(code, signal);
         });
+
+        this.#cluster.on("exit", (code, signal) => {
+            this.death(code, signal);
+        });
+    }
+
+    death(code, signal) {
+        if (this.#isRestarting) return;
+
+        this.#isUp = false;
+        this.#upCallbacks = [];
+
+        if (signal) {
+            console.log(`${chalk.redBright(`Cluster ${this.#server} killed`)} ${chalk.gray("by signal:")} ${chalk.cyanBright(signal)}`);
+        } else {
+            console.log(`${chalk.redBright(`Cluster ${this.#server} exited`)} ${chalk.gray("with exit code:")} ${chalk.cyanBright(code)}`);
+        }
+
+        this.#restart();
     }
 
     async #restart() {
