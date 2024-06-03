@@ -1,11 +1,12 @@
 import { existsSync, mkdirSync, createWriteStream, unlinkSync, statSync } from "fs";
 import { join } from "path";
+import { reverse } from "./functions.js";
 
 let logs = [],
     file;
 
 export function getLogs() {
-    return logs.toReversed();
+    return reverse(logs);
 }
 
 const _consoleLog = console.log;

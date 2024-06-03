@@ -20,3 +20,15 @@ export function formatNumber(pNumber, pDecimals) {
 
     return str.replace(/\.?0+$/gm, "");
 }
+
+export function reverse(array) {
+    if (array.toReversed !== undefined) return array.toReversed();
+
+    let reversed = [];
+
+    for (let x = array.length - 1; x >= 0; x--) {
+        reversed.push(array[x]);
+    }
+
+    return reversed;
+}
