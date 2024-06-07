@@ -62,7 +62,7 @@ export async function checkIfServerIsUp(server) {
 
         success = data.serverReady === true;
     } catch (e) {
-        console.warn(`Failed to check if server is up: ${e.message}`);
+        console.warn(`Failed to check if server is up (${String(server.url)}): ${e.message}`);
     }
 
     server.info = {
