@@ -63,6 +63,12 @@ export async function checkIfServerIsUp(server) {
         success = data.serverReady === true;
     } catch (e) {
         console.warn(`Failed to check if server is up (${String(server.url)}): ${e.message}`);
+
+        if (!server.url) {
+            console.error("Server URL not found, waiting for restart...");
+
+            process.exit(1);
+        }
     }
 
     server.info = {
