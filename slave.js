@@ -148,6 +148,12 @@ export class Slave {
                 this.#restart();
             }
 
+            if (error.response?.status === 504) {
+                console.log(`${chalk.redBright(`Cluster ${this.#server} timeout`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+
+                this.#restart();
+            }
+
             abort(resp, e.message);
         }
     }
