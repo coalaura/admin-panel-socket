@@ -8,14 +8,15 @@ import { resolveHistoricData, resolveTimestamp } from "./history-resolve.js";
 let slaves = {};
 
 export function initSlaves() {
-    let id = 1;
+    for (let i = 0; i < config.servers.length; i++) {
+        const server = config.servers[i];
 
-    for (const server of config.servers) {
-        let slave = new Slave(id, server);
+        // Staggered slave startup to spread out resource usage
+        setTimeout(() => {
+            let slave = new Slave(i + 1, server);
 
-        slaves[server] = slave;
-
-        id++;
+            slaves[server] = slave;
+        }, i * 500);
     }
 }
 

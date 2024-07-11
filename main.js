@@ -103,8 +103,8 @@ if (cluster.isPrimary) {
 
 	registerConsole(slave.server);
 
-	// Initialize the server
-	await initServer(slave.server);
+	// Initialize the server (async deferred, no await)
+	initServer(slave.server);
 
 	// Initialize express server
 	const app = express();

@@ -85,10 +85,10 @@ export function initDataLoop() {
     for (const serverName in servers) {
         const server = servers[serverName];
 
-        setTimeout(worldJSON, 1000, server);
-        setTimeout(staffJSON, 1000, server);
-
-        downChecker(server);
+        // Stagger
+        setTimeout(downChecker, 2000, server);
+        setTimeout(worldJSON, 2500, server);
+        setTimeout(staffJSON, 3000, server);
     }
 }
 
