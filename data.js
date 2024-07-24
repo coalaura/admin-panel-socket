@@ -4,7 +4,7 @@ import { trackHistoricData } from "./history-store.js";
 import { decompressPlayers } from "./decompressor.js";
 import { compressPlayer } from "./compression.js";
 
-import { lookup } from "node:dns/promises";
+import { lookup, getServers } from "node:dns/promises";
 import chalk from "chalk";
 
 export async function updateWorldJSON(server) {
@@ -89,7 +89,8 @@ async function canResolveServerDNS(url) {
     }
 
     const uri = new URL(url),
-        host = uri.host;
+        host = uri.host,
+        servers = getServers();
 
     try {
         const result = await lookup(host);
@@ -98,8 +99,8 @@ async function canResolveServerDNS(url) {
             throw new Error("no address found");
         }
 
-        console.log(`Resolved ${host} to: ${result.address}`);
+        console.log(`Resolved ${host} to: ${result.address} (using ${servers.join(", ")})`);
     } catch(e) {
-        console.warn(`Failed to resolve ${origin}: ${e.message}`);
+        console.warn(`Failed to resolve ${origin} (using ${servers.join(", ")}): ${e.message}`);
     }
 }
