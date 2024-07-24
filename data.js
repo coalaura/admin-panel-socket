@@ -65,9 +65,7 @@ export async function checkIfServerIsUp(server) {
     } catch (e) {
         console.warn(`Failed to check if server is up (${String(server.url)}): ${e.message}`);
 
-        if (!await canResolveServerDNS(server.url)) {
-            console.warn(`Unable to resolve server DNS: ${server.url}`);
-        }
+        await canResolveServerDNS(server.url);
 
         if (!server.url) {
             console.error("Server URL not found, waiting for restart...");
@@ -87,7 +85,7 @@ export async function checkIfServerIsUp(server) {
 
 async function canResolveServerDNS(url) {
     if (!url || url.match(/\d+\.\d+\.\d+\.\d+/)) {
-        return true;
+        return;
     }
 
     const uri = new URL(url),
@@ -96,10 +94,12 @@ async function canResolveServerDNS(url) {
     try {
         const result = await lookup(host);
 
-        return result && result.address && result.address.length > 0;
+        if (!result || !result.address) {
+            throw new Error("no address found");
+        }
+
+        console.log(`Resolved ${host} to: ${result.address}`);
     } catch(e) {
         console.warn(`Failed to resolve ${origin}: ${e.message}`);
-
-        return false;
     }
 }
