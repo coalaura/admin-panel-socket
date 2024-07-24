@@ -4,6 +4,7 @@ import { trackHistoricData } from "./history-store.js";
 import { decompressPlayers } from "./decompressor.js";
 import { compressPlayer } from "./compression.js";
 
+import { lookup } from "node:dns/promises";
 import chalk from "chalk";
 
 export async function updateWorldJSON(server) {
@@ -64,6 +65,10 @@ export async function checkIfServerIsUp(server) {
     } catch (e) {
         console.warn(`Failed to check if server is up (${String(server.url)}): ${e.message}`);
 
+        if (!await canResolveServerDNS(server.url)) {
+            console.warn(`Unable to resolve server DNS: ${server.url}`);
+        }
+
         if (!server.url) {
             console.error("Server URL not found, waiting for restart...");
 
@@ -78,4 +83,23 @@ export async function checkIfServerIsUp(server) {
     };
 
     return success;
+}
+
+async function canResolveServerDNS(url) {
+    if (!url || url.match(/\d+\.\d+\.\d+\.\d+/)) {
+        return true;
+    }
+
+    const uri = new URL(url),
+        host = uri.host;
+
+    try {
+        const result = await lookup(host);
+
+        return result && result.address && result.address.length > 0;
+    } catch(e) {
+        console.warn(`Failed to resolve ${origin}: ${e.message}`);
+
+        return false;
+    }
 }
