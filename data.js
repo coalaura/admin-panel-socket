@@ -99,8 +99,9 @@ async function canResolveServerDNS(url) {
             throw new Error("no address found");
         }
 
-        console.log(`Resolved ${host} to: ${result.address} (using ${servers.join(", ")})`);
+        console.log(`Resolved ${host} to: ${result.address}`);
     } catch(e) {
-        console.warn(`Failed to resolve ${origin} (using ${servers.join(", ")}): ${e.message}`);
+        console.info(`Active DNS servers: ${servers.join(", ")}`);
+        console.warn(`Failed to resolve ${origin}: ${e.message}`);
     }
 }
