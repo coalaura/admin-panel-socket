@@ -16,7 +16,7 @@ export function log(server, level, msg) {
 
     logs.push(msg);
 
-    if (logs.length > 500) {
+    if (logs.length > 2500) {
         logs.shift();
     }
 
