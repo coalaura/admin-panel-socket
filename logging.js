@@ -64,6 +64,10 @@ export function registerConsole(server) {
     cycleFile(server);
 
     console.log = (...args) => {
+        log(server, "log", args.join(" "));
+    };
+
+    console.info = (...args) => {
         log(server, "info", args.join(" "));
     };
 

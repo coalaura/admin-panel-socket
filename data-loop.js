@@ -11,12 +11,9 @@ export function getLastServerError(server) {
 }
 
 async function worldJSON(server) {
-    let timeout = 1000;
-
     if (!server.down && !server.failed) {
         try {
-            const start = Date.now(),
-                clientData = await updateWorldJSON(server);
+            const clientData = await updateWorldJSON(server);
 
             lastErrors[server.server] = null;
 
@@ -27,9 +24,7 @@ async function worldJSON(server) {
                     p: clientData.players,
                     i: clientData.instance || false
                 }
-            })
-
-            timeout = Math.max(1000 - (Date.now() - start), 1);
+            });
         } catch (e) {
             server.down = true;
             server.downError = e.message;
@@ -39,8 +34,6 @@ async function worldJSON(server) {
             lastErrors[server.server] = e;
         }
     }
-
-    setTimeout(worldJSON, timeout, server);
 }
 
 async function staffJSON(server) {
@@ -62,8 +55,6 @@ async function staffJSON(server) {
             lastErrors[server.server] = e;
         }
     }
-
-    setTimeout(staffJSON, 3000, server);
 }
 
 async function downChecker(server) {
@@ -75,8 +66,6 @@ async function downChecker(server) {
         server.down = false;
         server.downError = null;
     }
-
-    setTimeout(downChecker, 10000, server);
 }
 
 export function initDataLoop() {
@@ -86,12 +75,28 @@ export function initDataLoop() {
         const server = servers[serverName];
 
         // Stagger
-        setTimeout(downChecker, 2000, server);
-        setTimeout(worldJSON, 2500, server);
-        setTimeout(staffJSON, 3000, server);
+        runIntervalDelayed(() => {
+            downChecker(server);
+        }, 1000, 10000);
+
+        runIntervalDelayed(() => {
+            worldJSON(server);
+        }, 2000, 1000);
+
+        runIntervalDelayed(() => {
+            staffJSON(server);
+        }, 3000, 3000);
     }
 }
 
 export function isValidType(type) {
     return type && ["world", "staff"].includes(type);
+}
+
+function runIntervalDelayed(fn, delay, interval) {
+    setTimeout(() => {
+        fn();
+
+        setInterval(fn, interval);
+    }, delay);
 }
