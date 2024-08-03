@@ -22,6 +22,10 @@ export function getServer(server, req) {
 	return servers[data.cluster];
 }
 
+export function getServerByName(name) {
+	return servers[name];
+}
+
 export function getServers() {
 	return servers;
 }

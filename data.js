@@ -78,13 +78,15 @@ export async function checkIfServerIsUp(server) {
         console.log(`Server ${server.url} is up again! (uptime=${uptime}, name=${name})`);
     }
 
-    server.info = {
+    if (!success) {
+        return false;
+    }
+
+    return {
         uptime: uptime,
         name: name,
         logo: logo
     };
-
-    return success;
 }
 
 async function canResolveServerDNS(url) {

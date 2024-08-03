@@ -2,7 +2,7 @@ import chalk from "chalk";
 
 import { updateWorldJSON, checkIfServerIsUp } from "./data.js";
 import { updateStaffJSON } from "./staff.js";
-import { getServers } from "./server.js";
+import { getServers, getServerByName } from "./server.js";
 
 let lastErrors = {};
 
@@ -10,7 +10,9 @@ export function getLastServerError(server) {
 	return lastErrors[server];
 }
 
-async function worldJSON(server) {
+async function worldJSON(serverName) {
+    const server = getServerByName(serverName);
+
     if (!server.down && !server.failed) {
         try {
             const clientData = await updateWorldJSON(server);
@@ -36,7 +38,9 @@ async function worldJSON(server) {
     }
 }
 
-async function staffJSON(server) {
+async function staffJSON(serverName) {
+    const server = getServerByName(serverName);
+
     if (!server.down && !server.failed) {
         try {
             const clientData = await updateStaffJSON(server);
@@ -57,14 +61,19 @@ async function staffJSON(server) {
     }
 }
 
-async function downChecker(server) {
-    const isUp = await checkIfServerIsUp(server);
+async function downChecker(serverName) {
+    const server = getServerByName(serverName),
+        info = await checkIfServerIsUp(server);
 
-    if (server.down && isUp) {
-        console.error(`${chalk.greenBright("Server back up")} ${chalk.cyanBright(server.server)}`);
+    if (info) {
+        server.info = info;
 
-        server.down = false;
-        server.downError = null;
+        if (server.down) {
+            console.error(`${chalk.greenBright("Server back up")} ${chalk.cyanBright(server.server)}`);
+
+            server.down = false;
+            server.downError = null;
+        }
     }
 }
 
@@ -72,19 +81,17 @@ export function initDataLoop() {
     const servers = getServers();
 
     for (const serverName in servers) {
-        const server = servers[serverName];
-
         // Stagger
         runIntervalDelayed(() => {
-            downChecker(server);
+            downChecker(serverName);
         }, 1000, 10000);
 
         runIntervalDelayed(() => {
-            worldJSON(server);
+            worldJSON(serverName);
         }, 2000, 1000);
 
         runIntervalDelayed(() => {
-            staffJSON(server);
+            staffJSON(serverName);
         }, 3000, 3000);
     }
 }
