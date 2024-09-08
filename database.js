@@ -18,6 +18,8 @@ export async function initDatabases() {
     }
 
     await Promise.all(promises);
+
+    console.log(chalk.greenBright(`All databases initialized successfully!`));
 }
 
 async function initDatabase(cluster) {
@@ -72,6 +74,8 @@ async function initDatabase(cluster) {
     }
 
     databases[cluster] = database;
+
+    console.log(chalk.greenBright(`Successfully connected to database for ${cluster}...`));
 }
 
 async function testConnection(database) {
