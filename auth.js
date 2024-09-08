@@ -1,10 +1,8 @@
 import config from "./config.js";
+import { getDatabase } from "./database.js";
 import { abort } from "./functions.js";
 
 import chalk from "chalk";
-import { join } from "path";
-import { readFile } from "fs/promises";
-import { existsSync } from "fs";
 
 export async function checkAuth(cluster, token) {
     if (!cluster || !token) {
@@ -77,7 +75,7 @@ export async function authenticate(req, resp, next) {
     next();
 }
 
-export async function isValidToken(cluster, token) {
+async function isValidToken(cluster, token) {
     if (!config.servers.includes(cluster)) {
         return false;
     }
@@ -86,16 +84,35 @@ export async function isValidToken(cluster, token) {
         return false;
     }
 
-    try {
-        const sessionFile = join(config.panel, "storage", "sessions", cluster + ".json");
+    const database = getDatabase(cluster);
 
-        if (!existsSync(sessionFile)) {
+    if (!database) {
+        return false;
+    }
+
+    try {
+        const database = getDatabase(cluster);
+
+        const sessions = await database.query("SELECT `key`, `data` FROM `webpanel_sessions` WHERE `key` = ?", [
+            token
+        ]);
+
+        if (!sessions || !sessions.length) {
             return false;
         }
 
-        const sessions = JSON.parse(await readFile(sessionFile, "utf8"));
+        const session = sessions[0];
 
-        return token in sessions ? sessions[token] : false;
+        const data = JSON.parse(session.data);
+
+        if (!data || !data.user || !data.discord) {
+            return false;
+        }
+
+        return {
+            name: data.name,
+            discord: data.discord.id
+        };
     } catch (e) {
         console.error(`${chalk.yellowBright("Failed to validate session")} ${chalk.cyanBright(cluster)}: ${chalk.gray(e)}`);
     }

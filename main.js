@@ -10,6 +10,7 @@ import { getSlaveData } from "./slave.js";
 import { initServer } from "./server.js";
 import { rejectClient } from "./functions.js";
 import { registerConsole } from "./logging.js";
+import { initDatabases } from "./database.js";
 
 import express from "express";
 import { createServer } from "http";
@@ -33,6 +34,9 @@ if (cluster.isPrimary) {
 	}));
 
 	app.use(express.json());
+
+	// Connect to databases
+	await initDatabases();
 
 	// Wake up the slaves
 	initSlaves();
