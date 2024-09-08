@@ -4,6 +4,8 @@ import { abort } from "./functions.js";
 
 import chalk from "chalk";
 
+let sessions = {};
+
 export async function checkAuth(cluster, token) {
     if (!cluster || !token) {
         return false;
@@ -84,6 +86,12 @@ async function isValidToken(cluster, token) {
         return false;
     }
 
+    const cached = sessions[token];
+
+    if (cached && Date.now() - cached.fetched < 10 * 1000) {
+        return cached;
+    }
+
     const database = getDatabase(cluster);
 
     if (!database) {
@@ -109,10 +117,13 @@ async function isValidToken(cluster, token) {
             return false;
         }
 
-        return {
+        sessions[token] = {
             name: data.name,
-            discord: data.discord.id
+            discord: data.discord.id,
+            fetched: Date.now()
         };
+
+        return sessions[token];
     } catch (e) {
         console.error(`${chalk.yellowBright("Failed to validate session")} ${chalk.cyanBright(cluster)}: ${chalk.gray(e)}`);
     }
