@@ -26,7 +26,7 @@ async function updateTwitchData(api, streamers) {
             data = response.data;
 
         if (data && Array.isArray(data)) {
-            streamerData = data;
+            streamerData = data.filter(streamer => streamer?.live);
         }
     } catch {}
 
