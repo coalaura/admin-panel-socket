@@ -26,7 +26,7 @@ export function getServers() {
 	return servers;
 }
 
-export async function initServer(cluster, tries = 0) {
+export function initServer(cluster, tries = 0) {
 	const cfg = readDotEnv(cluster);
 
 	if (!cfg) {

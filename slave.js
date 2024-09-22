@@ -1,18 +1,19 @@
 import cluster from "cluster";
-import { Agent } from "http";
-import axios from "axios";
 import chalk from "chalk";
 
 import { abort } from "./functions.js";
-import { getSlaveRoutes } from "./slave-routes.js";
+import { handleDataUpdate } from "./client.js";
+import { SlaveHandler } from "./slave-handler.js";
 
-const routes = getSlaveRoutes();
+const routes = SlaveHandler.routes();
 
 export class Slave {
     #id;
-    #agent;
     #cluster;
     #server;
+
+    #requestId = 0;
+    #requests = {};
 
     #isUp = false;
     #isRestarting = false;
@@ -27,20 +28,33 @@ export class Slave {
     }
 
     #init() {
-        this.#agent = new Agent({
-            keepAlive: true
-        });
-
         this.#cluster = cluster.fork({
             stdio: [0, 1, 2, "ipc"],
 
             ID: this.#id,
-            PORT: this.port,
             SERVER: this.#server
         });
 
         this.#cluster.on("online", () => {
             console.log(`${chalk.greenBright(`Cluster ${this.#server} online`)}`);
+        });
+
+        this.#cluster.on("message", message => {
+            const { id, type, data } = message;
+
+            if (type === "hello") {
+                this.isUp();
+
+                return;
+            } else if (type === "request") {
+                const request = this.#requests[id];
+
+                request?.resolve(data);
+
+                return;
+            }
+
+            handleDataUpdate(type, this.#server, data);
         });
 
         this.#cluster.on("disconnect", (code, signal) => {
@@ -73,9 +87,10 @@ export class Slave {
         this.#isRestarting = true;
         this.#isUp = false;
         this.#upCallbacks = [];
+        this.#restarts++;
 
-        let timeout = setTimeout(() => {
-            console.log(`${chalk.redBright(`Cluster ${this.#server} restart failed`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+        const failed = () => {
+            console.log(`${chalk.redBright(`Cluster ${this.#server} restart failed`)}`);
 
             this.#isRestarting = false;
 
@@ -83,15 +98,19 @@ export class Slave {
             this.#upCallbacks = [];
 
             this.#restart();
-        }, 60 * 1000);
+        };
+
+        // Restart should not take longer than 1 minute
+        const timeout = setTimeout(failed, 60 * 1000);
 
         try {
             if (this.#cluster && this.#cluster.isRunning) {
                 this.#cluster.kill();
             }
 
+            // Delay extra long if we have too many restarts
             if (this.#restarts >= 3) {
-                console.log(`${chalk.redBright(`Cluster ${this.#server} restart limit reached`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+                console.log(`${chalk.redBright(`Cluster ${this.#server} restart limit reached`)}`);
                 console.log(`${chalk.redBright(`Waiting 15 minutes before restarting cluster ${this.#server}...`)}`);
 
                 await new Promise(resolve => setTimeout(resolve, 15 * 60 * 1000));
@@ -103,18 +122,51 @@ export class Slave {
                 clearTimeout(timeout);
 
                 this.#isRestarting = false;
+                this.#restarts = 0;
 
-                console.log(`${chalk.greenBright(`Cluster ${this.#server} startup succeeded`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
+                console.log(`${chalk.greenBright(`Cluster ${this.#server} startup succeeded`)}`);
             });
-        } catch(e) {}
+        } catch (e) {
+            console.log(`${chalk.redBright(`Cluster ${this.#server} restart failed`)}: ${e.message}`);
+
+            failed();
+        }
     }
 
-    get port() {
-        // Master port is 9999, cluster port is 9900 + id
-        return 9900 + this.#id;
+    ipc(resolve, func, options) {
+        const id = ++this.#requestId;
+
+        const finish = data => {
+            clearTimeout(this.#requests[id].timeout);
+
+            delete this.#requests[id];
+
+            resolve(data || {
+                status: false,
+                error: "Request timed out"
+            });
+        };
+
+        this.#requests[id] = {
+            resolve: finish,
+            timeout: setTimeout(() => {
+                finish(false);
+
+                console.log(`${chalk.redBright(`Cluster ${this.#server} timeout`)}`);
+
+                this.#restart();
+            }, 5000)
+        };
+
+        this.#cluster.send({
+            id: id,
+            server: this.#server,
+            func: func,
+            options: options
+        });
     }
 
-    async get(type, route, options, resp) {
+    get(type, route, options, resp) {
         if (!this.#isUp) {
             return abort(resp, "Cluster not up yet");
         }
@@ -123,43 +175,9 @@ export class Slave {
             return abort(resp, "Invalid route");
         }
 
-        const port = this.port;
-
-        try {
-            options = options ? `/${options}` : "";
-
-            const response = await axios.get(`http://localhost:${port}/${route}${options}`, {
-                httpsAgent: this.#agent
-            });
-
-            // Forward data, headers and status code
-            const { data, headers, status } = response;
-
-            for (const key in headers) {
-                resp.setHeader(key, headers[key]);
-            }
-
-            resp.status(status);
+        this.ipc(data => {
             resp.send(data);
-        } catch (e) {
-            if (e.message.includes("ECONNREFUSED")) {
-                console.log(`${chalk.redBright(`Cluster ${this.#server} connection refused`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
-
-                this.#restart();
-            }
-
-            if (error.response?.status === 504) {
-                console.log(`${chalk.redBright(`Cluster ${this.#server} timeout`)} ${chalk.gray("on port:")} ${chalk.cyanBright(this.port)}`);
-
-                this.#restart();
-            }
-
-            abort(resp, e.message);
-        }
-    }
-
-    wait(ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
+        }, route, options);
     }
 
     onUp(callback) {

@@ -20,10 +20,6 @@ export function initSlaves() {
     }
 }
 
-export function getSlave(server) {
-    return slaves[server];
-}
-
 export function initMasterRoutes(app) {
     // Data route requires authentication
     app.get("/socket/:server/data/:route/:options?", authenticate, async (req, resp) => {
@@ -92,7 +88,7 @@ export function initMasterRoutes(app) {
     });
 
     // Misc data routes (no authentication)
-    app.get("/socket/:server/misc/twitch", async (req, resp) => {
+    app.get("/socket/:server/misc/twitch", (req, resp) => {
         resp.json({
             status: true,
             data: getStreamerData()

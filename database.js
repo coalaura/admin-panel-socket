@@ -83,7 +83,9 @@ async function testConnection(database) {
 		await database.query("SELECT 1");
 
 		return true;
-	} catch (e) {}
+	} catch {
+        // Don't care
+    }
 
 	return false;
 }

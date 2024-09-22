@@ -1,16 +1,15 @@
 import { initDataLoop, isValidType } from "./data-loop.js";
-import { isValidLicense } from "./auth.js";
-import { handleConnection, handleDataUpdate } from "./client.js";
-import { initSlaveRoutes } from "./slave-routes.js";
-import { initSlaves, initMasterRoutes, getSlave } from "./master.js";
+import { handleConnection } from "./client.js";
+import { initSlaves, initMasterRoutes } from "./master.js";
 import { startTwitchUpdateLoop } from "./twitch.js";
 import { cleanupHistoricData } from "./cleanup.js";
-import { checkAuth, parseServer } from "./auth.js";
+import { checkAuth, parseServer, isValidLicense } from "./auth.js";
 import { getSlaveData } from "./slave.js";
 import { initServer } from "./server.js";
 import { rejectClient } from "./functions.js";
 import { registerConsole } from "./logging.js";
 import { initDatabases } from "./database.js";
+import { SlaveHandler } from "./slave-handler.js";
 
 import express from "express";
 import { createServer } from "http";
@@ -76,27 +75,6 @@ if (cluster.isPrimary) {
 		handleConnection(client, server.server, type, license);
 	});
 
-	// Listen for data from the slaves
-	cluster.on("message", (worker, message) => {
-		const { server, type, data } = message;
-
-		if (type === "slave") {
-			const slave = getSlave(server);
-
-			if (!slave) {
-				console.log(`Slave ${server} sent message but was not found.`);
-
-				return;
-			}
-
-			slave.isUp();
-
-			return
-		}
-
-		handleDataUpdate(type, server, data);
-	});
-
 	// Start the server
 	xp.listen(9999, () => {
 		console.log(chalk.blueBright("Listening on port 9999."));
@@ -110,22 +88,14 @@ if (cluster.isPrimary) {
 	// Initialize the server (async deferred, no await)
 	initServer(slave.server);
 
-	// Initialize express server
-	const app = express();
-
-	app.use(express.json());
-
-	// Initialize routes
-	initSlaveRoutes(slave.server, app);
+	// Initialize handler
+	new SlaveHandler();
 
 	// Initialize data-loop
 	initDataLoop();
 
 	// Start the server
-	app.listen(slave.port, () => {
-		process.send({
-			server: slave.server,
-			type: "slave"
-		});
+	process.send({
+		type: "hello"
 	});
 }

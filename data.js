@@ -108,6 +108,6 @@ async function canResolveServerDNS(url) {
         console.log(`Resolved ${host} to: ${result.address}`);
     } catch(e) {
         console.info(`Active DNS servers: ${servers.join(", ")}`);
-        console.warn(`Failed to resolve ${origin}: ${e.message}`);
+        console.warn(`Failed to resolve ${host}: ${e.message}`);
     }
 }

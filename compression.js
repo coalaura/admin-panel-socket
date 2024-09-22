@@ -55,7 +55,7 @@ function _movementData(player) {
 
 function _cleanup(obj) {
     for (const key in obj) {
-        if (Object.hasOwnProperty(key)) continue;
+        if (Object.prototype.hasOwnProperty.call(obj, key)) continue;
 
         const value = obj[key];
 
