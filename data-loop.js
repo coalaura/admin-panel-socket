@@ -21,7 +21,6 @@ async function worldJSON(serverName) {
 
             process.send({
                 type: "world",
-                server: server.server,
                 data: {
                     p: clientData.players,
                     i: clientData.instance || false
@@ -47,7 +46,6 @@ async function staffJSON(serverName) {
 
             process.send({
                 type: "staff",
-                server: server.server,
                 data: clientData
             });
         } catch (e) {

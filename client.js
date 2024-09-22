@@ -53,7 +53,7 @@ function getActiveViewers(server, type) {
     let viewers = [];
 
     for (const id in connections) {
-        if (Object.prototype.hasOwnProperty.call(connections, id)) continue;
+        if (!connections.hasOwnProperty(id)) continue;
 
         const client = connections[id],
             license = client.license;
@@ -75,7 +75,7 @@ export function handleDataUpdate(type, server, data) {
     data = _prepareData(data);
 
     for (const id in connections) {
-        if (Object.prototype.hasOwnProperty.call(connections, id)) continue;
+        if (!connections.hasOwnProperty(id)) continue;
 
         const client = connections[id];
 
@@ -89,7 +89,7 @@ export function countConnections(server, type) {
     let total = 0;
 
     for (const id in connections) {
-        if (Object.prototype.hasOwnProperty.call(connections, id)) continue;
+        if (!connections.hasOwnProperty(id)) continue;
 
         const client = connections[id];
 
