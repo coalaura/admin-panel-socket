@@ -86,16 +86,21 @@ if (cluster.isPrimary) {
 	registerConsole(slave.server);
 
 	// Initialize the server (async deferred, no await)
+	console.log("Initializing server...");
 	initServer(slave.server);
 
 	// Initialize handler
+	console.log("Initializing handler...");
 	new SlaveHandler();
 
 	// Initialize data-loop
+	console.log("Initializing data-loop...");
 	initDataLoop();
 
 	// Start the server
 	process.send({
 		type: "hello"
 	});
+
+	console.log("Startup complete");
 }
