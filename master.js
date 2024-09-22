@@ -11,12 +11,7 @@ export function initSlaves() {
     for (let i = 0; i < config.servers.length; i++) {
         const server = config.servers[i];
 
-        // Staggered slave startup to spread out resource usage
-        setTimeout(() => {
-            let slave = new Slave(i + 1, server);
-
-            slaves[server] = slave;
-        }, i * 500);
+        slaves[server] = new Slave(i + 1, server);
     }
 }
 
