@@ -21,35 +21,14 @@ export function startTwitchUpdateLoop() {
 }
 
 async function updateTwitchData(api, streamers) {
-    const data = (await Promise.all(streamers.map(async streamer => {
-        try {
-            const avatar = await getTwitchStreamer(api, streamer);
+    try {
+        const response = await axios.get(api.replace("%s", streamers.join(","))),
+            data = response.data;
 
-            return {
-                name: streamer,
-                live: !!avatar,
-                avatar: avatar
-            };
-        } catch (e) {
-            console.log(chalk.redBright(`Failed to resolve streamer ${streamer}!`));
-		    console.log(chalk.red(e.message));
+        if (data && Array.isArray(data)) {
+            streamerData = data;
         }
-
-        return null;
-    }))).filter(streamer => streamer && streamer.live);
-
-    streamerData = data;
+    } catch {}
 
     setTimeout(updateTwitchData, 60 * 1000, api, streamers);
-}
-
-async function getTwitchStreamer(api, streamer) {
-    const url = api.replace("%s", streamer);
-
-    const response = await axios.get(url),
-        json = response.data;
-
-    if (!json || !json.live) return false;
-
-    return json.avatar;
 }
