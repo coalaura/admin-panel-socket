@@ -9,7 +9,8 @@ export function getLogs() {
     return reverse(logs);
 }
 
-const _consoleLog = console.log;
+const _consoleLog = console.log,
+    isDev = process.argv.includes("--dev");
 
 function log(server, level, msg) {
     msg = `[${new Date().toISOString()}] ${level.toUpperCase()} - ${msg}`;
@@ -24,6 +25,10 @@ function log(server, level, msg) {
         file.write(msg + "\n");
 
         cycleFile(server);
+
+        if (isDev) {
+            _consoleLog(msg);
+        }
     } else {
         _consoleLog(msg);
     }

@@ -1,10 +1,15 @@
 import { createWriteStream, existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
 
-let buffers = {};
+let buffers = {},
+    streams = 0;
 
 export function bufferCount() {
     return Object.keys(buffers).length;
+}
+
+export function streamCount() {
+    return streams;
 }
 
 export class BufferedWriter {
@@ -29,6 +34,8 @@ export class BufferedWriter {
             });
         }
 
+        streams++;
+
         this.#stream = createWriteStream(path, {
             flags: "a",
             highWaterMark: BufferedWriter.BufferSize
@@ -42,6 +49,10 @@ export class BufferedWriter {
             console.warn(`Failed to write to ${path}`);
 
             this.close();
+        });
+
+        this.#stream.on("close", () => {
+            streams--;
         });
 
         this.#buffer = [];
