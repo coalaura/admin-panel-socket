@@ -42,8 +42,10 @@ function getInstance(uri) {
         const agent = url.scheme === "https" ? new https.Agent({
             keepAlive: true,
             rejectUnauthorized: false,
+            keepAliveMsecs: 5000,
         }) : new http.Agent({
             keepAlive: true,
+            keepAliveMsecs: 5000,
         });
 
         agents[origin] = agent;
