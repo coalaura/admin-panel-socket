@@ -3,6 +3,10 @@ import { dirname } from "path";
 
 let buffers = {};
 
+export function bufferCount() {
+    return Object.keys(buffers).length;
+}
+
 export class BufferedWriter {
     static BufferSize = 8 * 1024; // 8 KB
 

@@ -1,6 +1,7 @@
 import { getServerByName } from "./server.js";
 import { getLogs } from "./logging.js";
 import { isValidLicense } from "./auth.js";
+import { bufferCount } from "./buffer.js";
 
 export class SlaveHandler {
     constructor() {
@@ -170,6 +171,7 @@ export class SlaveHandler {
         logs.push(srv && srv.token ? "+ server.token is set" : "- server.token is not set");
         logs.push(srv && !srv.down ? "+ server is up" : `- server is down (${srv?.downError || "Unknown error"})`);
         logs.push(srv && srv.info ? "+ server.info is set" : "- server.info is not set");
+        logs.push(`+ ${bufferCount()} open write buffers`);
 
         logs.push("");
         logs.push((srv && srv.info ? "+ server.info = " : "- server.info = ") + JSON.stringify(srv?.info));
