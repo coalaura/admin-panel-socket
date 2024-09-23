@@ -29,12 +29,12 @@ export class BufferedWriter {
             });
         }
 
-        const random = Math.floor(Math.random() * 5000);
+        const random = Math.floor(Math.random() * 10000);
 
         setTimeout(() => {
             this.#interval = setInterval(() => {
                 this.flush();
-            }, 20 * 1000);
+            }, 30 * 1000);
         }, random);
     }
 
@@ -44,6 +44,7 @@ export class BufferedWriter {
         }
 
         const writer = new BufferedWriter(path);
+
         buffers[path] = writer;
 
         return writer;
@@ -61,11 +62,11 @@ export class BufferedWriter {
         this.#buffer.push(data);
         this.#size += len;
 
-        // Close after 5 minutes of inactivity
+        // Close and delete buffer after 10 minutes of inactivity
         clearTimeout(this.#timeout);
         setTimeout(() => {
             this.close();
-        }, 5 * 60 * 1000);
+        }, 10 * 60 * 1000);
     }
 
     flush() {
