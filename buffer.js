@@ -1,24 +1,19 @@
-import { createWriteStream, existsSync, mkdirSync } from "fs";
+import { appendFile, existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
 
-let buffers = {},
-    streams = 0;
+let buffers = {};
 
 export function bufferCount() {
     return Object.keys(buffers).length;
-}
-
-export function streamCount() {
-    return streams;
 }
 
 export class BufferedWriter {
     static BufferSize = 8 * 1024; // 8 KB
 
     #path;
-    #stream;
-    #buffer;
-    #size;
+    #lock = false;
+    #buffer = [];
+    #size = 0;
 
     #interval;
     #timeout;
@@ -33,30 +28,6 @@ export class BufferedWriter {
                 recursive: true
             });
         }
-
-        streams++;
-
-        this.#stream = createWriteStream(path, {
-            flags: "a",
-            highWaterMark: BufferedWriter.BufferSize
-        });
-
-        this.#stream.on("drain", () => {
-            this.flush();
-        });
-
-        this.#stream.on("error", () => {
-            console.warn(`Failed to write to ${path}`);
-
-            this.close();
-        });
-
-        this.#stream.on("close", () => {
-            streams--;
-        });
-
-        this.#buffer = [];
-        this.#size = 0;
 
         const random = Math.floor(Math.random() * 5000);
 
@@ -98,16 +69,24 @@ export class BufferedWriter {
     }
 
     flush() {
-        if (this.#size === 0) {
+        if (this.#size === 0 || this.#lock) {
             return;
         }
+
+        this.#lock = true;
 
         const data = this.#buffer.join("");
 
         this.#buffer = [];
         this.#size = 0;
 
-        this.#stream.write(data, "utf8");
+        appendFile(this.#path, data, err => {
+            this.#lock = false;
+
+            if (err) {
+                console.warn(`Failed to flush ${this.#path}: ${err.message}`);
+            }
+        });
     }
 
     close() {
@@ -116,8 +95,6 @@ export class BufferedWriter {
         clearInterval(this.#interval);
 
         this.flush();
-
-        this.#stream.end();
     }
 }
 
