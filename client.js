@@ -85,7 +85,7 @@ export function handleDataUpdate(type, server, data) {
     }
 }
 
-export function countConnections(server, type) {
+function countConnections(server, type) {
     let total = 0;
 
     for (const id in connections) {

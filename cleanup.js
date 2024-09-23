@@ -1,6 +1,6 @@
 import moment from "moment";
 
-import { readdirSync, lstatSync } from "fs";
+import { readdirSync, lstatSync, existsSync } from "fs";
 import { join } from "path";
 import { execSync } from "child_process";
 
@@ -36,12 +36,14 @@ function _cleanupServer(server) {
 export function cleanupHistoricData() {
 	console.log("Cleaning up historic data...");
 
-	const servers = readdirSync("historic");
-
 	let removed = 0;
 
-	for (const server of servers) {
-		removed += _cleanupServer(server);
+	if (existsSync("historic")) {
+		const servers = readdirSync("historic");
+
+		for (const server of servers) {
+			removed += _cleanupServer(server);
+		}
 	}
 
 	console.log(`Cleanup complete (${removed} files removed)`);

@@ -3,9 +3,8 @@ import { createInterface } from "readline";
 import { Writable } from "stream";
 import { execSync } from "child_process";
 
-export function findFiles(path, startWith) {
+export function findHistoryFilesWithTimestamp(path, startWith) {
     try {
-        console.debug(`grep -rnw "${path}" -e "^${startWith}"`)
         const out = execSync(`grep -rnw "${path}" -e "^${startWith}"`).toString(),
             lines = out.trim().split("\n");
 
@@ -18,58 +17,38 @@ export function findFiles(path, startWith) {
                 result.push({
                     file: line[0],
                     line: line[1],
-                    content: line[2]
+                    entry: line[2]
                 });
             }
         }
 
         return result;
     } catch (e) {
-        const error = e.stderr ? e.stderr.toString().trim() : "Something went wrong";
-
-        if (error === "") {
+        if (!e.stderr) {
             return [];
         }
 
-        throw Error(error);
+        throw Error(e.stderr.toString().trim());
     }
 }
 
-export function readLines(path, callback) {
+export function readFileLineByLine(path, callback) {
     let inStream = createReadStream(path),
         outStream = new Writable();
 
     return new Promise((resolve, reject) => {
         const rl = createInterface(inStream, outStream);
 
-        rl.on('line', line => {
+        rl.on("line", line => {
             if (callback(line ? line.trim() : line) === false) {
                 rl.close();
             }
         });
 
-        rl.on('error', reject);
+        rl.on("error", reject);
 
-        rl.on('close', () => {
+        rl.on("close", () => {
             resolve();
         });
-    });
-}
-
-export function readLastHistoricEntry(path) {
-    return new Promise((resolve, reject) => {
-        let lastLine = false;
-
-        readLines(path, line => {
-            if (line) {
-                line = line.replace(/^\d+,/gm, "");
-
-                if (!line.endsWith("*")) {
-                    lastLine = line;
-                }
-            }
-        }).then(() => {
-            resolve(lastLine);
-        }).catch(reject);
     });
 }

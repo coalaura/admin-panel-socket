@@ -11,7 +11,7 @@ export function getLogs() {
 
 const _consoleLog = console.log;
 
-export function log(server, level, msg) {
+function log(server, level, msg) {
     msg = `[${new Date().toISOString()}] ${level.toUpperCase()} - ${msg}`;
 
     logs.push(msg);

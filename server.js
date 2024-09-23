@@ -1,22 +1,7 @@
 import chalk from "chalk";
-import { parseServer } from "./auth.js";
 import { readDotEnv } from "./env.js";
 
 let servers = {};
-
-export function getServer(server, req) {
-	const data = req && req.cluster ? req : parseServer(server);
-
-	if (!data) {
-		return false;
-	}
-
-	if (data.server && data.server in servers) {
-		return servers[data.server];
-	}
-
-	return servers[data.cluster];
-}
 
 export function getServerByName(name) {
 	return servers[name];
