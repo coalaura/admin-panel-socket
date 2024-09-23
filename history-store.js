@@ -27,5 +27,5 @@ export function trackHistoricData(server, player) {
 
     const path = join("historic", server, date, license + ".csv");
 
-    BufferedWriter.fromFile(path, now.endOf("day").unix()).writeLine(entry);
+    BufferedWriter.fromFile(path).writeLine(entry);
 }

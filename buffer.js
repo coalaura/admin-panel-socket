@@ -12,6 +12,7 @@ export class BufferedWriter {
     #size;
 
     #interval;
+    #timeout;
 
     constructor(path) {
         this.#path = path;
@@ -51,17 +52,13 @@ export class BufferedWriter {
         }, random);
     }
 
-    static fromFile(path, lifetime) {
+    static fromFile(path) {
         if (path in buffers) {
             return buffers[path];
         }
 
         const writer = new BufferedWriter(path);
         buffers[path] = writer;
-
-        setTimeout(() => {
-            writer.close();
-        }, (lifetime - Date.now()) + 4000)
 
         return writer;
     }
@@ -77,6 +74,12 @@ export class BufferedWriter {
 
         this.#buffer.push(data);
         this.#size += len;
+
+        // Close after 5 minutes of inactivity
+        clearTimeout(this.#timeout);
+        setTimeout(() => {
+            this.close();
+        }, 5 * 60 * 1000);
     }
 
     flush() {
@@ -99,16 +102,22 @@ export class BufferedWriter {
 
         this.flush();
 
-        this.#stream.close();
+        this.#stream.end();
     }
 }
 
-["SIGINT", "SIGTERM", "SIGQUIT", "SIGHUP", "exit"].forEach(signal => {
+function flushAll() {
+    for (const path in buffers) {
+        buffers[path].close();
+    }
+}
+
+["SIGINT", "SIGTERM", "SIGQUIT", "SIGHUP"].forEach(signal => {
     process.on(signal, () => {
-        for (const path in buffers) {
-            buffers[path].close();
-        }
+        flushAll();
 
         process.exit(0);
     });
 });
+
+process.on("beforeExit", flushAll);
