@@ -15,8 +15,7 @@ export function findHistoryFilesWithTimestamp(path, startWith) {
 
             if (line.length === 3) {
                 result.push({
-                    file: line[0],
-                    line: line[1],
+                    path: line[0],
                     entry: line[2]
                 });
             }

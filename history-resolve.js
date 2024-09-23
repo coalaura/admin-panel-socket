@@ -71,7 +71,7 @@ export async function resolveTimestamp(server, timestamp) {
             continue;
         }
 
-        const license = basename(file).replace(".csv", "");
+        const license = basename(file.path).replace(".csv", "");
 
         data[license] = minifyTimestampEntry(parsed);
     }
