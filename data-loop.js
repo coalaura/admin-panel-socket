@@ -3,6 +3,7 @@ import chalk from "chalk";
 import { updateWorldJSON, checkIfServerIsUp } from "./data.js";
 import { updateStaffJSON } from "./staff.js";
 import { getServers, getServerByName } from "./server.js";
+import { trackAverage } from "./average.js";
 
 let lastErrors = {};
 
@@ -13,7 +14,11 @@ export function getLastServerError(server) {
 async function worldJSON(serverName) {
     const server = getServerByName(serverName);
 
+    let timeout = 1000;
+
     if (!server.down && !server.failed) {
+        const start = Date.now();
+
         try {
             const clientData = await updateWorldJSON(server);
 
@@ -34,13 +39,29 @@ async function worldJSON(serverName) {
 
             lastErrors[server.server] = e;
         }
+
+        const took = Date.now() - start;
+
+        trackAverage("world", took);
+
+        timeout = Math.max(0, 1000 - took);
+    } else {
+        timeout = 5000;
     }
+
+    setTimeout(() => {
+        worldJSON(serverName);
+    }, timeout);
 }
 
 async function staffJSON(serverName) {
     const server = getServerByName(serverName);
 
+    let timeout = 3000;
+
     if (!server.down && !server.failed) {
+        const start = Date.now();
+
         try {
             const clientData = await updateStaffJSON(server);
 
@@ -56,7 +77,19 @@ async function staffJSON(serverName) {
 
             lastErrors[server.server] = e;
         }
+
+        const took = Date.now() - start;
+
+        trackAverage("staff", took);
+
+        timeout = Math.max(0, 3000 - took);
+    } else {
+        timeout = 5000;
     }
+
+    setTimeout(() => {
+        staffJSON(serverName);
+    }, timeout);
 }
 
 async function downChecker(serverName) {
@@ -84,13 +117,13 @@ export function initDataLoop() {
             downChecker(serverName);
         }, 1000, 10000);
 
-        runIntervalDelayed(() => {
+        setTimeout(() => {
             worldJSON(serverName);
-        }, 2000, 1000);
+        }, 2000);
 
-        runIntervalDelayed(() => {
+        setTimeout(() => {
             staffJSON(serverName);
-        }, 3000, 3000);
+        }, 3000);
     }
 }
 

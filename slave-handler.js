@@ -2,6 +2,7 @@ import { getServerByName } from "./server.js";
 import { getLogs } from "./logging.js";
 import { isValidLicense } from "./auth.js";
 import { bufferCount } from "./buffer.js";
+import { getAverage } from "./average.js";
 
 export class SlaveHandler {
     constructor() {
@@ -163,6 +164,9 @@ export class SlaveHandler {
 
     // Get slave health
     get_health(id, srv) {
+        const avgWorld = getAverage("world"),
+            avgStaff = getAverage("staff");
+
         let logs = [];
 
         logs.push(srv ? "+ server object found" : "- server object not found");
@@ -173,6 +177,8 @@ export class SlaveHandler {
         logs.push(srv && srv.info ? "+ server.info is set" : "- server.info is not set");
         logs.push(`+ ${bufferCount()} open buffered writers`);
         logs.push(`+ worker pid is ${process.pid}`);
+        logs.push(avgWorld ? `+ world.json API average is ${avgWorld}ms` : "- world.json API average is not set");
+        logs.push(avgStaff ? `+ staff.json API average is ${avgStaff}ms` : "- staff.json API average is not set");
 
         logs.push("");
         logs.push((srv && srv.info ? "+ server.info = " : "- server.info = ") + JSON.stringify(srv?.info));
