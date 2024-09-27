@@ -36,6 +36,8 @@ export class BufferedWriter {
                 this.flush();
             }, 30 * 1000);
         }, random);
+
+        this.scheduleClose();
     }
 
     static fromFile(path) {
@@ -62,11 +64,7 @@ export class BufferedWriter {
         this.#buffer.push(data);
         this.#size += len;
 
-        // Close and delete buffer after 10 minutes of inactivity
-        clearTimeout(this.#timeout);
-        setTimeout(() => {
-            this.close();
-        }, 10 * 60 * 1000);
+        this.scheduleClose();
     }
 
     flush() {
@@ -90,9 +88,18 @@ export class BufferedWriter {
         });
     }
 
+    scheduleClose() {
+        // Close and delete buffer after 10 minutes of inactivity
+        clearTimeout(this.#timeout);
+        this.#timeout = setTimeout(() => {
+            this.close();
+        }, 10 * 60 * 1000);
+    }
+
     close() {
         delete buffers[this.#path];
 
+        clearTimeout(this.#timeout);
         clearInterval(this.#interval);
 
         this.flush();

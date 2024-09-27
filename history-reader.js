@@ -33,21 +33,33 @@ export function findHistoryFilesWithTimestamp(path, startWith) {
 
 export function readFileLineByLine(path, callback) {
     let inStream = createReadStream(path),
-        outStream = new Writable();
+        outStream = new Writable(),
+        rl = createInterface(inStream, outStream);
+
+    const close = () => {
+        rl.close();
+
+        inStream.close();
+        outStream.end();
+    };
 
     return new Promise((resolve, reject) => {
-        const rl = createInterface(inStream, outStream);
-
         rl.on("line", line => {
             if (callback(line ? line.trim() : line) === false) {
-                rl.close();
+                close();
             }
         });
 
-        rl.on("error", reject);
+        rl.on("error", err => {
+            reject(err);
+
+            close();
+        });
 
         rl.on("close", () => {
             resolve();
+
+            close();
         });
     });
 }

@@ -86,10 +86,8 @@ async function isValidToken(cluster, token) {
         return false;
     }
 
-    const cached = sessions[token];
-
-    if (cached && Date.now() - cached.fetched < 10 * 1000) {
-        return cached;
+    if (token in sessions) {
+        return sessions[token];
     }
 
     const database = getDatabase(cluster);
@@ -99,8 +97,6 @@ async function isValidToken(cluster, token) {
     }
 
     try {
-        const database = getDatabase(cluster);
-
         const sessions = await database.query("SELECT `key`, `data` FROM `webpanel_sessions` WHERE `key` = ?", [
             token
         ]);
@@ -119,9 +115,12 @@ async function isValidToken(cluster, token) {
 
         sessions[token] = {
             name: data.name,
-            discord: data.discord.id,
-            fetched: Date.now()
+            discord: data.discord.id
         };
+
+        setTimeout(() => {
+            delete sessions[token];
+        }, 10 * 1000);
 
         return sessions[token];
     } catch (e) {
