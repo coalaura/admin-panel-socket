@@ -70,7 +70,13 @@ async function initDatabase(cluster) {
 	};
 
     if (!await testConnection(database)) {
-        throw new Error(`Failed to connect to database ${cluster}`);
+        console.warn(`Failed to connect to database ${cluster}, trying again in 5 minutes...`);
+
+        setTimeout(() => {
+            initDatabase(cluster);
+        }, 5 * 60 * 1000);
+
+        return;
     }
 
     databases[cluster] = database;
