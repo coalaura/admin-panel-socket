@@ -127,7 +127,8 @@ function minifyHistoricEntry(parsed) {
         i: !!(characterFlags & 8),
         c: !!(characterFlags & 16),
         f: !!(characterFlags & 32),
-        d: !!(characterFlags & 1)
+        d: !!(characterFlags & 1),
+        s: parsed.speed
     };
 }
 
