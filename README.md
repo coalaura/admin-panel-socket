@@ -25,7 +25,9 @@ Create a file in the root of the directory called `_config.json`. This is how it
             "coalaura",
             "northbayjoe"
         ]
-    }
+    },
+    "timeout": 5000,
+    "lifetime": 10
 }
 ```
 
