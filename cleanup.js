@@ -4,8 +4,12 @@ import { readdirSync, lstatSync, existsSync } from "fs";
 import { join } from "path";
 import { execSync } from "child_process";
 
+import config from "./config.js";
+
 function _cleanupServer(server) {
 	const now = moment();
+
+	const maxDays = config.lifetime || 10;
 
 	const path = join("historic", server),
 		files = readdirSync(path);
@@ -20,7 +24,7 @@ function _cleanupServer(server) {
 			const timestamp = moment(file, "DD-MM-YYYY"),
 				days = now.diff(timestamp, "days");
 
-			if (days > 10) {
+			if (days > maxDays) {
 				execSync(`rm -rf ${filePath}`);
 
 				console.log(`  Cleaned up ${filePath} (${days} days)`);
