@@ -47,6 +47,8 @@ export function handleConnection(client, server, type, license) {
             console.log(`${chalk.greenBright("Resumed")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(self.server + "/" + self.type)}`);
         }
     });
+
+    self.client.emit("welcome", "connected");
 }
 
 function getActiveViewers(server, type) {

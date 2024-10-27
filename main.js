@@ -62,9 +62,7 @@ if (cluster.isPrimary) {
 			return rejectClient(client, "Invalid request");
 		}
 
-		const session = await checkAuth(server.cluster, token);
-
-		if (!session) {
+		if (!await checkAuth(server.cluster, token, client.handshake.address)) {
 			return rejectClient(client, "Unauthorized");
 		}
 

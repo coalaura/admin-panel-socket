@@ -6,7 +6,14 @@ import chalk from "chalk";
 
 let sessions = {};
 
-export async function checkAuth(cluster, token) {
+export async function checkAuth(cluster, token, ip) {
+    if (config.allowLocal && (ip === "127.0.0.1" || ip.endsWith(":127.0.0.1"))) {
+        return {
+            name: "Local",
+            discord: "123456789012345678"
+        };
+    }
+
     if (!cluster || !token) {
         return false;
     }
@@ -54,7 +61,7 @@ export async function authenticate(req, resp, next) {
         return abort(resp, "Invalid server");
     }
 
-    const session = await checkAuth(server.cluster, req.query.token);
+    const session = await checkAuth(server.cluster, req.query.token, req.ip);
 
     if (!session) {
         return abort(resp, "Unauthorized");
