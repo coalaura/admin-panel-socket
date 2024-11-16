@@ -43,8 +43,16 @@ function count(server, type) {
 }
 
 function sendFullData(client, server, type) {
+	const data = getSlaveData(server, type);
+
+	if (!data) {
+		client.emit("no_data", true);
+
+		return;
+	}
+
 	client.emit("reset", true);
-	client.emit("message", Uint8Array.from(pack(getSlaveData(server, type))).buffer);
+	client.emit("message", Uint8Array.from(pack()).buffer);
 }
 
 export function handleConnection(client, server, type, license) {
