@@ -2,6 +2,7 @@ import config from "./config.js";
 
 import { join } from "path";
 import * as dotenv from "dotenv";
+import { danger } from "./colors.js";
 
 export function readDotEnv(cluster) {
     const envPath = join(config.panel, "envs", cluster, ".env"),
