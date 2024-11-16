@@ -1,9 +1,9 @@
 import { v4 } from "uuid";
-import chalk from "chalk";
 import { pack } from "msgpackr";
 
 import { getLastServerError } from "./data-loop.js";
 import { getSlaveData } from "./master.js";
+import { counter, danger, muted, success, warning, info } from "./colors.js";
 
 let connections = {},
 	total = {};
@@ -56,21 +56,13 @@ export function handleConnection(client, server, type, license) {
 	increment(self.server, self.type);
 	connections[self.id] = self;
 
-	console.log(
-		`${chalk.greenBright("Connected")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(
-			self.server + "/" + self.type
-		)} - ${chalk.black(chalk.bgYellow(countConnections(self.server, self.type)))}`
-	);
+	console.log(`${success("Connected")} ${muted("{" + self.id + "}")} ${info(self.server + "/" + self.type)} - ${counter(count(self.server, self.type))}`);
 
 	self.client.on("disconnect", () => {
         decrement(self.server, self.type);
 		delete connections[self.id];
 
-		console.log(
-			`${chalk.redBright("Disconnected")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(
-				self.server + "/" + self.type
-			)} - ${chalk.black(chalk.bgYellow(countConnections(self.server, self.type)))}`
-		);
+		console.log(`${danger("Disconnected")} ${muted("{" + self.id + "}")} ${info(self.server + "/" + self.type)} - ${counter(count(self.server, self.type))}`);
 	});
 
 	const error = getLastServerError(server);
@@ -87,17 +79,9 @@ export function handleConnection(client, server, type, license) {
 		self.paused = pPause;
 
 		if (self.paused) {
-			console.log(
-				`${chalk.yellowBright("Paused")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(
-					self.server + "/" + self.type
-				)}`
-			);
+			console.log(`${warning("Paused")} ${muted("{" + self.id + "}")} ${info(self.server + "/" + self.type)}`);
 		} else {
-			console.log(
-				`${chalk.greenBright("Resumed")} ${chalk.gray("{" + self.id + "}")} ${chalk.cyanBright(
-					self.server + "/" + self.type
-				)}`
-			);
+			console.log(`${success("Resumed")} ${muted("{" + self.id + "}")} ${info(self.server + "/" + self.type)}`);
 		}
 	});
 
@@ -127,11 +111,7 @@ export function handleDataUpdate(type, server, data) {
 		return;
 	}
 
-    console.log(data);
-
 	data = pack(data);
-
-	console.log("size", type, data.length);
 
 	for (const id in connections) {
 		if (!connections.hasOwnProperty(id)) continue;
@@ -142,20 +122,4 @@ export function handleDataUpdate(type, server, data) {
 			client.client.emit("message", Uint8Array.from(data).buffer);
 		}
 	}
-}
-
-function countConnections(server, type) {
-	let total = 0;
-
-	for (const id in connections) {
-		if (!connections.hasOwnProperty(id)) continue;
-
-		const client = connections[id];
-
-		if (client.type === type && client.server === server) {
-			total++;
-		}
-	}
-
-	return total;
 }

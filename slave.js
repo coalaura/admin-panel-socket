@@ -1,9 +1,9 @@
 import cluster from "cluster";
-import chalk from "chalk";
 
 import { abort } from "./functions.js";
 import { getActiveViewers, handleDataUpdate } from "./client.js";
 import { SlaveHandler } from "./slave-handler.js";
+import { danger, info, muted, success, warning, error } from "./colors.js";
 
 const routes = SlaveHandler.routes();
 
@@ -38,7 +38,7 @@ export class Slave {
         });
 
         this.#cluster.on("online", () => {
-            console.log(`${chalk.greenBright(`Cluster ${this.#server} online`)}`);
+            console.log(`${success(`Cluster ${this.#server} online`)}`);
         });
 
         this.#cluster.on("message", message => {
@@ -126,9 +126,9 @@ export class Slave {
         this.#upCallbacks = [];
 
         if (signal) {
-            console.log(`${chalk.redBright(`Cluster ${this.#server} killed`)} ${chalk.gray("by signal:")} ${chalk.cyanBright(signal)}`);
+            console.log(`${danger(`Cluster ${this.#server} killed`)} ${muted("by signal:")} ${info(signal)}`);
         } else {
-            console.log(`${chalk.redBright(`Cluster ${this.#server} exited`)} ${chalk.gray("with exit code:")} ${chalk.cyanBright(code)}`);
+            console.log(`${danger(`Cluster ${this.#server} exited`)} ${muted("with exit code:")} ${info(code)}`);
         }
 
         this.#restart();
@@ -143,7 +143,7 @@ export class Slave {
         this.#restarts++;
 
         const failed = () => {
-            console.log(`${chalk.redBright(`Cluster ${this.#server} restart failed`)}`);
+            console.log(`${danger(`Cluster ${this.#server} restart failed`)}`);
 
             this.#isRestarting = false;
 
@@ -163,8 +163,8 @@ export class Slave {
 
             // Delay extra long if we have too many restarts
             if (this.#restarts >= 3) {
-                console.log(`${chalk.redBright(`Cluster ${this.#server} restart limit reached`)}`);
-                console.log(`${chalk.redBright(`Waiting 15 minutes before restarting cluster ${this.#server}...`)}`);
+                console.log(`${danger(`Cluster ${this.#server} restart limit reached`)}`);
+                console.log(`${danger(`Waiting 15 minutes before restarting cluster ${this.#server}...`)}`);
 
                 await new Promise(resolve => setTimeout(resolve, 15 * 60 * 1000));
             }
@@ -177,10 +177,10 @@ export class Slave {
                 this.#isRestarting = false;
                 this.#restarts = 0;
 
-                console.log(`${chalk.greenBright(`Cluster ${this.#server} startup succeeded`)}`);
+                console.log(`${success(`Cluster ${this.#server} startup succeeded`)}`);
             });
         } catch (e) {
-            console.log(`${chalk.redBright(`Cluster ${this.#server} restart failed`)}: ${e.message}`);
+            console.log(`${danger(`Cluster ${this.#server} restart failed`)}: ${error(e.message)}`);
 
             failed();
         }
@@ -205,7 +205,7 @@ export class Slave {
             timeout: setTimeout(() => {
                 finish(false);
 
-                console.log(`${chalk.redBright(`Cluster ${this.#server} timeout`)}`);
+                console.log(`${warning(`Cluster ${this.#server} timeout`)}`);
 
                 this.#restart();
             }, 5000)

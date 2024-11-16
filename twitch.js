@@ -1,7 +1,7 @@
 import config from "./config.js";
+import { success } from "./colors.js";
 
 import axios from "axios";
-import chalk from "chalk";
 
 let streamerData = {};
 
@@ -17,7 +17,7 @@ export function startTwitchUpdateLoop() {
 
     updateTwitchData(api, streamers);
 
-    console.log(`${chalk.greenBright("Started Twitch update loop")}`);
+    console.log(`${success("Started Twitch update loop")}`);
 }
 
 async function updateTwitchData(api, streamers) {

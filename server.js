@@ -1,5 +1,5 @@
-import chalk from "chalk";
 import { readDotEnv } from "./env.js";
+import { danger, error, success, warning } from "./colors.js";
 
 let servers = {};
 
@@ -46,21 +46,21 @@ export function initServer(cluster, tries = 0) {
 
 			servers[serverName] = srv;
 
-			console.log(chalk.greenBright(`Successfully initialized server ${serverName}...`));
+			console.log(success(`Successfully initialized server ${serverName}...`));
 		} catch (e) {
-			console.log(chalk.redBright(`Failed establish database connection with ${serverName}!`));
-			console.log(chalk.red(e.message));
+			console.log(danger(`Failed establish database connection with ${serverName}!`));
+			console.log(error(e.message));
 
 			servers[serverName] = {
 				failed: true
 			};
 
 			if (tries < 3) {
-				console.log(chalk.redBright(`Retrying in 10 seconds...`));
+				console.log(warning(`Retrying in 10 seconds...`));
 
 				setTimeout(initServer, 10000, cluster, tries + 1);
 			} else {
-				console.log(chalk.redBright(`Failed to reconnect 3 times! Waiting for restart...`));
+				console.log(danger(`Failed to reconnect 3 times! Waiting for restart...`));
 
 				process.exit(1);
 			}

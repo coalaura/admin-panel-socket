@@ -1,8 +1,7 @@
 import config from "./config.js";
+import { info, muted, request, warning } from "./colors.js";
 import { getDatabase } from "./database.js";
 import { abort } from "./functions.js";
-
-import chalk from "chalk";
 
 let sessions = {};
 
@@ -74,7 +73,7 @@ export async function authenticate(req, resp, next) {
         return abort(resp, "Invalid license");
     }
 
-    console.log(chalk.bgGreen(" " + req.method + " ") + " " + chalk.cyanBright(session.name) + " - " + chalk.gray(req.path));
+    console.log(request(req.method, req.url, session.name));
 
     req.cluster = server.cluster;
     req.server = server.server;
@@ -131,7 +130,7 @@ async function isValidToken(cluster, token) {
 
         return sessions[token];
     } catch (e) {
-        console.error(`${chalk.yellowBright("Failed to validate session")} ${chalk.cyanBright(cluster)}: ${chalk.gray(e)}`);
+        console.error(`${warning("Failed to validate session")} ${info(cluster)}: ${muted(e)}`);
     }
 
     return false;

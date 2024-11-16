@@ -1,8 +1,8 @@
 import config from "./config.js";
 import { readDotEnv } from "./env.js";
+import { danger, error, muted, success } from "./colors.js";
 
 import { createPool } from "mysql2";
-import chalk from "chalk";
 
 let databases = {};
 
@@ -19,7 +19,7 @@ export async function initDatabases() {
 
     await Promise.all(promises);
 
-    console.log(chalk.greenBright(`All databases initialized successfully!`));
+    console.log(success(`All databases initialized successfully!`));
 }
 
 async function initDatabase(cluster) {
@@ -81,7 +81,7 @@ async function initDatabase(cluster) {
 
     databases[cluster] = database;
 
-    console.log(chalk.greenBright(`Successfully connected to database for ${cluster}...`));
+    console.log(success(`Successfully connected to database for ${cluster}...`));
 }
 
 async function testConnection(database) {
@@ -97,5 +97,5 @@ async function testConnection(database) {
 }
 
 function logDatabaseError(cluster, err, query) {
-    console.log(`${chalk.redBright(`${cluster} database error`)}\n - ${chalk.gray(query)}\n - ${chalk.red(err.message)}`);
+    console.log(`${danger(`${cluster} database error`)}\n - ${muted(query)}\n - ${error(err.message)}`);
 }

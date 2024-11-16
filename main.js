@@ -10,11 +10,11 @@ import { rejectClient } from "./functions.js";
 import { registerConsole } from "./logging.js";
 import { initDatabases } from "./database.js";
 import { SlaveHandler } from "./slave-handler.js";
+import { success } from "./colors.js";
 
 import express from "express";
 import { createServer } from "http";
 import { Server } from "socket.io";
-import chalk from "chalk";
 import cors from "cors";
 import cluster from "cluster";
 
@@ -75,7 +75,7 @@ if (cluster.isPrimary) {
 
 	// Start the server
 	xp.listen(9999, () => {
-		console.log(chalk.blueBright("Listening on port 9999."));
+		console.log(success("Listening on port 9999."));
 	});
 } else {
 	// Get slave data first

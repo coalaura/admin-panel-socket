@@ -1,4 +1,4 @@
-import chalk from "chalk";
+import { muted, warning } from "./colors.js";
 
 export function abort(resp, err) {
     resp.json({
@@ -12,7 +12,7 @@ export function rejectClient(client, err) {
 
 	client.disconnect(true);
 
-	console.log(`${chalk.redBright("Rejected connection")} ${chalk.gray("from " + client.handshake.address + " for: " + err)}`);
+	console.log(`${warning("Rejected connection")} ${muted("from " + client.handshake.address + " for: " + err)}`);
 }
 
 export function formatNumber(pNumber, pDecimals) {

@@ -3,9 +3,9 @@ import { loadOnDutyData } from "./duty.js";
 import { trackHistoricData } from "./history-store.js";
 import { decompressPlayers } from "./decompressor.js";
 import { compressPlayer } from "./compression.js";
+import { muted, warning } from "./colors.js";
 
 import { lookup, getServers } from "node:dns/promises";
-import chalk from "chalk";
 
 export async function updateWorldJSON(server) {
     const dutyMap = await loadOnDutyData(server);
@@ -20,7 +20,7 @@ export async function updateWorldJSON(server) {
         try {
             trackHistoricData(server.server, player);
         } catch (e) {
-            console.error(`${chalk.yellowBright("Failed to track historic data")}: ${chalk.gray(e)}`);
+            console.error(`${warning("Failed to track historic data")}: ${muted(e)}`);
         }
 
         clientData[player.source] = compressPlayer(player, dutyMap);
