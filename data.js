@@ -12,7 +12,7 @@ export async function updateWorldJSON(server) {
 
     const data = decompressPlayers(await requestOpFwApi(`${server.url}/op-framework/world.json?compress=1`, server.token));
 
-    let clientData = [];
+    let clientData = {};
 
     for (let x = 0; x < data.players.length; x++) {
         const player = data.players[x];
@@ -23,7 +23,7 @@ export async function updateWorldJSON(server) {
             console.error(`${chalk.yellowBright("Failed to track historic data")}: ${chalk.gray(e)}`);
         }
 
-        clientData.push(compressPlayer(player, dutyMap));
+        clientData[player.source] = compressPlayer(player, dutyMap);
     }
 
     server.players = data.players;

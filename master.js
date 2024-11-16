@@ -15,6 +15,14 @@ export function initSlaves() {
     }
 }
 
+export function getSlaveData(server, type) {
+    const slave = slaves[server];
+
+    if (!slave) return false;
+
+    return slave.data(type);
+}
+
 export function initMasterRoutes(app) {
     // Data route requires authentication
     app.get("/socket/:server/data/:route/:options?", authenticate, async (req, resp) => {

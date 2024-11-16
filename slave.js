@@ -2,7 +2,7 @@ import cluster from "cluster";
 import chalk from "chalk";
 
 import { abort } from "./functions.js";
-import { handleDataUpdate } from "./client.js";
+import { getActiveViewers, handleDataUpdate } from "./client.js";
 import { SlaveHandler } from "./slave-handler.js";
 
 const routes = SlaveHandler.routes();
@@ -11,6 +11,8 @@ export class Slave {
     #id;
     #cluster;
     #server;
+
+    #data = {};
 
     #requestId = 0;
     #requests = {};
@@ -54,7 +56,14 @@ export class Slave {
                 return;
             }
 
-            handleDataUpdate(type, this.#server, data);
+            // We have to add the viewer count here, since the slaves don't know about it
+            if (type === "world") {
+                data.v = getActiveViewers(this.#server, "world");
+            }
+
+            handleDataUpdate(type, this.#server, this.diff(type, data));
+
+            this.#data[type] = data;
         });
 
         this.#cluster.on("disconnect", (code, signal) => {
@@ -64,6 +73,50 @@ export class Slave {
         this.#cluster.on("exit", (code, signal) => {
             this.death(code, signal);
         });
+    }
+
+    data(type) {
+        return this.#data[type];
+    }
+
+    diff(type, data) {
+        const compare = (df, a, b) => {
+            for (const key in a) {
+                const newValue = a[key],
+                    oldValue = b[key];
+
+                const newType = typeof newValue,
+                    oldType = typeof oldValue;
+
+                if (newType !== oldType) {
+                    if (newType === "undefined" || newValue === null) {
+                        df[key] = null;
+                    } else {
+                        df[key] = newValue;
+                    }
+                } else if (newType === "object") {
+                    if (Array.isArray(newValue)) {
+                        const newDiff = newValue;
+
+                        if (newDiff.length !== oldValue.length) {
+                            df[key] = newDiff;
+                        }
+                    } else {
+                        const newDiff = compare(df[key] || {}, newValue, oldValue);
+
+                        if (Object.keys(newDiff).length) {
+                            df[key] = newDiff;
+                        }
+                    }
+                } else if (newValue !== oldValue) {
+                    df[key] = newValue;
+                }
+            }
+
+            return df;
+        };
+
+        return compare({}, data, this.#data[type] || {});
     }
 
     death(code, signal) {
