@@ -42,6 +42,11 @@ function count(server, type) {
 	return 0;
 }
 
+function sendFullData(client, server, type) {
+	client.emit("reset", true);
+	client.emit("message", Uint8Array.from(pack(getSlaveData(server, type))).buffer);
+}
+
 export function handleConnection(client, server, type, license) {
 	const self = {
 		id: v4(),
@@ -65,7 +70,7 @@ export function handleConnection(client, server, type, license) {
 		console.log(`${danger("Disconnected")} ${muted("{" + self.id + "}")} ${info(self.server + "/" + self.type)} - ${counter(count(self.server, self.type))}`);
 	});
 
-	const error = getLastServerError(server);
+	const error = getLastServerError(self.server);
 
 	if (error) {
 		const data = pack({
@@ -82,11 +87,12 @@ export function handleConnection(client, server, type, license) {
 			console.log(`${warning("Paused")} ${muted("{" + self.id + "}")} ${info(self.server + "/" + self.type)}`);
 		} else {
 			console.log(`${success("Resumed")} ${muted("{" + self.id + "}")} ${info(self.server + "/" + self.type)}`);
+
+			sendFullData(self.client, self.server, self.type);
 		}
 	});
 
-	self.client.emit("welcome", "connected");
-	self.client.emit("message", Uint8Array.from(pack(getSlaveData(server, type))).buffer);
+	sendFullData(self.client, self.server, self.type);
 }
 
 export function getActiveViewers(server, type) {
