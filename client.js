@@ -46,12 +46,12 @@ function sendFullData(client, server, type) {
 	const data = getSlaveData(server, type);
 
 	if (!data) {
-		client.emit("no_data", true);
+		client.emit("no_data");
 
 		return;
 	}
 
-	client.emit("reset", true);
+	client.emit("reset");
 	client.emit("message", Uint8Array.from(pack()).buffer);
 }
 
