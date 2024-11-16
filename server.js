@@ -18,18 +18,31 @@ export function initServer(cluster, tries = 0) {
 		return;
 	}
 
-	const ips = cfg.OP_FW_SERVERS.split(",");
+	const ips = cfg.OP_FW_SERVERS.split(";");
 
 	for (let i = 0; i < ips.length; i++) {
-		const fullName = cluster + 's' + (i + 1),
-			serverName = i === 0 ? cluster : fullName;
+		const ip = ips[i];
+
+		let fullName, serverUrl;
+
+		if (ip.includes(",")) {
+			const parts = ip.split(",");
+
+			fullName = parts[0];
+			serverUrl = getServerUrl(parts[1]);
+		} else {
+			fullName = `${cluster}s${i + 1}`;
+			serverUrl = getServerUrl(ip);
+		}
+
+		const serverName = i === 0 ? cluster : fullName;
 
 		try {
 			const srv = {
 				server: serverName,
 				cluster: cluster,
 				fullName: fullName,
-				url: getServerUrl(ips[i]),
+				url: serverUrl,
 				token: cfg.OP_FW_TOKEN,
 
 				down: false,
