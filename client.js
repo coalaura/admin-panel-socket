@@ -52,7 +52,7 @@ function sendFullData(client, server, type) {
 	}
 
 	client.emit("reset");
-	client.emit("message", Uint8Array.from(pack()).buffer);
+	client.emit("message", Uint8Array.from(pack(data)).buffer);
 }
 
 export function handleConnection(client, server, type, license) {
