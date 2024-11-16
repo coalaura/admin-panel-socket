@@ -16,7 +16,9 @@ export function readDotEnv(cluster) {
 
 	const cfg = env.parsed;
 
-	if (cfg.NO_SOCKET) {
+	if (cfg.INACTIVE) {
+		console.log(`${danger(`Cluster ${cluster} is inactive.`)}`);
+
 		return false;
 	}
 

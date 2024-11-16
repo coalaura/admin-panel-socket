@@ -14,9 +14,7 @@ export function getServers() {
 export function initServer(cluster, tries = 0) {
 	const cfg = readDotEnv(cluster);
 
-	if (!cfg || cfg.INACTIVE) {
-		console.log(`${danger(`Cluster ${cluster} has no config or is inactive.`)}`);
-
+	if (!cfg) {
 		return;
 	}
 
