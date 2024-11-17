@@ -81,6 +81,12 @@ export class Slave {
 
     diff(type, data) {
         const compare = (df, a, b) => {
+            if (typeof df === "object" && Array.isArray(df)) {
+                delete this.#data[type];
+
+                return data;
+            }
+
             for (const key in a) {
                 const newValue = a[key],
                     oldValue = b[key];
