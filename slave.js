@@ -81,48 +81,52 @@ export class Slave {
 
     diff(type, data) {
         const compare = (df, a, b) => {
-            if (typeof df === "object" && Array.isArray(df)) {
-                delete this.#data[type];
+            if (Array.isArray(a)) {
+                if (equals(a, b)) {
+                    return [];
+                }
 
-                return data;
-            }
+                return a;
+            } else if (typeof a === "object") {
+                df = {};
 
-            for (const key in a) {
-                const newValue = a[key],
-                    oldValue = b[key];
+                const bValid = typeof b === "object" && b !== null;
 
-                const newType = typeof newValue,
-                    oldType = typeof oldValue;
+                for (const key in a) {
+                    const newValue = a[key],
+                        oldValue = bValid ? b[key] : null;
 
-                if (newType !== oldType) {
-                    if (newType === "undefined" || newValue === null) {
-                        df[key] = null;
-                    } else {
-                        df[key] = newValue;
-                    }
-                } else if (newType === "object") {
-                    if (Array.isArray(newValue)) {
-                        const newDiff = newValue;
+                    const newType = typeof newValue,
+                        oldType = typeof oldValue;
 
-                        if (newDiff.length !== oldValue.length) {
-                            df[key] = newDiff;
+                    if (newType !== oldType) {
+                        if (newType === "undefined" || newValue === null) {
+                            df[key] = null;
+                        } else {
+                            df[key] = newValue;
                         }
-                    } else {
-                        const newDiff = compare(df[key] || {}, newValue, oldValue);
+                    } else if (newType === "object") {
+                        const newDiff = compare(df[key], newValue, oldValue);
 
                         if (Object.keys(newDiff).length) {
                             df[key] = newDiff;
                         }
+                    } else if (newValue !== oldValue) {
+                        df[key] = newValue;
                     }
-                } else if (newValue !== oldValue) {
-                    df[key] = newValue;
                 }
+
+                return df;
             }
 
-            return df;
+            return a;
         };
 
-        return compare({}, data, this.#data[type] || {});
+        if (!this.#data[type]) {
+            this.#data[type] = {};
+        }
+
+        return compare({}, data, this.#data[type]);
     }
 
     death(code, signal) {
@@ -259,6 +263,47 @@ export class Slave {
         this.#upCallbacks = [];
     }
 };
+
+function equals(a, b) {
+    const typeA = typeof a,
+        typeB = typeof b;
+
+    if (typeA !== typeB) {
+        return false;
+    } else if (Array.isArray(a)) {
+        if (!Array.isArray(b) || a.length !== b.length) {
+            return false;
+        }
+
+        for (let x = 0; x < a.length; x++) {
+            if (!equals(a[x], b[x])) {
+                return false;
+            }
+        }
+
+        return true;
+    } else if (typeA === "object") {
+        if (a === null && b === null) {
+            return true;
+        } else if (a === null || b === null) {
+            return false;
+        }
+
+        if (Object.keys(a).length !== Object.keys(b).length) {
+            return false;
+        }
+
+        for (const key in a) {
+            if (!equals(a[key], b[key])) {
+                return false;
+            }
+        }
+
+        return true;
+    }
+
+    return a === b;
+}
 
 export function getSlaveData() {
     if (cluster.isPrimary) return false;

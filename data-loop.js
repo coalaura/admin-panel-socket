@@ -2,7 +2,7 @@ import { updateWorldJSON, checkIfServerIsUp } from "./data.js";
 import { updateStaffJSON } from "./staff.js";
 import { getServers, getServerByName } from "./server.js";
 import { trackAverage } from "./average.js";
-import { muted, success, warning, info } from "./colors.js";
+import { muted, success, warning, info as _info } from "./colors.js";
 
 let lastErrors = {};
 
@@ -34,7 +34,7 @@ async function worldJSON(serverName) {
             server.down = true;
             server.downError = e.message;
 
-            console.error(`${warning("Failed to load world.json")} ${info(String(server.url))}: ${muted(e)}`);
+            console.error(`${warning("Failed to load world.json")} ${_info(String(server.url))}: ${muted(e)}`);
 
             lastErrors[server.server] = e;
         }
@@ -72,7 +72,7 @@ async function staffJSON(serverName) {
             server.down = true;
             server.downError = e.message;
 
-            console.error(`${warning("Failed to load staffChat.json")} ${info(String(server.url))}: ${muted(e)}`);
+            console.error(`${warning("Failed to load staffChat.json")} ${_info(String(server.url))}: ${muted(e)}`);
 
             lastErrors[server.server] = e;
         }
@@ -99,7 +99,7 @@ async function downChecker(serverName) {
         server.info = info;
 
         if (server.down) {
-            console.error(`${success("Server back up")} ${info(server.server)}`);
+            console.error(`${success("Server back up")} ${_info(server.server)}`);
 
             server.down = false;
             server.downError = null;
