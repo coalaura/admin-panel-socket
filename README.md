@@ -2,10 +2,10 @@
 
 ## Overview
 
-OP-FW Socket is a Node.js application designed to integrate with the [OP-FW Admin](https://github.com/coalaura/opfw-admin) panel, enhancing its functionality by providing real-time data and interaction capabilities. This backend service plays a crucial role in managing and broadcasting the live positional data of players within the OP-FW framework, a custom solution tailored for OP-FW FiveM servers. It basically acts as a proxy between the OP-FW Admin panel and the OP-FW API on the FiveM server(s).
+OP-FW Socket is a bun application designed to integrate with the [OP-FW Admin](https://github.com/coalaura/opfw-admin) panel, enhancing its functionality by providing real-time data and interaction capabilities. This backend service plays a crucial role in managing and broadcasting the live positional data of players within the OP-FW framework, a custom solution tailored for OP-FW FiveM servers. It basically acts as a proxy between the OP-FW Admin panel and the OP-FW API on the FiveM server(s).
 
 ## Requirements
-- [nodejs](https://nodejs.org/en/download) 18.0.0 or higher
+- [bun](https://bun.sh/) v1.1.34 or higher
 - At least 2GB of memory (or swap)
 - A decent bit of space depending on how many servers (for historic data)
 

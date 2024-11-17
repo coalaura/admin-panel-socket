@@ -3,7 +3,7 @@ import { Slave } from "./slave.js";
 import { authenticate, parseServer } from "./auth.js";
 import { abort } from "./functions.js";
 import { getStreamerData } from "./twitch.js";
-import { resolveHistoricData, resolveTimestamp } from "./history-resolve.js";
+import { resolveHistoricData, resolveTimestampData } from "./history-resolve.js";
 
 let slaves = {};
 
@@ -79,7 +79,7 @@ export function initMasterRoutes(app) {
         if (!timestamp) return abort(resp, "Invalid request");
 
         try {
-            const data = await resolveTimestamp(server, timestamp);
+            const data = await resolveTimestampData(server, timestamp);
 
             resp.json({
                 status: true,

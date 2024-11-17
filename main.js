@@ -2,7 +2,7 @@ import { initDataLoop, isValidType } from "./data-loop.js";
 import { handleConnection } from "./client.js";
 import { initSlaves, initMasterRoutes } from "./master.js";
 import { startTwitchUpdateLoop } from "./twitch.js";
-import { cleanupHistoricData } from "./cleanup.js";
+import { cleanupHistoricData } from "./history-resolve.js";
 import { checkAuth, parseServer, isValidLicense } from "./auth.js";
 import { getSlaveData } from "./slave.js";
 import { initServer } from "./server.js";
@@ -17,6 +17,13 @@ import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
 import cluster from "cluster";
+import { semver } from "bun";
+
+if (!semver.satisfies(Bun.version, "^1.1.34")) {
+	console.error("Please use bun v1.1.34 or higher.");
+
+	process.exit(1);
+}
 
 // Master handles all connections
 if (cluster.isPrimary) {

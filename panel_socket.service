@@ -11,12 +11,9 @@ RuntimeMaxSec=1d
 RestartSec=5
 User=root
 WorkingDirectory=/var/www/admin-panel-socket
-ExecStart=node --no-warnings main.js
+ExecStart=bun main.js
 StandardOutput=append:/var/log/panel_socket.log
 StandardError=append:/var/log/panel_socket.log
-
-# Set maximum heap size to 1024 MB (if needed)
-# --max-old-space-size=1024
 
 [Install]
 WantedBy=multi-user.target

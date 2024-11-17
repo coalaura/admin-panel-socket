@@ -1,11 +1,11 @@
 import { requestOpFwApi } from "./http.js";
 import { loadOnDutyData } from "./duty.js";
-import { trackHistoricData } from "./history-store.js";
 import { decompressPlayers } from "./decompressor.js";
 import { compressPlayer } from "./compression.js";
 import { muted, warning } from "./colors.js";
+import { store } from "./history.js";
 
-import { lookup, getServers } from "node:dns/promises";
+import { getServers, promises as dns } from "node:dns";
 
 export async function updateWorldJSON(server) {
     const dutyMap = await loadOnDutyData(server);
@@ -17,13 +17,13 @@ export async function updateWorldJSON(server) {
     for (let x = 0; x < data.players.length; x++) {
         const player = data.players[x];
 
-        try {
-            trackHistoricData(server.server, player);
-        } catch (e) {
-            console.error(`${warning("Failed to track historic data")}: ${muted(e)}`);
-        }
-
         clientData[player.source] = compressPlayer(player, dutyMap);
+    }
+
+    try {
+        store(server.server, data.players);
+    } catch (e) {
+        console.error(`${warning("Failed to track historic data")}: ${muted(e)}`);
     }
 
     server.players = data.players;
@@ -99,7 +99,7 @@ async function canResolveServerDNS(url) {
         servers = getServers();
 
     try {
-        const result = await lookup(host);
+        const result = await dns.lookup(host);
 
         if (!result || !result.address) {
             throw new Error("no address found");
