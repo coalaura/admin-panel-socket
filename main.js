@@ -18,6 +18,7 @@ import { Server } from "socket.io";
 import cors from "cors";
 import cluster from "cluster";
 import { semver } from "bun";
+import { stayHealthy } from "./health.js";
 
 if (!semver.satisfies(Bun.version, "^1.1.34")) {
 	console.error("Please use bun v1.1.34 or higher.");
@@ -30,6 +31,8 @@ if (cluster.isPrimary) {
 	// This is only needed once so its on the master too
 	startTwitchUpdateLoop();
 	cleanupHistoricData();
+
+	stayHealthy();
 
 	// Initialize express server
 	const app = express(),
