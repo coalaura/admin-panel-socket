@@ -11,7 +11,9 @@ RuntimeMaxSec=1d
 RestartSec=5
 User=root
 WorkingDirectory=/var/www/admin-panel-socket
+ExecStartPre=rm -f /tmp/op-fw.sock
 ExecStart=bun main.js
+ExecStopPost=rm -f /tmp/op-fw.sock
 StandardOutput=append:/var/log/panel_socket.log
 StandardError=append:/var/log/panel_socket.log
 

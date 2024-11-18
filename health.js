@@ -1,27 +1,17 @@
-import { serve } from "bun";
-import { getRunningSlaves } from "./master";
-
-const banner = `{slaves}
-
- \\    /\\
-  )  ( ')
- (  /  )
-  \\(__)|`;
+import { serve, unlinkSync } from "bun";
+import os from "os";
 
 export function stayHealthy() {
-	serve({
-		port: 9998,
-		fetch(req) {
-            const slaves = getRunningSlaves().join(",");
+    if (os.platform() === "win32") return;
 
-			return new Response(banner.replace("{slaves}", slaves), {
-				status: 202
-			});
-		},
-        error(error) {
-            return new Response(error.message, {
-                status: 503
-            });
-        }
+	serve({
+		unix: "/tmp/op-fw.sock",
+		fetch(req) {
+            return new Response(":)");
+		}
 	});
+
+    process.on("exit", () => {
+        unlinkSync("/tmp/op-fw.sock");
+    });
 }
