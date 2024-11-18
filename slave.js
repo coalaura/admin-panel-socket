@@ -253,6 +253,10 @@ export class Slave {
         this.#upCallbacks.push(callback);
     }
 
+    getIsUp() {
+        return this.#isUp;
+    }
+
     isUp() {
         this.#isUp = true;
 

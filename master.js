@@ -15,6 +15,18 @@ export function initSlaves() {
     }
 }
 
+export function getRunningSlaves() {
+    let running = [];
+
+    for (const server in slaves) {
+        const slave = slaves[server];
+
+        if (slave.getIsUp()) running.push(server);
+    }
+
+    return running;
+}
+
 export function getSlaveData(server, type) {
     const slave = slaves[server];
 

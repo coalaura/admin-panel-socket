@@ -1,10 +1,20 @@
 import { serve } from "bun";
+import { getRunningSlaves } from "./master";
+
+const banner = `{slaves}
+
+ \\    /\\
+  )  ( ')
+ (  /  )
+  \\(__)|`;
 
 export function stayHealthy() {
 	serve({
 		port: 9998,
 		fetch(req) {
-			return new Response("OK", {
+            const slaves = getRunningSlaves().join(",");
+
+			return new Response(banner.replace("{slaves}", slaves), {
 				status: 202
 			});
 		},
