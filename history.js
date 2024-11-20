@@ -23,6 +23,8 @@ function initHistoryDatabase(server = null) {
 
 		db.run("PRAGMA journal_mode=WAL");
 		db.run("PRAGMA synchronous=NORMAL");
+		db.run("PRAGMA auto_vacuum=INCREMENTAL");
+		db.run("PRAGMA wal_autocheckpoint=2000");
 	}
 
 	if (server && !tables[server]) {
@@ -148,7 +150,7 @@ export function cleanup() {
 		db.run("PRAGMA wal_checkpoint(FULL)");
 
 		console.log(muted("Vacuuming..."));
-		db.run("VACUUM");
+		db.run("PRAGMA incremental_vacuum(10000)");
 	} catch (err) {
 		console.log(warning("SQLite error: "), muted(err));
 	}
