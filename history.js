@@ -7,29 +7,45 @@ import { info, muted, warning } from "./colors.js";
 let db,
 	tables = {};
 
+function ensureIndex(indexName, table, column) {
+	const exists = db.query("SELECT COUNT(*) as count FROM sqlite_master WHERE type = 'index' AND name = ?").get(indexName);
+
+	if (!exists || exists.count === 0) {
+		db.run(`CREATE INDEX ${indexName} ON ${table} (${column})`);
+
+		console.log(`${info("New sqlite index created:")} ${muted(indexName)}`);
+	}
+}
+
 function initHistoryDatabase(server = null) {
 	if (!db) {
 		db = new Database("history.db", { create: true });
+
+		db.run("PRAGMA journal_mode=WAL");
+		db.run("PRAGMA synchronous=NORMAL");
 	}
 
 	if (server && !tables[server]) {
 		tables[server] = true;
 
 		db.run(`
-            CREATE TABLE IF NOT EXISTS ${server} (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                timestamp INTEGER NOT NULL,
-                license TEXT NOT NULL,
-                characterId INTEGER NOT NULL,
-                x REAL NOT NULL,
-                y REAL NOT NULL,
-                z REAL NOT NULL,
-                heading REAL NOT NULL,
-                speed REAL NOT NULL,
-                characterFlags INTEGER NOT NULL,
-                userFlags INTEGER NOT NULL
-            )
+			CREATE TABLE IF NOT EXISTS ${server} (
+				id INTEGER PRIMARY KEY AUTOINCREMENT,
+				timestamp INTEGER NOT NULL,
+				license TEXT NOT NULL,
+				characterId INTEGER NOT NULL,
+				x REAL NOT NULL,
+				y REAL NOT NULL,
+				z REAL NOT NULL,
+				heading REAL NOT NULL,
+				speed REAL NOT NULL,
+				characterFlags INTEGER NOT NULL,
+				userFlags INTEGER NOT NULL
+			)
         `);
+
+		ensureIndex(`${server}_timestamp`, server, "timestamp");
+		ensureIndex(`${server}_license`, server, "license");
 	}
 }
 
@@ -113,16 +129,21 @@ export function cleanup() {
 
 	console.log(muted("Collecting tables..."));
 
-	const tables = db.query(`SELECT name FROM sqlite_master WHERE type = 'table'`)
-        .all()
-        .map(table => table.name)
-        .filter(name => name && name.match(/^c\d+/m));
+	const tables = db
+		.query(`SELECT name FROM sqlite_master WHERE type = 'table'`)
+		.all()
+		.map(table => table.name)
+		.filter(name => name && name.match(/^c\d+/m));
 
 	for (const table of tables) {
 		console.log(muted(`Cleaning up ${table}...`));
 
 		db.run(`DELETE FROM ${table} WHERE timestamp < ?`, [timestamp]);
 	}
+
+	console.log(muted("Vacuuming..."));
+
+	db.run("VACUUM");
 
 	console.log(`${info("Cleanup complete!")} ${muted(`Updated ${tables.length} table(s)`)}`);
 }
