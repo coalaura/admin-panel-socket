@@ -8,6 +8,11 @@ import { statSync } from "fs";
 let db,
 	tables = {};
 
+const stored = {
+	failed: 0,
+	success: 0
+};
+
 function close() {
 	if (!db) return;
 
@@ -98,38 +103,50 @@ export function historySize() {
     }
 }
 
+export function historyStoreStats() {
+	return `History: ${stored.success} stored, ${stored.failed} failed.`;
+}
+
 export function store(server, players) {
 	initHistoryDatabase(server);
 
 	const timestamp = Math.floor(Date.now() / 1000);
 
-	const statement = db.prepare(`
-        INSERT INTO ${server}
-        (timestamp, license, characterId, x, y, z, heading, speed, characterFlags, userFlags)
-        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `);
+	try {
+		const statement = db.prepare(`
+			INSERT INTO ${server}
+			(timestamp, license, characterId, x, y, z, heading, speed, characterFlags, userFlags)
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+		`);
 
-	db.transaction(() => {
-		for (const player of players) {
-			const coords = player.coords,
-				character = player.character;
+		db.transaction(() => {
+			for (const player of players) {
+				const coords = player.coords,
+					character = player.character;
 
-			if (!character || !(character.flags & 64)) continue;
+				if (!character || !(character.flags & 64)) continue;
 
-			statement.run(
-				timestamp,
-				player.licenseIdentifier.replace(/^license:/m, ""),
-				character.id,
-				coords.x,
-				coords.y,
-				coords.z,
-				coords.w,
-				player.speed,
-				character.flags,
-				player.flags
-			);
-		}
-	})();
+				statement.run(
+					timestamp,
+					player.licenseIdentifier.replace(/^license:/m, ""),
+					character.id,
+					coords.x,
+					coords.y,
+					coords.z,
+					coords.w,
+					player.speed,
+					character.flags,
+					player.flags
+				);
+			}
+		})();
+
+		stored.success++;
+	} catch (err) {
+		console.log(warning("SQLite error: "), muted(err));
+
+		stored.failed++;
+	}
 }
 
 export function range(server, license, start, end) {

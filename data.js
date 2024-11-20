@@ -20,11 +20,7 @@ export async function updateWorldJSON(server) {
         clientData[player.source] = compressPlayer(player, dutyMap);
     }
 
-    try {
-        store(server.server, data.players);
-    } catch (e) {
-        console.error(`${warning("Failed to track historic data")}: ${muted(e)}`);
-    }
+    store(server.server, data.players);
 
     server.players = data.players;
     server.world = data.world;
