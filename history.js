@@ -7,8 +7,40 @@ import { info, muted, warning } from "./colors.js";
 let db,
 	tables = {};
 
+function close() {
+	if (!db) return;
+
+	console.log(info("Closing database..."));
+
+	db.close();
+
+	db = null;
+}
+
+function vacuum() {
+	while (true) {
+		const freelist = db.query("PRAGMA freelist_count;").get(),
+			pages = freelist?.freelist_count || 0;
+
+		if (pages === 0) {
+			console.log(info("Finished incremental vacuuming."));
+
+			break;
+		}
+
+		const reclaim = Math.min(pages, 10000);
+
+		db.run(`PRAGMA incremental_vacuum(${reclaim});`);
+
+		console.log(muted(`Reclaimed ${reclaim} pages, ${pages - reclaim} pages remaining.`));
+	}
+}
+
+
 function ensureIndex(indexName, table, column) {
-	const exists = db.query("SELECT COUNT(*) as count FROM sqlite_master WHERE type = 'index' AND name = ?").get(indexName);
+	const exists = db
+		.query("SELECT COUNT(*) as count FROM sqlite_master WHERE type = 'index' AND name = ?")
+		.get(indexName);
 
 	if (!exists || exists.count === 0) {
 		db.run(`CREATE INDEX ${indexName} ON ${table} (${column})`);
@@ -150,22 +182,12 @@ export function cleanup() {
 		db.run("PRAGMA wal_checkpoint(FULL)");
 
 		console.log(muted("Vacuuming..."));
-		db.run("PRAGMA incremental_vacuum(10000)");
+		vacuum();
 	} catch (err) {
 		console.log(warning("SQLite error: "), muted(err));
 	}
 
 	console.log(`${info("Cleanup complete!")} ${muted(`Updated ${tables.length} table(s)`)}`);
-}
-
-function close() {
-	if (!db) return;
-
-	console.log(info("Closing database..."));
-
-	db.close();
-
-	db = null;
 }
 
 process.on("exit", close);
