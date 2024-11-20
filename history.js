@@ -87,7 +87,7 @@ function initHistoryDatabase(server = null) {
 
 export function historySize() {
     try {
-        const stats = statSync(filePath),
+        const stats = statSync("history.db"),
 			bytes = stats.size;
 
         return formatBytes(bytes);
