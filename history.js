@@ -145,8 +145,12 @@ export function cleanup() {
 
 	console.log(muted("Vacuuming..."));
 
-	db.run("PRAGMA wal_checkpoint(FULL)");
-	db.run("VACUUM");
+	try {
+		db.run("PRAGMA wal_checkpoint(FULL)");
+		db.run("VACUUM");
+	} catch (err) {
+		console.log(warning("SQLite error: "), muted(err));
+	}
 
 	console.log(`${info("Cleanup complete!")} ${muted(`Updated ${tables.length} table(s)`)}`);
 }
