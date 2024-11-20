@@ -143,7 +143,22 @@ export function cleanup() {
 
 	console.log(muted("Vacuuming..."));
 
+	db.run("PRAGMA wal_checkpoint(FULL)");
 	db.run("VACUUM");
 
 	console.log(`${info("Cleanup complete!")} ${muted(`Updated ${tables.length} table(s)`)}`);
 }
+
+function close() {
+	if (!db) return;
+
+	console.log(info("Closing database..."));
+
+	db.close();
+
+	db = null;
+}
+
+process.on("exit", close);
+process.on("SIGINT", close);
+process.on("SIGTERM", close);
