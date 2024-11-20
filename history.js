@@ -22,7 +22,7 @@ function vacuum() {
 	console.log(info("Starting incremental vacuuming..."));
 
 	while (true) {
-		const freelist = db.query("PRAGMA freelist_count;").get(),
+		const freelist = db.query("PRAGMA freelist_count").get(),
 			pages = freelist?.freelist_count || 0;
 
 		if (pages === 0) {
@@ -33,7 +33,7 @@ function vacuum() {
 
 		const reclaim = Math.min(pages, 10000);
 
-		db.run(`PRAGMA incremental_vacuum(${reclaim});`);
+		db.run(`PRAGMA incremental_vacuum(${reclaim})`);
 
 		console.log(muted(`Reclaimed ${reclaim} pages, ${pages - reclaim} pages remaining.`));
 	}
