@@ -144,8 +144,7 @@ export class SlaveHandler {
             baseTime: srv.world?.baseTime || 0,
             uptime: srv.info?.uptime || 0,
             name: srv.info?.name || "",
-            logo: srv.info?.logo || "",
-            history: historySize()
+            logo: srv.info?.logo || ""
         };
 
         this.respond(id, {
@@ -181,6 +180,14 @@ export class SlaveHandler {
         logs.push(`+ worker pid is ${process.pid}`);
         logs.push(avgWorld ? `+ world.json API average is ${avgWorld}ms` : "- world.json API average is not set");
         logs.push(avgStaff ? `+ staff.json API average is ${avgStaff}ms` : "- staff.json API average is not set");
+
+        const history = historySize();
+
+        if (history) {
+            logs.push(`+ history size is ${history}`);
+        } else {
+            logs.push("- history size is unavailable");
+        }
 
         logs.push("");
         logs.push((srv && srv.info ? "+ server.info = " : "- server.info = ") + JSON.stringify(srv?.info));
