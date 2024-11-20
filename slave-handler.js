@@ -3,6 +3,7 @@ import { getLogs } from "./logging.js";
 import { isValidLicense } from "./auth.js";
 import { bufferCount } from "./buffer.js";
 import { getAverage } from "./average.js";
+import { historySize } from "./history.js";
 
 export class SlaveHandler {
     constructor() {
@@ -143,7 +144,8 @@ export class SlaveHandler {
             baseTime: srv.world?.baseTime || 0,
             uptime: srv.info?.uptime || 0,
             name: srv.info?.name || "",
-            logo: srv.info?.logo || ""
+            logo: srv.info?.logo || "",
+            history: historySize()
         };
 
         this.respond(id, {

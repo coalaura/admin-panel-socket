@@ -1,8 +1,9 @@
-import { table } from "console";
 import config from "./config.js";
+import { formatBytes } from "./functions.js";
+import { info, muted, warning } from "./colors.js";
 
 import { Database } from "bun:sqlite";
-import { info, muted, warning } from "./colors.js";
+import { statSync } from "fs";
 
 let db,
 	tables = {};
@@ -37,7 +38,6 @@ function vacuum() {
 		console.log(muted(`Reclaimed ${reclaim} pages, ${pages - reclaim} pages remaining.`));
 	}
 }
-
 
 function ensureIndex(indexName, table, column) {
 	const exists = db
@@ -83,6 +83,19 @@ function initHistoryDatabase(server = null) {
 		ensureIndex(`${server}_timestamp`, server, "timestamp");
 		ensureIndex(`${server}_license`, server, "license");
 	}
+}
+
+export function historySize() {
+    try {
+        const stats = statSync(filePath),
+			bytes = stats.size;
+
+        return formatBytes(bytes);
+    } catch (err) {
+		console.log(warning("Failed to get history size: "), muted(err));
+
+        return null;
+    }
 }
 
 export function store(server, players) {
