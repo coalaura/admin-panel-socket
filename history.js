@@ -111,12 +111,16 @@ export function cleanup() {
 	const days = config.lifetime || 10,
 		timestamp = Math.floor(Date.now() / 1000) - 60 * 60 * 24 * days;
 
+	console.log(muted("Collecting tables..."));
+
 	const tables = db.query(`SELECT name FROM sqlite_master WHERE type = 'table'`)
         .all()
         .map(table => table.name)
         .filter(name => name && name.match(/^c\d+/m));
 
 	for (const table of tables) {
+		console.log(muted(`Cleaning up ${table}...`));
+
 		db.run(`DELETE FROM ${table} WHERE timestamp < ?`, [timestamp]);
 	}
 
