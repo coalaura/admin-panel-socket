@@ -143,10 +143,11 @@ export function cleanup() {
 		db.run(`DELETE FROM ${table} WHERE timestamp < ?`, [timestamp]);
 	}
 
-	console.log(muted("Vacuuming..."));
-
 	try {
+		console.log(muted("Checkpointing..."));
 		db.run("PRAGMA wal_checkpoint(FULL)");
+
+		console.log(muted("Vacuuming..."));
 		db.run("VACUUM");
 	} catch (err) {
 		console.log(warning("SQLite error: "), muted(err));
