@@ -18,6 +18,8 @@ function close() {
 }
 
 function vacuum() {
+	console.log(info("Starting incremental vacuuming..."));
+
 	while (true) {
 		const freelist = db.query("PRAGMA freelist_count;").get(),
 			pages = freelist?.freelist_count || 0;
@@ -181,7 +183,6 @@ export function cleanup() {
 		console.log(muted("Checkpointing..."));
 		db.run("PRAGMA wal_checkpoint(FULL)");
 
-		console.log(muted("Vacuuming..."));
 		vacuum();
 	} catch (err) {
 		console.log(warning("SQLite error: "), muted(err));
