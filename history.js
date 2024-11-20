@@ -55,10 +55,10 @@ function initHistoryDatabase(server = null) {
 	if (!db) {
 		db = new Database("history.db", { create: true });
 
-		db.run("PRAGMA journal_mode=WAL");
+		db.run("PRAGMA journal_mode=DELETE;");
 		db.run("PRAGMA synchronous=NORMAL");
 		db.run("PRAGMA auto_vacuum=INCREMENTAL");
-		db.run("PRAGMA wal_autocheckpoint=2000");
+		db.run("PRAGMA busy_timeout=2000");
 	}
 
 	if (server && !tables[server]) {
@@ -193,9 +193,6 @@ export function cleanup() {
 	}
 
 	try {
-		console.log(muted("Checkpointing..."));
-		db.run("PRAGMA wal_checkpoint(FULL)");
-
 		vacuum();
 	} catch (err) {
 		console.log(warning("SQLite error: "), muted(err));
