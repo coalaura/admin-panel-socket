@@ -154,7 +154,7 @@ export class SlaveHandler {
 
     // Get server player count
     get_count(id, srv) {
-        const count = srv.info?.players?.length || 0;
+        const count = srv.players?.length || 0;
 
         this.respond(id, {
             status: true,
