@@ -136,8 +136,10 @@ export function cleanup() {
 		.filter(name => name && name.match(/^c\d+/m));
 
 	for (const table of tables) {
-		console.log(muted(`Cleaning up ${table}...`));
+		console.log(muted(`Preparing ${table}...`));
+		initHistoryDatabase(table);
 
+		console.log(muted(`Cleaning up ${table}...`));
 		db.run(`DELETE FROM ${table} WHERE timestamp < ?`, [timestamp]);
 	}
 
