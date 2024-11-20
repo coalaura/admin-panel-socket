@@ -1,5 +1,5 @@
 import config from "./config.js";
-import { formatBytes, formatNumber } from "./functions.js";
+import { formatBytes, formatInteger } from "./functions.js";
 import { info, muted, warning } from "./colors.js";
 
 import { Database } from "bun:sqlite";
@@ -104,7 +104,7 @@ export function historySize() {
 }
 
 export function historyStoreStats() {
-	return `${formatNumber(stored.success)} stored, ${formatNumber(stored.failed)} failed.`;
+	return `${formatInteger(stored.success)} stored, ${formatInteger(stored.failed)} failed.`;
 }
 
 export function store(server, players) {

@@ -21,6 +21,10 @@ export function formatNumber(pNumber, pDecimals) {
 	return str.replace(/\.?0+$/gm, "");
 }
 
+export function formatInteger(pNumber) {
+	return Intl.NumberFormat("en-US").format(pNumber);
+}
+
 export function reverse(array) {
 	if (array.toReversed !== undefined) return array.toReversed();
 
