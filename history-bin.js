@@ -2,6 +2,8 @@ import { BufferedWriter } from "./buffer.js";
 
 import { readdirSync, rmdirSync, existsSync } from "fs";
 
+let bin;
+
 class HistoryBin {
     #server;
     #closed = false;
@@ -11,14 +13,8 @@ class HistoryBin {
         this.#server = server;
     }
 
-    #path(timestamp, license) {
-        const date = new Date(timestamp * 1000).toISOString().slice(0, 10);
-
-        return `./history/${this.#server}/${date}/${license}.bin`;
-    }
-
     #writer(timestamp, license) {
-        const path = this.#path(timestamp, license),
+        const path = getHistoryPath(this.#server, timestamp, license),
             writer = this.#writers[license];
 
         if (writer) {
@@ -40,7 +36,6 @@ class HistoryBin {
 
         /**
          * | Timestamp (ui32) | character_id (ui32) | x (f32) | y (f32) | z (f32) | heading (f32) | speed (f32) | character_flags (ui32) | user_flags (ui32) |
-         * = 36 bytes
          */
         const license = player.licenseIdentifier.replace(/^license:/m, ""),
             writer = this.#writer(timestamp, license);
@@ -96,9 +91,13 @@ class HistoryBin {
     }
 };
 
-let bin;
+export function getHistoryPath(server, timestamp, license = null) {
+    const date = new Date(timestamp * 1000).toISOString().slice(0, 10);
 
-export function writeToHistoryBin(server, players) {
+    return `./history/${server}/${date}` + (license ? `/${license}` : "");
+}
+
+export function writeHistory(server, players) {
     if (!bin) {
         bin = new HistoryBin(server);
     }
@@ -106,7 +105,7 @@ export function writeToHistoryBin(server, players) {
     bin.writeAll(players);
 }
 
-export function closeHistoryBin() {
+export function closeHistory() {
     if (!bin) return;
 
     bin.close();
@@ -114,7 +113,7 @@ export function closeHistoryBin() {
     bin = null;
 }
 
-export function cleanHistoricBins(server) {
+export function cleanupHistory(server) {
     const path = `./history/${server}`;
 
     if (!existsSync(path)) return;
@@ -133,6 +132,6 @@ export function cleanHistoricBins(server) {
     }
 
     setTimeout(() => {
-        cleanHistoricBins(server);
+        cleanup(server);
     }, 12 * 60 * 60 * 1000); // 12 hours
 }

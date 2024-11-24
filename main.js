@@ -11,7 +11,7 @@ import { initDatabases } from "./database.js";
 import { SlaveHandler } from "./slave-handler.js";
 import { success, warning } from "./colors.js";
 import { parseArguments } from "./arguments.js";
-import { cleanHistoricBins, closeHistoryBin } from "./history-bin.js";
+import { cleanupHistory, closeHistory } from "./history-bin.js";
 
 import express from "express";
 import { createServer } from "http";
@@ -97,11 +97,9 @@ if (cluster.isPrimary) {
 	// Register console logging
 	registerConsole(slave.server);
 
-	// Listen for termination
-	process.on("message", message => {
-		if (message !== "terminate") return;
-
-		closeHistoryBin();
+	// Listen for termination (any message from the parent)
+	process.on("message", () => {
+		closeHistory();
 
 		process.exit(0);
 	});
@@ -120,7 +118,7 @@ if (cluster.isPrimary) {
 
 	// Start cleanup loop
 	console.log("Starting cleanup loop...");
-	cleanHistoricBins(slave.cluster);
+	cleanupHistory(slave.cluster);
 
 	// Start the server
 	process.send({

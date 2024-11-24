@@ -2,7 +2,7 @@ import { requestOpFwApi } from "./http.js";
 import { loadOnDutyData } from "./duty.js";
 import { decompressPlayers } from "./decompressor.js";
 import { compressPlayer } from "./compression.js";
-import { writeToHistoryBin } from "./history-bin.js";
+import { writeHistory } from "./history-bin.js";
 
 import { getServers, promises as dns } from "node:dns";
 
@@ -19,7 +19,7 @@ export async function updateWorldJSON(server) {
         clientData[player.source] = compressPlayer(player, dutyMap);
     }
 
-    writeToHistoryBin(server.server, data.players);
+    writeHistory(server.server, data.players);
 
     server.players = data.players;
     server.world = data.world;

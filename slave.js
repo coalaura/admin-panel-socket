@@ -83,13 +83,19 @@ export class Slave {
             this.#cluster.send("terminate");
 
             const timeout = setTimeout(() => {
+                this.#cluster.kill();
+
                 resolve();
+
+                console.log(`${danger(`Cluster ${this.#server} terminated forcefully after 5 seconds`)}`);
             }, 5000);
 
             this.on("down", () => {
                 clearTimeout(timeout);
 
                 resolve();
+
+                console.log(`${success(`Cluster ${this.#server} terminated successfully`)}`);
             });
         });
     }

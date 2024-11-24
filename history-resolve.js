@@ -1,17 +1,15 @@
-import { range, single } from "./clickhouse.js";
+import { range, single } from "./history-reader.js";
 
-export async function resolveHistoricData(server, license, from, till) {
+export function resolveHistoricData(server, license, from, till) {
     if (till < from) {
         throw Error("From must be before till");
     }
 
-    const raw = await range(server, license, from, till);
+    const data = range(server, license, from, till);
 
-    if (!raw || raw.data.length === 0) {
+    if (!data || data.length === 0) {
         throw Error("No data for the selected period");
     }
-
-    const data = raw.data;
 
     let result = {};
 
@@ -22,26 +20,26 @@ export async function resolveHistoricData(server, license, from, till) {
     return result;
 }
 
-export async function resolveTimestampData(server, timestamp) {
-    const raw = await single(server, timestamp);
+export function resolveTimestampData(server, timestamp) {
+    const data = single(server, timestamp);
 
-    if (!raw || raw.data.length === 0) {
+    if (!data || data.length === 0) {
         throw Error("No data for this timestamp");
     }
 
-    const data = raw.data;
-
     let result = {};
 
-    for (const entry of data) {
-        result[entry.license] = minifyTimestampEntry(entry);
+    for (const license in data) {
+        const entry = data[license];
+
+        result[license] = minifyTimestampEntry(entry);
     }
 
     return result;
 }
 
 function minifyHistoricEntry(parsed) {
-    const characterFlags = parsed.characterFlags;
+    const characterFlags = parsed.character_flags;
 
     return {
         x: parsed.x,
@@ -57,7 +55,7 @@ function minifyHistoricEntry(parsed) {
 
 function minifyTimestampEntry(parsed) {
     return {
-        _: parsed.characterId,
+        _: parsed.character_id,
         x: parsed.x,
         y: parsed.y,
         z: parsed.z,
@@ -65,7 +63,7 @@ function minifyTimestampEntry(parsed) {
         h: parsed.heading,
         s: parsed.speed,
 
-        cf: parsed.characterFlags,
-        uf: parsed.userFlags
+        cf: parsed.character_flags,
+        uf: parsed.user_flags
     };
 }
