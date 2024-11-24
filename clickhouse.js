@@ -31,12 +31,14 @@ async function ensureSchema(server) {
 	}
 
 	try {
-		const tables = await client.query({
+		const result = await client.query({
 			query: "SHOW TABLES FROM history",
 			format: "JSONEachRow"
 		});
 
-		const exists = tables.json().some(table => table.name === server);
+        const tables = await result.json();
+
+		const exists = tables.some(table => table.name === server);
 
 		if (exists) return;
 
@@ -81,12 +83,14 @@ async function initHistoryDatabase(server = null) {
 		});
 
 		try {
-			const databases = await client.query({
+			const result = await client.query({
 				query: "SHOW DATABASES",
 				format: "JSONEachRow"
 			});
 
-			const exists = databases.json().some(db => db.name === "history");
+            const databases = await result.json();
+
+			const exists = databases.some(db => db.name === "history");
 
 			if (exists) return;
 
@@ -161,7 +165,7 @@ export async function range(server, license, start, end) {
 			format: "JSON"
 		});
 
-		return result.json();
+		return await result.json();
 	} catch (err) {
         console.log(`${warning("History Range error:")} ${muted(err.message)}`);
 
@@ -180,7 +184,7 @@ export async function single(server, timestamp) {
             format: "JSON",
         });
 
-        return result.json();
+        return await result.json();
     } catch (err) {
         console.log(`${warning("History Single error:")} ${muted(err.message)}`);
 
