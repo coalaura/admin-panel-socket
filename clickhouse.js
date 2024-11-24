@@ -1,5 +1,5 @@
 import { createClient } from "@clickhouse/client";
-import { error, info, muted } from "./colors";
+import { error, info, muted, warning } from "./colors";
 import configData from "./config.js";
 
 let client,
