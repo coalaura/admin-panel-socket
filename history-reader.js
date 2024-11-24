@@ -1,8 +1,8 @@
 import { getHistoryPath } from "./history-bin.js";
+import { formatBytes } from "./functions.js";
 
 import { existsSync, readFileSync, readdirSync } from "fs";
-import du from "du";
-import { formatBytes } from "./functions.js";
+import { $ } from "bun";
 
 function read(path, min, max) {
 	if (!existsSync(path)) return [];
@@ -77,12 +77,21 @@ export function single(server, timestamp) {
 async function size(path) {
 	if (!existsSync(path)) return 0;
 
-	return await du(path);
+	try {
+		const output = await $`du -sb "${path}"`.text(),
+			size = output.split(" ").shift();
+
+		return parseInt(size) || 0;
+	} catch (err) {
+		return 0;
+	}
 }
 
 export async function historyStatistics(server) {
-	const total = await size("./history"),
-		local = await size(`./history/${server}`);
+	const [ total, local ] = await Promise.all([
+		size("./history"),
+		size(`./history/${server}`)
+	])
 
 	return [
 		`+ History Size (all): ${formatBytes(total)}`,
