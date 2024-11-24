@@ -5,6 +5,8 @@ import { getAverage } from "./average.js";
 import { historyStatistics } from "./history-reader.js";
 import { closeHistory } from "./history-bin.js";
 
+const startup = new Date();
+
 export class SlaveHandler {
     constructor() {
         process.on("message", message => {
@@ -192,6 +194,8 @@ export class SlaveHandler {
         const history = await historyStatistics(srv.cluster);
 
         logs.push(...history);
+
+        logs.push(`+ slave startup was ${startup.toUTCString()}`);
 
         logs.push("");
         logs.push((srv && srv.info ? "+ server.info = " : "- server.info = ") + JSON.stringify(srv?.info));
