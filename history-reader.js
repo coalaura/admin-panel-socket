@@ -11,6 +11,12 @@ function read(path, min, max) {
 		view = new DataView(data.buffer),
 		entries = [];
 
+	if (view.byteLength % 36 !== 0) {
+		console.log(danger(`Corrupt history file: ${path}`));
+
+		return [];
+	}
+
 	for (let i = 0; i < view.byteLength; i += 36) {
 		/**
          * | Timestamp (ui32) | character_id (ui32) | x (f32) | y (f32) | z (f32) | heading (f32) | speed (f32) | character_flags (ui32) | user_flags (ui32) |
