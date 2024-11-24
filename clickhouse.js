@@ -127,7 +127,14 @@ async function initHistoryDatabase() {
     client = createClient({
         url: "http://localhost:8123",
         username: "default",
-        password: configData.clickhouse
+        password: configData.clickhouse,
+		clickhouse_settings: {
+			async_insert: 1,
+			wait_for_async_insert: 0,
+			async_insert_max_data_size: 10485760, // 10 MB
+			async_insert_busy_timeout_ms: 1000,
+			async_insert_threads: 4,
+		}
     });
 
     try {
@@ -178,7 +185,7 @@ export async function store(server, players) {
 		});
 	}
 
-	if (batch.length < 4200) return;
+	if (batch.length < 8000) return;
 
 	try {
 		// Insert rows into the ClickHouse table
