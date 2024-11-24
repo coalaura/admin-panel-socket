@@ -5,7 +5,8 @@ import configData from "./config.js";
 
 let client,
 	schemas = {},
-	closing = false;
+	closing = false,
+	batch = [];
 
 const stored = {
 	failed: 0,
@@ -57,6 +58,7 @@ export async function historyStatistics(server) {
 
             `+ History Size (${server}): ${formatBytes(server_size)}`,
             `+ History Rows (${server}): ${formatInteger(server_rows)}`,
+            `+ History Batch (${server}): ${formatInteger(batch.length)}`,
 
 			`${stored.success > 0 ? "+" : "-"} History successful inserts: ${formatInteger(stored.success)}`,
 			`${stored.failed > 0 ? "-" : "+"} History failed inserts: ${formatInteger(stored.failed)}`
@@ -154,8 +156,7 @@ export async function store(server, players) {
 	await initHistoryDatabase();
     await ensureSchema(server);
 
-	const timestamp = Math.floor(Date.now() / 1000),
-		rows = [];
+	const timestamp = Math.floor(Date.now() / 1000);
 
 	for (const player of players) {
 		const coords = player.coords,
@@ -163,7 +164,7 @@ export async function store(server, players) {
 
 		if (!character || !(character.flags & 64)) continue;
 
-		rows.push({
+		batch.push({
 			timestamp: timestamp,
 			license: player.licenseIdentifier.replace(/^license:/m, ""),
 			character_id: character.id,
@@ -177,22 +178,24 @@ export async function store(server, players) {
 		});
 	}
 
-	if (rows.length === 0) return;
+	if (batch.length < 4200) return;
 
 	try {
 		// Insert rows into the ClickHouse table
 		await client.insert({
 			table: `history.${server}`,
-			values: rows,
+			values: batch,
 			format: "JSONEachRow"
 		});
 
-		stored.success += rows.length;
+		stored.success += batch.length;
 	} catch (err) {
 		console.log(`${warning("History Store error:")} ${muted(err.message)}`);
 
-		stored.failed += rows.length;
+		stored.failed += batch.length;
 	}
+
+	batch = [];
 }
 
 export async function range(server, license, start, end) {
