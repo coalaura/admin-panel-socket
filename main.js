@@ -6,12 +6,12 @@ import { checkAuth, parseServer, isValidLicense } from "./auth.js";
 import { getSlaveData } from "./slave.js";
 import { initServer } from "./server.js";
 import { rejectClient } from "./functions.js";
-import { registerConsole } from "./logging.js";
+import { registerConsole, initializeLogs } from "./logging.js";
 import { initDatabases } from "./database.js";
 import { SlaveHandler } from "./slave-handler.js";
 import { success, warning } from "./colors.js";
 import { parseArguments } from "./arguments.js";
-import { cleanupHistory } from "./history-bin.js";
+import { cleanupHistory, initializeHistory } from "./history-bin.js";
 
 import express from "express";
 import { createServer } from "http";
@@ -36,6 +36,9 @@ if (cluster.isPrimary) {
 
 	// This is only needed once so its on the master too
 	startTwitchUpdateLoop();
+
+	initializeLogs();
+	initializeHistory();
 
 	// Initialize express server
 	const app = express(),

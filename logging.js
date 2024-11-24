@@ -35,10 +35,6 @@ function log(server, level, msg) {
 }
 
 function cycleFile(server) {
-    if (!existsSync("logs")) {
-        mkdirSync("logs");
-    }
-
     const path = join("logs", `${server}.log`);
 
     if (existsSync(path)) {
@@ -63,6 +59,12 @@ function cycleFile(server) {
             flags: "a"
         });
     }
+}
+
+export function initializeLogs() {
+    if (existsSync("logs")) return;
+
+    mkdirSync("logs");
 }
 
 export function registerConsole(server) {

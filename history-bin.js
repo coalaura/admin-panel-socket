@@ -1,6 +1,6 @@
 import { BufferedWriter } from "./buffer.js";
 
-import { readdirSync, rmdirSync, existsSync } from "fs";
+import { readdirSync, rmdirSync, existsSync, mkdirSync } from "fs";
 
 let bin;
 
@@ -111,6 +111,12 @@ export function closeHistory() {
     bin.close();
 
     bin = null;
+}
+
+export function initializeHistory() {
+    if (existsSync("./history")) return;
+
+    mkdirSync("./history");
 }
 
 export function cleanupHistory(server) {
