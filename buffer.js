@@ -4,7 +4,7 @@ import { appendFile, appendFileSync, existsSync, mkdirSync } from "fs";
 import { dirname } from "path";
 
 export class BufferedWriter {
-    static EntryBuffer = 120; // 120 seconds for minimal data loss
+    static EntryCount = 120; // 120 seconds for minimal data loss
     static EntrySize = 36; // 4 ui32 + 5 f32
 
     #offset = 0;
@@ -37,7 +37,7 @@ export class BufferedWriter {
         if (!this.#buffer) {
             const staggering = Math.floor(Math.random() * 30);
 
-            this.#buffer = new ArrayBuffer(BufferedWriter.EntryBuffer * (BufferedWriter.EntrySize + staggering));
+            this.#buffer = new ArrayBuffer((BufferedWriter.EntryCount + staggering) * BufferedWriter.EntrySize);
 
             this.#view = new DataView(this.#buffer);
         }
