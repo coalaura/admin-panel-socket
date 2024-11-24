@@ -4,7 +4,7 @@ import configData from "./config.js";
 import { formatInteger } from "./functions.js";
 
 let client,
-	schemas = {}
+	schemas = {},
 	closing = false;
 
 const stored = {
