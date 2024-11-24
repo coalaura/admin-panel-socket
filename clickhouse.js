@@ -159,6 +159,8 @@ async function initHistoryDatabase() {
         });
     } catch (err) {
         console.error(`${error("Error connecting to ClickHouse:")} ${muted(err.message)}`);
+
+		process.exit(1); // Can't continue without the connection
     }
 }
 
