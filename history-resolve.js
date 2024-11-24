@@ -1,11 +1,11 @@
-import { cleanup, range, single } from "./history.js";
+import { range, single } from "./clickhouse.js";
 
-export function resolveHistoricData(server, license, from, till) {
+export async function resolveHistoricData(server, license, from, till) {
     if (till < from) {
         throw Error("From must be before till");
     }
 
-    const data = range(server, license, from, till);
+    const data = await range(server, license, from, till);
 
     if (data.length === 0) {
         throw Error("No data for the selected period");
@@ -20,8 +20,8 @@ export function resolveHistoricData(server, license, from, till) {
     return result;
 }
 
-export function resolveTimestampData(server, timestamp) {
-    const data = single(server, timestamp);
+export async function resolveTimestampData(server, timestamp) {
+    const data = await single(server, timestamp);
 
     if (data.length === 0) {
         throw Error("No data for this timestamp");
@@ -34,12 +34,6 @@ export function resolveTimestampData(server, timestamp) {
     }
 
     return result;
-}
-
-export function cleanupHistoricData() {
-    cleanup();
-
-    setTimeout(cleanupHistoricData, 2 * 60 * 60 * 1000);
 }
 
 function minifyHistoricEntry(parsed) {

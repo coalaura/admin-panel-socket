@@ -2,7 +2,6 @@ import { initDataLoop, isValidType } from "./data-loop.js";
 import { handleConnection } from "./client.js";
 import { initSlaves, initMasterRoutes } from "./master.js";
 import { startTwitchUpdateLoop } from "./twitch.js";
-import { cleanupHistoricData } from "./history-resolve.js";
 import { checkAuth, parseServer, isValidLicense } from "./auth.js";
 import { getSlaveData } from "./slave.js";
 import { initServer } from "./server.js";
@@ -29,7 +28,6 @@ if (!semver.satisfies(Bun.version, "^1.1.34")) {
 if (cluster.isPrimary) {
 	// This is only needed once so its on the master too
 	startTwitchUpdateLoop();
-	cleanupHistoricData();
 
 	// Initialize express server
 	const app = express(),

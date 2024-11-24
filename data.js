@@ -2,8 +2,7 @@ import { requestOpFwApi } from "./http.js";
 import { loadOnDutyData } from "./duty.js";
 import { decompressPlayers } from "./decompressor.js";
 import { compressPlayer } from "./compression.js";
-import { muted, warning } from "./colors.js";
-import { store } from "./history.js";
+import { store } from "./clickhouse.js";
 
 import { getServers, promises as dns } from "node:dns";
 
