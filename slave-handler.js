@@ -181,7 +181,7 @@ export class SlaveHandler {
         logs.push(avgWorld ? `+ world.json API average is ${avgWorld}ms` : "- world.json API average is not set");
         logs.push(avgStaff ? `+ staff.json API average is ${avgStaff}ms` : "- staff.json API average is not set");
 
-        const history = await historyStatistics(srv)
+        const history = await historyStatistics(srv.cluster);
 
         logs.push(...history);
 
