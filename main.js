@@ -9,7 +9,8 @@ import { rejectClient } from "./functions.js";
 import { registerConsole } from "./logging.js";
 import { initDatabases } from "./database.js";
 import { SlaveHandler } from "./slave-handler.js";
-import { success } from "./colors.js";
+import { success, warning } from "./colors.js";
+import { parseArguments } from "./arguments.js";
 
 import express from "express";
 import { createServer } from "http";
@@ -26,6 +27,12 @@ if (!semver.satisfies(Bun.version, "^1.1.34")) {
 
 // Master handles all connections
 if (cluster.isPrimary) {
+	const { only } = parseArguments();
+
+	if (only) {
+		console.log(warning(`Only initializing cluster ${only}!`));
+	}
+
 	// This is only needed once so its on the master too
 	startTwitchUpdateLoop();
 
@@ -40,10 +47,10 @@ if (cluster.isPrimary) {
 	app.use(express.json());
 
 	// Connect to databases
-	await initDatabases();
+	await initDatabases(only);
 
 	// Wake up the slaves
-	initSlaves();
+	initSlaves(only);
 
 	// Initialize routes
 	initMasterRoutes(app);

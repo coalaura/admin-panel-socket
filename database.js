@@ -10,10 +10,12 @@ export function getDatabase(cluster) {
     return databases[cluster];
 }
 
-export async function initDatabases() {
+export async function initDatabases(only = null) {
     let promises = [];
 
     for (const cluster of config.servers) {
+        if (only && cluster !== only) continue;
+
         promises.push(initDatabase(cluster));
     }
 

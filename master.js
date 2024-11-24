@@ -7,9 +7,11 @@ import { resolveHistoricData, resolveTimestampData } from "./history-resolve.js"
 
 let slaves = {};
 
-export function initSlaves() {
+export function initSlaves(only = null) {
     for (let i = 0; i < config.servers.length; i++) {
         const server = config.servers[i];
+
+        if (only && server !== only) continue;
 
         slaves[server] = new Slave(i + 1, server);
     }
