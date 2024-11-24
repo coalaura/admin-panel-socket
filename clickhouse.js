@@ -4,25 +4,59 @@ import configData from "./config.js";
 import { formatInteger } from "./functions.js";
 
 let client,
-	schemas = {};
+	schemas = {}
+	closing = false;
 
 const stored = {
 	failed: 0,
 	success: 0
 };
 
-function close() {
-	if (!client) return;
+async function close() {
+	if (!client || closing) return;
+
+	closing = true;
 
 	console.log(info("Closing database..."));
 
-	client.close();
+	await client.close();
 
 	client = null;
+	closing = false;
+
+	process.exit(0);
 }
 
-export function historyStoreStats() {
-	return `${formatInteger(stored.success)} stored, ${formatInteger(stored.failed)} failed.`;
+export async function historyStatistics(server) {
+    try {
+        const result = await client.query({
+            query: `
+                SELECT sum(bytes_on_disk) AS total_size, sum(rows) AS total_rows, sumIf(bytes_on_disk, table = 'history.${server}') AS server_size, sumIf(rows, table = 'history.${server}') AS server_rows
+                FROM system.parts
+                WHERE database = 'history'
+            `,
+            format: "JSONEachRow",
+        });
+
+        const { total_size, total_rows, server_size, server_rows } = (await result.json())[0];
+
+        return [
+            `+ History Size (all): ${formatBytes(total_size)}`,
+			`+ History Rows (all): ${formatInteger(total_rows)}`,
+
+            `+ History Size (${server}): ${formatBytes(server_size)}`,
+            `+ History Rows (${server}): ${formatInteger(server_rows)}`,
+
+			`+ History failed inserts: ${formatInteger(stored.failed)}`,
+			`+ History successful inserts: ${formatInteger(stored.success)}`
+        ];
+    } catch (err) {
+        console.error(`${error("Error fetching history statistics:")} ${muted(err.message)}`);
+
+        return [
+			`- History Error: ${err.message}`
+		];
+    }
 }
 
 async function ensureSchema(server) {
@@ -159,9 +193,10 @@ export async function range(server, license, start, end) {
 			query: `
                 SELECT timestamp, character_id AS characterId, x, y, z, heading, speed, character_flags AS characterFlags, user_flags AS userFlags
                 FROM history.${server}
-                WHERE license = '${license}' AND timestamp BETWEEN ${start} AND ${end}
+                WHERE license = ? AND timestamp BETWEEN ? AND ?
                 ORDER BY timestamp ASC
             `,
+			query_params: [license, start, end],
 			format: "JSON"
 		});
 
@@ -181,9 +216,10 @@ export async function single(server, timestamp) {
         const result = await client.query({
             query: `
                 SELECT timestamp, license, character_id AS characterId, x, y, z, heading, speed, character_flags AS characterFlags, user_flags AS userFlags
-                FROM ${server}.player_history
-                WHERE timestamp = ${timestamp}
+                FROM history.${server}
+                WHERE timestamp = ?
             `,
+			query_params: [timestamp],
             format: "JSON",
         });
 

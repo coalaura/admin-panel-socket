@@ -3,7 +3,7 @@ import { getLogs } from "./logging.js";
 import { isValidLicense } from "./auth.js";
 import { bufferCount } from "./buffer.js";
 import { getAverage } from "./average.js";
-import { historyStoreStats } from "./clickhouse.js";
+import { historyStatistics, historyStoreStats } from "./clickhouse.js";
 
 export class SlaveHandler {
     constructor() {
@@ -164,7 +164,7 @@ export class SlaveHandler {
     }
 
     // Get slave health
-    get_health(id, srv) {
+    async get_health(id, srv) {
         const avgWorld = getAverage("world"),
             avgStaff = getAverage("staff");
 
@@ -181,7 +181,9 @@ export class SlaveHandler {
         logs.push(avgWorld ? `+ world.json API average is ${avgWorld}ms` : "- world.json API average is not set");
         logs.push(avgStaff ? `+ staff.json API average is ${avgStaff}ms` : "- staff.json API average is not set");
 
-        logs.push(`+ history store: ${historyStoreStats()}`);
+        const history = await historyStatistics(srv)
+
+        logs.push(...history);
 
         logs.push("");
         logs.push((srv && srv.info ? "+ server.info = " : "- server.info = ") + JSON.stringify(srv?.info));
