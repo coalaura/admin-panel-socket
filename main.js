@@ -33,6 +33,10 @@ if (cluster.isPrimary) {
 		console.log(warning(`Only initializing cluster ${only}!`));
 	}
 
+	process.on("exit", close);
+	process.on("SIGINT", close);
+	process.on("SIGTERM", close);
+
 	// This is only needed once so its on the master too
 	startTwitchUpdateLoop();
 
@@ -113,4 +117,8 @@ if (cluster.isPrimary) {
 	});
 
 	console.log("Startup complete");
+}
+
+function close() {
+	process.exit(0);
 }
