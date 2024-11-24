@@ -66,6 +66,8 @@ function cycleFile(server) {
 }
 
 export function registerConsole(server) {
+    if (process.platform === "win32") return;
+
     cycleFile(server);
 
     console.log = (...args) => {

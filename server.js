@@ -11,7 +11,7 @@ export function getServers() {
 	return servers;
 }
 
-export function initServer(cluster, tries = 0) {
+export function initServer(cluster) {
 	const cfg = readDotEnv(cluster);
 
 	if (!cfg) {
@@ -68,15 +68,9 @@ export function initServer(cluster, tries = 0) {
 				failed: true
 			};
 
-			if (tries < 3) {
-				console.log(warning(`Retrying in 10 seconds...`));
+			console.log(danger(`Failed to initialize server ${serverName}!`));
 
-				setTimeout(initServer, 10000, cluster, tries + 1);
-			} else {
-				console.log(danger(`Failed to reconnect 3 times! Waiting for restart...`));
-
-				process.exit(1);
-			}
+			process.exit(1);
 		}
 	}
 }

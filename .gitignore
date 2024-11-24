@@ -7,3 +7,4 @@ logs
 history.db
 history.db-wal
 history.db-shm
+history

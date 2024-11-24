@@ -4,8 +4,23 @@ import { authenticate, parseServer } from "./auth.js";
 import { abort } from "./functions.js";
 import { getStreamerData } from "./twitch.js";
 import { resolveHistoricData, resolveTimestampData } from "./history-resolve.js";
+import { warning } from "./colors.js";
 
 let slaves = {};
+
+async function terminateAll() {
+    let promises = [];
+
+    for (const server in slaves) {
+        const slave = slaves[server];
+
+        promises.push(slave.terminate());
+    }
+
+    await Promise.all(promises);
+
+    process.exit(0);
+}
 
 export function initSlaves(only = null) {
     for (let i = 0; i < config.servers.length; i++) {
@@ -15,6 +30,17 @@ export function initSlaves(only = null) {
 
         slaves[server] = new Slave(i + 1, server);
     }
+
+    process.on("SIGTERM", async () => {
+        console.log(warning("Terminating (SIGTERM)..."));
+        await terminateAll();
+    });
+
+    process.on("SIGINT", async () => {
+        console.log(warning("Terminating (SIGINT)..."));
+
+        await terminateAll();
+    });
 }
 
 export function getSlaveData(server, type) {

@@ -4,12 +4,6 @@ import { getServers, getServerByName } from "./server.js";
 import { trackAverage } from "./average.js";
 import { muted, success, warning, info as _info } from "./colors.js";
 
-let lastErrors = {};
-
-export function getLastServerError(server) {
-	return lastErrors[server];
-}
-
 async function worldJSON(serverName) {
     const server = getServerByName(serverName);
 
@@ -20,8 +14,6 @@ async function worldJSON(serverName) {
 
         try {
             const clientData = await updateWorldJSON(server);
-
-            lastErrors[server.server] = null;
 
             process.send({
                 type: "world",
@@ -35,8 +27,6 @@ async function worldJSON(serverName) {
             server.downError = e.message;
 
             console.error(`${warning("Failed to load world.json")} ${_info(String(server.url))}: ${muted(e)}`);
-
-            lastErrors[server.server] = e;
         }
 
         const took = Date.now() - start;
@@ -73,8 +63,6 @@ async function staffJSON(serverName) {
             server.downError = e.message;
 
             console.error(`${warning("Failed to load staffChat.json")} ${_info(String(server.url))}: ${muted(e)}`);
-
-            lastErrors[server.server] = e;
         }
 
         const took = Date.now() - start;

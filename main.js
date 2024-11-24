@@ -11,6 +11,7 @@ import { initDatabases } from "./database.js";
 import { SlaveHandler } from "./slave-handler.js";
 import { success, warning } from "./colors.js";
 import { parseArguments } from "./arguments.js";
+import { cleanHistoricBins, closeHistoryBin } from "./history-bin.js";
 
 import express from "express";
 import { createServer } from "http";
@@ -32,10 +33,6 @@ if (cluster.isPrimary) {
 	if (only) {
 		console.log(warning(`Only initializing cluster ${only}!`));
 	}
-
-	process.on("exit", close);
-	process.on("SIGINT", close);
-	process.on("SIGTERM", close);
 
 	// This is only needed once so its on the master too
 	startTwitchUpdateLoop();
@@ -97,7 +94,17 @@ if (cluster.isPrimary) {
 	// Get slave data first
 	const slave = getSlaveData();
 
+	// Register console logging
 	registerConsole(slave.server);
+
+	// Listen for termination
+	process.on("message", message => {
+		if (message !== "terminate") return;
+
+		closeHistoryBin();
+
+		process.exit(0);
+	});
 
 	// Initialize the server (async deferred, no await)
 	console.log("Initializing server...");
@@ -111,14 +118,14 @@ if (cluster.isPrimary) {
 	console.log("Initializing data-loop...");
 	initDataLoop();
 
+	// Start cleanup loop
+	console.log("Starting cleanup loop...");
+	cleanHistoricBins(slave.cluster);
+
 	// Start the server
 	process.send({
 		type: "hello"
 	});
 
 	console.log("Startup complete");
-}
-
-function close() {
-	process.exit(0);
 }

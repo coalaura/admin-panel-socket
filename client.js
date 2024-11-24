@@ -1,7 +1,6 @@
 import { v4 } from "uuid";
 import { pack } from "msgpackr";
 
-import { getLastServerError } from "./data-loop.js";
 import { getSlaveData } from "./master.js";
 import { counter, danger, muted, success, warning, info } from "./colors.js";
 
@@ -76,16 +75,6 @@ export function handleConnection(client, server, type, license) {
 
 		console.log(`${danger("Disconnected")} ${muted("{" + self.id + "}")} ${info(self.server + "/" + self.type)} - ${counter(count(self.server, self.type))}`);
 	});
-
-	const error = getLastServerError(self.server);
-
-	if (error) {
-		const data = pack({
-			error: error
-		});
-
-		self.client.emit("message", Uint8Array.from(data).buffer);
-	}
 
 	self.client.on("pause", pPause => {
 		self.paused = pPause;
