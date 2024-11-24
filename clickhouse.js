@@ -29,16 +29,27 @@ async function close() {
 
 export async function historyStatistics(server) {
     try {
-        const result = await client.query({
+        const total = await client.query({
             query: `
-                SELECT sum(bytes_on_disk) AS total_size, sum(rows) AS total_rows, sumIf(bytes_on_disk, table = 'history.${server}') AS server_size, sumIf(rows, table = 'history.${server}') AS server_rows
+                SELECT sum(bytes_on_disk) AS total_size, sum(rows) AS total_rows
                 FROM system.parts
                 WHERE database = 'history'
             `,
             format: "JSONEachRow",
         });
 
-        const { total_size, total_rows, server_size, server_rows } = (await result.json())[0];
+        const { total_size, total_rows } = (await total.json())[0];
+
+		const local = await client.query({
+			query: `
+				SELECT sum(bytes_on_disk) AS server_size, sum(rows) AS server_rows
+				FROM system.parts
+				WHERE database = 'history' AND table = '${server}'
+			`,
+			format: "JSONEachRow",
+		});
+
+		const { server_size, server_rows } = (await local.json())[0];
 
         return [
             `+ History Size (all): ${formatBytes(total_size)}`,
@@ -47,8 +58,8 @@ export async function historyStatistics(server) {
             `+ History Size (${server}): ${formatBytes(server_size)}`,
             `+ History Rows (${server}): ${formatInteger(server_rows)}`,
 
-			`+ History failed inserts: ${formatInteger(stored.failed)}`,
-			`+ History successful inserts: ${formatInteger(stored.success)}`
+			`${stored.success > 0 ? "+" : "-"} History successful inserts: ${formatInteger(stored.success)}`,
+			`${stored.failed > 0 ? "-" : "+"} History failed inserts: ${formatInteger(stored.failed)}`
         ];
     } catch (err) {
         console.error(`${error("Error fetching history statistics:")} ${muted(err.message)}`);
