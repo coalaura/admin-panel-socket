@@ -61,7 +61,7 @@ async function ensureSchema(server) {
                 ENGINE = MergeTree()
                 PARTITION BY toDate(timestamp)
                 ORDER BY (timestamp, license)
-                TTL timestamp + INTERVAL 30 DAY DELETE
+                TTL toDateTime(timestamp) + INTERVAL 30 DAY DELETE
                 SETTINGS index_granularity = 8192;
             `
 		});
@@ -74,43 +74,40 @@ async function ensureSchema(server) {
 	}
 }
 
-async function initHistoryDatabase(server = null) {
-	if (!client) {
-		client = createClient({
-			url: "http://localhost:8123",
-            username: "default",
-            password: configData.clickhouse
-		});
+async function initHistoryDatabase() {
+	if (client) return;
 
-		try {
-			const result = await client.query({
-				query: "SHOW DATABASES",
-				format: "JSONEachRow"
-			});
+    client = createClient({
+        url: "http://localhost:8123",
+        username: "default",
+        password: configData.clickhouse
+    });
 
-            const databases = await result.json();
+    try {
+        const result = await client.query({
+            query: "SHOW DATABASES",
+            format: "JSONEachRow"
+        });
 
-			const exists = databases.some(db => db.name === "history");
+        const databases = await result.json();
 
-			if (exists) return;
+        const exists = databases.some(db => db.name === "history");
 
-			console.log(info(`Creating database`));
+        if (exists) return;
 
-			await client.query({
-				query: "CREATE DATABASE history"
-			});
-		} catch (err) {
-			console.error(`${error("Error connecting to ClickHouse:")} ${muted(err.message)}`);
-		}
-	}
+        console.log(info(`Creating database`));
 
-	if (server) {
-		await ensureSchema(server);
-	}
+        await client.query({
+            query: "CREATE DATABASE history"
+        });
+    } catch (err) {
+        console.error(`${error("Error connecting to ClickHouse:")} ${muted(err.message)}`);
+    }
 }
 
 export async function store(server, players) {
-	await initHistoryDatabase(server);
+	await initHistoryDatabase();
+    await ensureSchema(server);
 
 	const timestamp = Math.floor(Date.now() / 1000),
 		rows = [];
@@ -154,6 +151,9 @@ export async function store(server, players) {
 }
 
 export async function range(server, license, start, end) {
+    await initHistoryDatabase();
+    await ensureSchema(server);
+
 	try {
 		const result = await client.query({
 			query: `
@@ -174,6 +174,9 @@ export async function range(server, license, start, end) {
 }
 
 export async function single(server, timestamp) {
+    await initHistoryDatabase();
+    await ensureSchema(server);
+
     try {
         const result = await client.query({
             query: `
