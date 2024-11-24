@@ -125,7 +125,8 @@ async function initHistoryDatabase() {
 	if (client) return;
 
     client = createClient({
-        url: "http://localhost:8123",
+		host: "localhost",
+		port: 9000,
         username: "default",
         password: configData.clickhouse,
 		clickhouse_settings: {
