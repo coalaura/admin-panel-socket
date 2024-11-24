@@ -1,7 +1,6 @@
 import { getServerByName } from "./server.js";
 import { getLogs } from "./logging.js";
 import { isValidLicense } from "./auth.js";
-import { bufferCount } from "./buffer.js";
 import { getAverage } from "./average.js";
 import { historyStatistics } from "./clickhouse.js";
 
@@ -176,7 +175,6 @@ export class SlaveHandler {
         logs.push(srv && srv.token ? "+ server.token is set" : "- server.token is not set");
         logs.push(srv && !srv.down ? "+ server is up" : `- server is down (${srv?.downError || "Unknown error"})`);
         logs.push(srv && srv.info ? "+ server.info is set" : "- server.info is not set");
-        logs.push(`+ ${bufferCount()} open buffered writers`);
         logs.push(`+ worker pid is ${process.pid}`);
         logs.push(avgWorld ? `+ world.json API average is ${avgWorld}ms` : "- world.json API average is not set");
         logs.push(avgStaff ? `+ staff.json API average is ${avgStaff}ms` : "- staff.json API average is not set");

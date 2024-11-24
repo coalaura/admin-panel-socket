@@ -29,6 +29,9 @@ async function close() {
 }
 
 export async function historyStatistics(server) {
+	await initHistoryDatabase();
+    await ensureSchema(server);
+
     try {
         const total = await client.query({
             query: `
