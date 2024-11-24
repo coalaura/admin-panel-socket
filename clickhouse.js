@@ -94,7 +94,7 @@ async function ensureSchema(server) {
 		await client.query({
 			query: `
                 CREATE TABLE history.${server} (
-                    timestamp UInt32,
+                    timestamp DateTime,
                     license String,
                     character_id Int32,
                     x Float32,
