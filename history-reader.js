@@ -1,12 +1,14 @@
 import { getHistoryPath } from "./history-bin.js";
 
 import { existsSync, readFileSync, readdirSync } from "fs";
+import du from "du";
+import { formatBytes } from "./functions.js";
 
 function read(path, min, max) {
 	if (!existsSync(path)) return [];
 
 	const data = readFileSync(path),
-        view = new DataView(data.buffer),
+		view = new DataView(data.buffer),
 		entries = [];
 
 	for (let i = 0; i < view.byteLength; i += 36) {
@@ -36,38 +38,54 @@ function paths(server, license, from, till) {
 	const files = [];
 
 	for (let i = from; i <= till; i += 86400) {
-        files.push(getHistoryPath(server, i, license));
-    }
+		files.push(getHistoryPath(server, i, license));
+	}
 
-    return files;
+	return files;
 }
 
 export function range(server, license, start, end) {
-    const files = paths(server, license, start, end),
-        entries = [];
+	const files = paths(server, license, start, end),
+		entries = [];
 
-    for (const path of files) {
-        entries.push(...read(path, start, end));
-    }
+	for (const path of files) {
+		entries.push(...read(path, start, end));
+	}
 
-    return entries;
+	return entries;
 }
 
 export function single(server, timestamp) {
-    const path = getHistoryPath(server, timestamp, null);
+	const path = getHistoryPath(server, timestamp, null);
 
-    if (!existsSync(path)) return {};
+	if (!existsSync(path)) return {};
 
-    const licenses = readdirSync(path),
-        entries = {};
+	const licenses = readdirSync(path),
+		entries = {};
 
-    for (const license of licenses) {
-        const entry = read(`${path}/${license}`, timestamp, timestamp);
+	for (const license of licenses) {
+		const entry = read(`${path}/${license}`, timestamp, timestamp);
 
-        if (!entry.length) continue;
+		if (!entry.length) continue;
 
-        entries[license] = entry[0];
-    }
+		entries[license] = entry[0];
+	}
 
-    return entries;
+	return entries;
+}
+
+async function size(path) {
+	if (!existsSync(path)) return 0;
+
+	return await du(path);
+}
+
+export async function historyStatistics(server) {
+	const total = await size("./history"),
+		local = await size(`./history/${server}`);
+
+	return [
+		`+ History Size (all): ${formatBytes(total)}`,
+		`+ History Size (${server}): ${formatBytes(local)}`
+	];
 }

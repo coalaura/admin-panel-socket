@@ -2,7 +2,7 @@ import { getServerByName } from "./server.js";
 import { getLogs } from "./logging.js";
 import { isValidLicense } from "./auth.js";
 import { getAverage } from "./average.js";
-import { historyStatistics } from "./clickhouse.js";
+import { historyStatistics } from "./history-reader.js";
 
 export class SlaveHandler {
     constructor() {
