@@ -1,6 +1,7 @@
 import { createClient } from "@clickhouse/client";
 import { error, info, muted, warning } from "./colors";
 import configData from "./config.js";
+import { formatInteger } from "./functions.js";
 
 let client,
 	schemas = {};
