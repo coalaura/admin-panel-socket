@@ -106,16 +106,16 @@ export function initMasterRoutes(app) {
 
         if (!timestamp) return abort(resp, "Invalid request");
 
-        //try {
+        try {
             const data = resolveTimestampData(server, timestamp);
 
             resp.json({
                 status: true,
                 data: data
             });
-        //} catch (e) {
-        //    abort(resp, e.message);
-        //}
+        } catch (e) {
+            abort(resp, e.message);
+        }
     });
 
     // Misc data routes (no authentication)

@@ -3,6 +3,7 @@ import { getLogs } from "./logging.js";
 import { isValidLicense } from "./auth.js";
 import { getAverage } from "./average.js";
 import { historyStatistics } from "./history-reader.js";
+import { closeHistory } from "./history-bin.js";
 
 export class SlaveHandler {
     constructor() {
@@ -12,6 +13,15 @@ export class SlaveHandler {
     }
 
     handle(message) {
+        // Special handling for termination message
+        if (message === "terminate") {
+            console.log(info("Received terminate message, terminating..."));
+
+            closeHistory();
+
+            process.exit(0);
+        }
+
         const { id, server, func, options } = message;
 
         const srv = getServerByName(server);

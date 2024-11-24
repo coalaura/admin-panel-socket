@@ -72,7 +72,7 @@ export class Slave {
 
     terminate() {
         return new Promise(resolve => {
-            if (this.#terminating) {
+            if (this.#terminating || !this.#cluster) {
                 resolve();
 
                 return;
@@ -83,7 +83,7 @@ export class Slave {
             this.#cluster.send("terminate");
 
             const timeout = setTimeout(() => {
-                this.#cluster.kill();
+                this.#kill();
 
                 resolve();
 
@@ -98,6 +98,14 @@ export class Slave {
                 console.log(`${success(`Cluster ${this.#server} terminated successfully`)}`);
             });
         });
+    }
+
+    #kill() {
+        if (!this.#cluster) return;
+
+        this.#cluster.kill();
+
+        this.#cluster = null;
     }
 
     #fork() {
@@ -140,15 +148,13 @@ export class Slave {
         });
 
         this.#cluster.on("disconnect", () => {
-            this.#cluster.kill();
-            this.#cluster = null;
+            this.#kill();
 
             this.#trigger("down");
         });
 
         this.#cluster.on("exit", (code, signal) => {
-            this.#cluster.kill();
-            this.#cluster = null;
+            this.#kill();
 
             this.#trigger("down");
         });
@@ -227,7 +233,7 @@ export class Slave {
             }, 5000)
         };
 
-        this.#cluster.send({
+        this.#cluster && this.#cluster.send({
             id: id,
             server: this.#server,
             func: func,
