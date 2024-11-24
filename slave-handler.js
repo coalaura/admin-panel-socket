@@ -3,7 +3,7 @@ import { getLogs } from "./logging.js";
 import { isValidLicense } from "./auth.js";
 import { bufferCount } from "./buffer.js";
 import { getAverage } from "./average.js";
-import { historyStatistics, historyStoreStats } from "./clickhouse.js";
+import { historyStatistics } from "./clickhouse.js";
 
 export class SlaveHandler {
     constructor() {
