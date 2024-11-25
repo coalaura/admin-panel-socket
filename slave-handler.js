@@ -4,6 +4,7 @@ import { isValidLicense } from "./auth.js";
 import { getAverage } from "./average.js";
 import { historyStatistics } from "./history-reader.js";
 import { closeHistory } from "./history-bin.js";
+import { formatUptime } from "./functions.js";
 
 const startup = new Date();
 
@@ -195,7 +196,8 @@ export class SlaveHandler {
 
         logs.push(...history);
 
-        logs.push(`+ slave startup was ${startup.toUTCString()}`);
+        logs.push(`+ startup was ${startup.toUTCString()}`);
+        logs.push(`+ uptime is ${formatUptime(startup)}`);
 
         logs.push("");
         logs.push((srv && srv.info ? "+ server.info = " : "- server.info = ") + JSON.stringify(srv?.info));

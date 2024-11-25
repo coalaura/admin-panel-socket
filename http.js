@@ -23,7 +23,7 @@ export async function requestOpFwApi(url, token) {
 
     const json = response.data;
 
-    if (!json || !('data' in json) || !('statusCode' in json)) {
+    if (!json || typeof json !== "object" || !("data" in json) || !("statusCode" in json)) {
         throw Error("invalid json returned");
     }
 

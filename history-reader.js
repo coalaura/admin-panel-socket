@@ -100,7 +100,7 @@ export async function historyStatistics(server) {
 	])
 
 	return [
-		`+ History Size (all): ${formatBytes(total)}`,
-		`+ History Size (${server}): ${formatBytes(local)}`
+		`+ history size (all): ${formatBytes(total)}`,
+		`+ history size (${server}): ${formatBytes(local)}`
 	];
 }

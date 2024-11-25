@@ -45,3 +45,23 @@ export function formatBytes(bytes) {
 
 	return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
 }
+
+export function formatUptime(since) {
+	let seconds = Math.floor((Date.now() - since) / 1000);
+
+	let minutes = Math.floor(seconds / 60);
+	seconds = seconds % 60;
+
+	let hours = Math.floor(minutes / 60);
+	minutes = minutes % 60;
+
+	let days = Math.floor(hours / 24);
+	hours = hours % 24;
+
+	return [
+		days ? `${days} day${days > 1 ? "s" : ""}` : false,
+		hours ? `${hours} hour${hours > 1 ? "s" : ""}` : false,
+		minutes ? `${minutes} minute${minutes > 1 ? "s" : ""}` : false,
+		`${seconds} second${seconds > 1 ? "s" : ""}`
+	].filter(Boolean).join(" ")
+}
