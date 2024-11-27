@@ -114,24 +114,25 @@ function cleanupPlayer(player, dutyMap) {
         duty = license in dutyMap ? dutyMap[license] : false;
 
     return {
+        source: player.source,
+        license: license,
+        name: player.name,
+        coords: player.coords,
+        flags: player.flags,
+        instance: player.instanceId,
         character: character ? {
             id: character.id,
             name: character.fullName,
             flags: character.flags
         } : false,
-        coords: player.coords,
-        duty: duty ? {
-            type: duty.type,
-            department: duty.department
-        } : false,
-        flags: player.flags,
-        instance: player.instanceId,
-        name: player.name,
-        source: player.source,
         vehicle: vehicle ? {
             id: vehicle.id,
             model: vehicle.model,
             driving: vehicle.driving
+        } : false,
+        duty: duty ? {
+            type: duty.type,
+            department: duty.department
         } : false
     };
 }
