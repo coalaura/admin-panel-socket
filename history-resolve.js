@@ -23,7 +23,7 @@ export function resolveHistoricData(server, license, from, till) {
 export function resolveTimestampData(server, timestamp) {
     const data = single(server, timestamp);
 
-    if (!data || data.length === 0) {
+    if (!data || Object.keys(data).length === 0) {
         throw Error("No data for this timestamp");
     }
 
