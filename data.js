@@ -118,6 +118,7 @@ function cleanupPlayer(player, dutyMap) {
         license: license,
         name: player.name,
         coords: player.coords,
+        speed: player.speed,
         flags: player.flags,
         instance: player.instanceId,
         character: character ? {
