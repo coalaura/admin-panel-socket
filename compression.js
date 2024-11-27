@@ -7,29 +7,29 @@ export function compressPlayer(player, dutyMap) {
     const license = player.licenseIdentifier,
         duty = license in dutyMap ? dutyMap[license] : false;
 
-    return _cleanup({
+    return {
         a: player.afkSince,
-        b: character ? _cleanup({
+        b: character ? {
             a: character.flags,
             b: character.fullName,
             c: character.id
-        }) : false,
+        } : false,
         c: _movementData(player),
         d: player.flags,
-        e: duty ? _cleanup({
+        e: duty ? {
             a: duty.type,
             b: duty.department
-        }) : false,
+        } : false,
         f: player.name,
         g: player.source,
         h: license,
-        i: vehicle ? _cleanup({
+        i: vehicle ? {
             a: vehicle.driving,
             b: vehicle.id,
             c: vehicle.model
-        }) : false,
+        } : false,
         j: player.instanceId
-    });
+    };
 }
 
 function _movementData(player) {
@@ -51,18 +51,4 @@ function _movementData(player) {
     }
 
     return data;
-}
-
-function _cleanup(obj) {
-    for (const key in obj) {
-        if (!obj.hasOwnProperty(key)) continue;
-
-        const value = obj[key];
-
-        if (value === false || value === 0 || value === "" || value === undefined) {
-            delete obj[key];
-        }
-    }
-
-    return obj;
 }
