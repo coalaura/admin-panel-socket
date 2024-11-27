@@ -1,7 +1,6 @@
 import { requestOpFwApi } from "./http.js";
 import { loadOnDutyData } from "./duty.js";
 import { decompressPlayers } from "./decompressor.js";
-import { compressPlayer } from "./compression.js";
 import { writeHistory } from "./history-bin.js";
 
 import { getServers, promises as dns } from "node:dns";
@@ -16,7 +15,7 @@ export async function updateWorldJSON(server) {
     for (let x = 0; x < data.players.length; x++) {
         const player = data.players[x];
 
-        clientData[player.source] = compressPlayer(player, dutyMap);
+        clientData[player.source] = cleanupPlayer(player, dutyMap);
     }
 
     writeHistory(server.server, data.players);
@@ -105,4 +104,34 @@ async function canResolveServerDNS(url) {
         console.info(`Active DNS servers: ${servers.join(", ")}`);
         console.warn(`Failed to resolve ${host}: ${e.message}`);
     }
+}
+
+function cleanupPlayer(player, dutyMap) {
+    const character = player.character,
+        vehicle = player.vehicle;
+
+    const license = player.licenseIdentifier,
+        duty = license in dutyMap ? dutyMap[license] : false;
+
+    return {
+        character: character ? {
+            id: character.id,
+            name: character.fullName,
+            flags: character.flags
+        } : false,
+        coords: player.coords,
+        duty: duty ? {
+            type: duty.type,
+            department: duty.department
+        } : false,
+        flags: player.flags,
+        instance: player.instanceId,
+        name: player.name,
+        source: player.source,
+        vehicle: vehicle ? {
+            id: vehicle.id,
+            model: vehicle.model,
+            driving: vehicle.driving
+        } : false
+    };
 }

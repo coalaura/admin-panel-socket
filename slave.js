@@ -139,7 +139,7 @@ export class Slave {
 
             // We have to add the viewer count here, since the slaves don't know about it
             if (type === "world") {
-                data.v = getActiveViewers(this.#server, "world");
+                data.viewers = getActiveViewers(this.#server, "world");
             }
 
             handleDataUpdate(type, this.#server, this.#diff(type, data));

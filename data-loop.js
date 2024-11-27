@@ -17,10 +17,7 @@ async function worldJSON(serverName) {
 
             process.send({
                 type: "world",
-                data: {
-                    p: clientData.players,
-                    i: clientData.instance || false
-                }
+                data: clientData
             });
         } catch (e) {
             server.down = true;
