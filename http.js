@@ -1,10 +1,10 @@
 import config from "./config.js";
 
-import https from "https";
-import http from "http";
+import https from "node:https";
+import http from "node:http";
 import axios from "axios";
 
-let agents = {};
+const agents = {};
 
 export async function requestOpFwApi(url, token) {
     const agent = getInstance(url);
@@ -13,7 +13,7 @@ export async function requestOpFwApi(url, token) {
         httpAgent: agent,
         timeout: config.timeout || 3000,
         headers: {
-            "Authorization": "Bearer " + token
+            "Authorization": `Bearer ${token}`
         }
     });
 

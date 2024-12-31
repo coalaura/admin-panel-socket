@@ -5,7 +5,7 @@ function _encodeIntegerAlphabetically(current) {
 		return "a";
 	}
 
-	let characters = [];
+	const characters = [];
 
 	while (newKey > 0) {
 		const remainder = newKey % 26;
@@ -15,7 +15,7 @@ function _encodeIntegerAlphabetically(current) {
 		newKey = Math.floor(newKey / 26);
 	}
 
-	return characters.reverse().join('');
+	return characters.reverse().join("");
 }
 
 function _reconstructValue(value) {
@@ -24,9 +24,9 @@ function _reconstructValue(value) {
 	if (valueType === "string" && value.match(/^-?\d+(\.\d+)?(:-?\d+(\.\d+)?)+$/m)) {
 		const values = value.split(":").map(num => parseFloat(num));
 
-		let result = {
+		const result = {
 			x: values[0],
-			y: values[1]
+			y: values[1],
 		};
 
 		if (values.length > 2) {
@@ -44,13 +44,13 @@ function _reconstructValue(value) {
 }
 
 function _resolveDuplicates(rawDuplicateMap, data) {
-	let duplicateMap = {};
+	const duplicateMap = {};
 
 	let current = -1;
-	let duplicatePairs = rawDuplicateMap.split(";");
+	const duplicatePairs = rawDuplicateMap.split(";");
 
 	for (const duplicate of duplicatePairs) {
-		let replacement = _encodeIntegerAlphabetically(current);
+		const replacement = _encodeIntegerAlphabetically(current);
 
 		duplicateMap[replacement] = duplicate;
 
@@ -84,10 +84,10 @@ function _resolveDuplicates(rawDuplicateMap, data) {
 }
 
 function _resolveKeys(pKeyMap, data) {
-	let keyMap = {};
+	const keyMap = {};
 
 	let current = -1;
-	let keyPairs = pKeyMap.split(";");
+	const keyPairs = pKeyMap.split(";");
 
 	for (const key of keyPairs) {
 		const replacement = _encodeIntegerAlphabetically(current);
@@ -105,7 +105,7 @@ function _resolveKeys(pKeyMap, data) {
 				return value.map(value => resolve(value));
 			}
 
-			let decompressed = {};
+			const decompressed = {};
 
 			for (const key in value) {
 				const newKey = keyMap[key] || key;
@@ -149,38 +149,44 @@ export function decompressPlayers(data) {
 	decompressed.world.weather = decompressed.world.weather || "";
 	decompressed.world.instance = decompressed.world.instance || 0;
 
-	decompressed.players = decompressed.players ? decompressed.players.map(pPlayer => {
-		const character = pPlayer.character,
-			vehicle = pPlayer.vehicle;
+	decompressed.players = decompressed.players
+		? decompressed.players.map(pPlayer => {
+				const character = pPlayer.character,
+					vehicle = pPlayer.vehicle;
 
-		return {
-			source: pPlayer.source || 0,
-			licenseIdentifier: pPlayer.licenseIdentifier || "",
-			name: pPlayer.name || "",
-			countryName: pPlayer.countryName || "",
-			character: character ? {
-				id: character.id || 0,
-				fullName: character.fullName || "",
-				flags: character.flags || 0
-			} : false,
-			coords: pPlayer.coords || {
-				x: 0,
-				y: 0,
-				z: 0,
-				w: 0
-			},
-			vehicle: vehicle ? {
-				id: vehicle.id || 0,
-				model: vehicle.model || "",
-				driving: vehicle.driving || false,
-				plate: vehicle.plate || ""
-			} : false,
-			speed: pPlayer.speed || 0,
-			flags: pPlayer.flags || 0,
-			instanceId: pPlayer.instanceId || 0,
-			afkSince: pPlayer.afkSince || false
-		};
-	}) : [];
+				return {
+					source: pPlayer.source || 0,
+					licenseIdentifier: pPlayer.licenseIdentifier || "",
+					name: pPlayer.name || "",
+					countryName: pPlayer.countryName || "",
+					character: character
+						? {
+								id: character.id || 0,
+								fullName: character.fullName || "",
+								flags: character.flags || 0,
+							}
+						: false,
+					coords: pPlayer.coords || {
+						x: 0,
+						y: 0,
+						z: 0,
+						w: 0,
+					},
+					vehicle: vehicle
+						? {
+								id: vehicle.id || 0,
+								model: vehicle.model || "",
+								driving: vehicle.driving || false,
+								plate: vehicle.plate || "",
+							}
+						: false,
+					speed: pPlayer.speed || 0,
+					flags: pPlayer.flags || 0,
+					instanceId: pPlayer.instanceId || 0,
+					afkSince: pPlayer.afkSince || false,
+				};
+			})
+		: [];
 
 	return decompressed;
 }

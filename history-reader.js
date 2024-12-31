@@ -1,7 +1,7 @@
 import { getHistoryPath } from "./history-bin.js";
 import { formatBytes } from "./functions.js";
 
-import { existsSync, readFileSync, readdirSync } from "fs";
+import { existsSync, readFileSync, readdirSync } from "node:fs";
 import { $ } from "bun";
 
 function read(path, min, max) {

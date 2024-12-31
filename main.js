@@ -13,11 +13,11 @@ import { success, warning } from "./colors.js";
 import { parseArguments } from "./arguments.js";
 import { cleanupHistory, initializeHistory } from "./history-bin.js";
 
+import { createServer } from "node:http";
+import cluster from "node:cluster";
 import express from "express";
-import { createServer } from "http";
 import { Server } from "socket.io";
 import cors from "cors";
-import cluster from "cluster";
 import { semver } from "bun";
 
 if (!semver.satisfies(Bun.version, "^1.1.34")) {
@@ -44,9 +44,11 @@ if (cluster.isPrimary) {
 	const app = express(),
 		xp = createServer(app);
 
-	app.use(cors({
-		origin: '*'
-	}));
+	app.use(
+		cors({
+			origin: "*",
+		})
+	);
 
 	app.use(express.json());
 
@@ -63,8 +65,8 @@ if (cluster.isPrimary) {
 	const io = new Server(xp, {
 		cors: {
 			origin: "*",
-			methods: ["GET", "POST"]
-		}
+			methods: ["GET", "POST"],
+		},
 	});
 
 	io.on("connection", async client => {
@@ -78,7 +80,7 @@ if (cluster.isPrimary) {
 			return rejectClient(client, "Invalid request");
 		}
 
-		if (!await checkAuth(server.cluster, token, client.handshake.address)) {
+		if (!(await checkAuth(server.cluster, token, client.handshake.address))) {
 			return rejectClient(client, "Unauthorized");
 		}
 
@@ -118,7 +120,7 @@ if (cluster.isPrimary) {
 
 	// Start the server
 	process.send({
-		type: "hello"
+		type: "hello",
 	});
 
 	console.log("Startup complete");

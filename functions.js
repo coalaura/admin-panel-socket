@@ -12,7 +12,7 @@ export function rejectClient(client, err) {
 
 	client.disconnect(true);
 
-	console.log(`${warning("Rejected connection")} ${muted("from " + client.handshake.address + " for: " + err)}`);
+	console.log(`${warning("Rejected connection")} ${muted(`from ${client.handshake.address} for: ${err}`)}`);
 }
 
 export function formatNumber(pNumber, pDecimals) {
@@ -28,7 +28,7 @@ export function formatInteger(pNumber) {
 export function reverse(array) {
 	if (array.toReversed !== undefined) return array.toReversed();
 
-	let reversed = [];
+	const reversed = [];
 
 	for (let x = array.length - 1; x >= 0; x--) {
 		reversed.push(array[x]);
@@ -43,7 +43,7 @@ export function formatBytes(bytes) {
 	const sizes = ["B", "KB", "MB", "GB", "TB"],
         i = Math.floor(Math.log(bytes) / Math.log(1024));
 
-	return `${(bytes / Math.pow(1024, i)).toFixed(2)} ${sizes[i]}`;
+	return `${(bytes / (1024 ** i)).toFixed(2)} ${sizes[i]}`;
 }
 
 export function formatUptime(since) {
@@ -55,7 +55,7 @@ export function formatUptime(since) {
 	let hours = Math.floor(minutes / 60);
 	minutes = minutes % 60;
 
-	let days = Math.floor(hours / 24);
+	const days = Math.floor(hours / 24);
 	hours = hours % 24;
 
 	return [

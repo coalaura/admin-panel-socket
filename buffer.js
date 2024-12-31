@@ -1,7 +1,7 @@
 import { info, muted } from "./colors.js";
 
-import { appendFile, appendFileSync, existsSync, mkdirSync } from "fs";
-import { dirname } from "path";
+import { appendFile, appendFileSync, existsSync, mkdirSync } from "node:fs";
+import { dirname } from "node:path";
 
 export class BufferedWriter {
     static EntryCount = 120; // 120 seconds for minimal data loss

@@ -1,6 +1,6 @@
 import config from "./config.js";
 
-import { join } from "path";
+import { join } from "node:path";
 import * as dotenv from "dotenv";
 import { danger } from "./colors.js";
 

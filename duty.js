@@ -3,13 +3,13 @@ import { requestOpFwApi } from "./http.js";
 export async function loadOnDutyData(server) {
     const data = await requestOpFwApi(`${server.url}/op-framework/duty.json`, server.token);
 
-    let map = {};
+    const map = {};
 
     if ("Law Enforcement" in data) {
         const police = data["Law Enforcement"];
 
         for (let x = 0; x < police.length; x++) {
-            let entry = police[x];
+            const entry = police[x];
 
             entry.type = "police";
 
@@ -21,7 +21,7 @@ export async function loadOnDutyData(server) {
         const ems = data["Medical"];
 
         for (let x = 0; x < ems.length; x++) {
-            let entry = ems[x];
+            const entry = ems[x];
 
             entry.type = "medical";
 

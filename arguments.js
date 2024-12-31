@@ -1,4 +1,4 @@
-import { parseArgs } from "util";
+import { parseArgs } from "node:util";
 
 export function parseArguments() {
 	const { values, positionals } = parseArgs({

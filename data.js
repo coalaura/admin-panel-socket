@@ -6,134 +6,140 @@ import { writeHistory } from "./history-bin.js";
 import { getServers, promises as dns } from "node:dns";
 
 export async function updateWorldJSON(server) {
-    const dutyMap = await loadOnDutyData(server);
+	const dutyMap = await loadOnDutyData(server);
 
-    const data = decompressPlayers(await requestOpFwApi(`${server.url}/op-framework/world.json?compress=1`, server.token));
+	const data = decompressPlayers(await requestOpFwApi(`${server.url}/op-framework/world.json?compress=1`, server.token));
 
-    let clientData = {};
+	const clientData = {};
 
-    for (let x = 0; x < data.players.length; x++) {
-        const player = data.players[x];
+	for (let x = 0; x < data.players.length; x++) {
+		const player = data.players[x];
 
-        clientData[player.source] = cleanupPlayer(player, dutyMap);
-    }
+		clientData[player.source] = cleanupPlayer(player, dutyMap);
+	}
 
-    writeHistory(server.server, data.players);
+	writeHistory(server.server, data.players);
 
-    server.players = data.players;
-    server.world = data.world;
+	server.players = data.players;
+	server.world = data.world;
 
-    return {
-        players: clientData,
-        instance: data.world?.instance
-    };
+	return {
+		players: clientData,
+		instance: data.world?.instance,
+	};
 }
 
 export async function checkIfServerIsUp(server) {
-    let uptime = false,
-        name = false,
-        logo = false,
-        success = false;
+	let uptime = false,
+		name = false,
+		logo = false,
+		success = false;
 
-    try {
-        if (server.down) {
-            // To test if we can do authorized requests
-            await requestOpFwApi(`${server.url}/op-framework/auth.json`, server.token);
-        }
+	try {
+		if (server.down) {
+			// To test if we can do authorized requests
+			await requestOpFwApi(`${server.url}/op-framework/auth.json`, server.token);
+		}
 
-        const data = await requestOpFwApi(`${server.url}/op-framework/variables.json`, server.token);
+		const data = await requestOpFwApi(`${server.url}/op-framework/variables.json`, server.token);
 
-        if (typeof data.serverUptimeMilliseconds === "number") {
-            uptime = data.serverUptimeMilliseconds;
-        }
+		if (typeof data.serverUptimeMilliseconds === "number") {
+			uptime = data.serverUptimeMilliseconds;
+		}
 
-        if (typeof data.communityName === "string") {
-            name = data.communityName;
-        }
+		if (typeof data.communityName === "string") {
+			name = data.communityName;
+		}
 
-        if (typeof data.communityLogo === "string") {
-            logo = data.communityLogo;
-        }
+		if (typeof data.communityLogo === "string") {
+			logo = data.communityLogo;
+		}
 
-        success = data.serverReady === true;
-    } catch (e) {
-        console.warn(`Failed to check if server is up (${String(server.url)}): ${e.message}`);
+		success = data.serverReady === true;
+	} catch (e) {
+		console.warn(`Failed to check if server is up (${String(server.url)}): ${e.message}`);
 
-        await canResolveServerDNS(server.url);
+		await canResolveServerDNS(server.url);
 
-        if (!server.url) {
-            console.error("Server URL not found, waiting for restart...");
+		if (!server.url) {
+			console.error("Server URL not found, waiting for restart...");
 
-            process.exit(1);
-        }
-    }
+			process.exit(1);
+		}
+	}
 
-    if (success && server.down) {
-        console.log(`Server ${server.url} is up again! (uptime=${uptime}, name=${name})`);
-    }
+	if (success && server.down) {
+		console.log(`Server ${server.url} is up again! (uptime=${uptime}, name=${name})`);
+	}
 
-    if (!success) {
-        return false;
-    }
+	if (!success) {
+		return false;
+	}
 
-    return {
-        uptime: uptime,
-        name: name,
-        logo: logo
-    };
+	return {
+		uptime: uptime,
+		name: name,
+		logo: logo,
+	};
 }
 
 async function canResolveServerDNS(url) {
-    if (!url || url.match(/\d+\.\d+\.\d+\.\d+/)) {
-        return;
-    }
+	if (!url || url.match(/\d+\.\d+\.\d+\.\d+/)) {
+		return;
+	}
 
-    const uri = new URL(url),
-        host = uri.host,
-        servers = getServers();
+	const uri = new URL(url),
+		host = uri.host,
+		servers = getServers();
 
-    try {
-        const result = await dns.lookup(host);
+	try {
+		const result = await dns.lookup(host);
 
-        if (!result || !result.address) {
-            throw new Error("no address found");
-        }
+		if (!result || !result.address) {
+			throw new Error("no address found");
+		}
 
-        console.log(`Resolved ${host} to: ${result.address}`);
-    } catch(e) {
-        console.info(`Active DNS servers: ${servers.join(", ")}`);
-        console.warn(`Failed to resolve ${host}: ${e.message}`);
-    }
+		console.log(`Resolved ${host} to: ${result.address}`);
+	} catch (e) {
+		console.info(`Active DNS servers: ${servers.join(", ")}`);
+		console.warn(`Failed to resolve ${host}: ${e.message}`);
+	}
 }
 
 function cleanupPlayer(player, dutyMap) {
-    const character = player.character,
-        vehicle = player.vehicle;
+	const character = player.character,
+		vehicle = player.vehicle;
 
-    const license = player.licenseIdentifier,
-        duty = license in dutyMap ? dutyMap[license] : false;
+	const license = player.licenseIdentifier,
+		duty = license in dutyMap ? dutyMap[license] : false;
 
-    return {
-        source: player.source,
-        license: license,
-        name: player.name,
-        coords: player.coords,
-        speed: player.speed,
-        flags: player.flags,
-        instance: player.instanceId,
-        character: character ? {
-            id: character.id,
-            name: character.fullName,
-            flags: character.flags
-        } : false,
-        vehicle: vehicle ? {
-            id: vehicle.id,
-            model: vehicle.model,
-            driving: vehicle.driving
-        } : false,
-        duty: duty ? {
-            type: duty.type,
-            department: duty.department
-        } : false
-    };
+	return {
+		source: player.source,
+		license: license,
+		name: player.name,
+		coords: player.coords,
+		speed: player.speed,
+		flags: player.flags,
+		instance: player.instanceId,
+		character: character
+			? {
+					id: character.id,
+					name: character.fullName,
+					flags: character.flags,
+				}
+			: false,
+		vehicle: vehicle
+			? {
+					id: vehicle.id,
+					model: vehicle.model,
+					driving: vehicle.driving,
+				}
+			: false,
+		duty: duty
+			? {
+					type: duty.type,
+					department: duty.department,
+				}
+			: false,
+	};
 }

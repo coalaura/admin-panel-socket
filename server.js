@@ -1,7 +1,7 @@
 import { readDotEnv } from "./env.js";
 import { danger, error, success, warning } from "./colors.js";
 
-let servers = {};
+const servers = {};
 
 export function getServerByName(name) {
 	return servers[name];
@@ -77,8 +77,8 @@ export function initServer(cluster) {
 
 function getServerUrl(ip) {
 	if (ip.match(/^[0-9.]+(:[0-9]+)?$/gm) || ip.startsWith("localhost")) {
-		return "http://" + ip;
+		return `http://${ip}`;
 	}
 
-	return "https://" + ip;
+	return `https://${ip}`;
 }

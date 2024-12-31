@@ -6,29 +6,29 @@ import axios from "axios";
 let streamerData = {};
 
 export function getStreamerData() {
-    return streamerData;
+	return streamerData;
 }
 
 export function startTwitchUpdateLoop() {
-    const api = config.twitch?.api,
-        streamers = config.twitch?.streamers;
+	const api = config.twitch?.api,
+		streamers = config.twitch?.streamers;
 
-    if (!api || !streamers || !streamers.length) return;
+	if (!api || !streamers || !streamers.length) return;
 
-    updateTwitchData(api, streamers);
+	updateTwitchData(api, streamers);
 
-    console.log(`${success("Started Twitch update loop")}`);
+	console.log(`${success("Started Twitch update loop")}`);
 }
 
 async function updateTwitchData(api, streamers) {
-    try {
-        const response = await axios.get(api.replace("%s", streamers.join(","))),
-            data = response.data;
+	try {
+		const response = await axios.get(api.replace("%s", streamers.join(","))),
+			data = response.data;
 
-        if (data && Array.isArray(data)) {
-            streamerData = data.filter(streamer => streamer?.live);
-        }
-    } catch {}
+		if (data && Array.isArray(data)) {
+			streamerData = data.filter(streamer => streamer?.live);
+		}
+	} catch {}
 
-    setTimeout(updateTwitchData, 60 * 1000, api, streamers);
+	setTimeout(updateTwitchData, 60 * 1000, api, streamers);
 }

@@ -4,7 +4,7 @@ import { pack } from "msgpackr";
 import { getSlaveData } from "./master.js";
 import { counter, danger, muted, success, warning, info } from "./colors.js";
 
-let connections = {},
+const connections = {},
 	total = {};
 
 function increment(server, type) {
@@ -61,28 +61,28 @@ export function handleConnection(client, server, type, license) {
 		type: type,
 		license: license,
 
-		paused: false
+		paused: false,
 	};
 
 	increment(self.server, self.type);
 	connections[self.id] = self;
 
-	console.log(`${success("Connected")} ${muted("{" + self.id + "}")} ${info(self.server + "/" + self.type)} - ${counter(count(self.server, self.type))}`);
+	console.log(`${success("Connected")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)} - ${counter(count(self.server, self.type))}`);
 
 	self.client.on("disconnect", () => {
-        decrement(self.server, self.type);
+		decrement(self.server, self.type);
 		delete connections[self.id];
 
-		console.log(`${danger("Disconnected")} ${muted("{" + self.id + "}")} ${info(self.server + "/" + self.type)} - ${counter(count(self.server, self.type))}`);
+		console.log(`${danger("Disconnected")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)} - ${counter(count(self.server, self.type))}`);
 	});
 
 	self.client.on("pause", pPause => {
 		self.paused = pPause;
 
 		if (self.paused) {
-			console.log(`${warning("Paused")} ${muted("{" + self.id + "}")} ${info(self.server + "/" + self.type)}`);
+			console.log(`${warning("Paused")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)}`);
 		} else {
-			console.log(`${success("Resumed")} ${muted("{" + self.id + "}")} ${info(self.server + "/" + self.type)}`);
+			console.log(`${success("Resumed")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)}`);
 
 			sendFullData(self.client, self.server, self.type);
 		}
@@ -92,7 +92,7 @@ export function handleConnection(client, server, type, license) {
 }
 
 export function getActiveViewers(server, type) {
-	let viewers = [];
+	const viewers = [];
 
 	for (const id in connections) {
 		if (!connections.hasOwnProperty(id)) continue;

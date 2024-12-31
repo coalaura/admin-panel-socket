@@ -4,52 +4,52 @@ import { danger, error, muted, success } from "./colors.js";
 
 import { createPool } from "mysql2";
 
-let databases = {};
+const databases = {};
 
 export function getDatabase(cluster) {
-    return databases[cluster];
+	return databases[cluster];
 }
 
 export async function initDatabases(only = null) {
-    let promises = [];
+	const promises = [];
 
-    for (const cluster of config.servers) {
-        if (only && cluster !== only) continue;
+	for (const cluster of config.servers) {
+		if (only && cluster !== only) continue;
 
-        promises.push(initDatabase(cluster));
-    }
+		promises.push(initDatabase(cluster));
+	}
 
-    await Promise.all(promises);
+	await Promise.all(promises);
 
-    console.log(success(`All databases initialized successfully!`));
+	console.log(success("All databases initialized successfully!"));
 }
 
 async function initDatabase(cluster) {
-    const cfg = readDotEnv(cluster);
+	const cfg = readDotEnv(cluster);
 
-    if (!cfg) {
-        return;
-    }
+	if (!cfg) {
+		return;
+	}
 
-    const database = {
-        pool: createPool({
-            connectionLimit: 5,
+	const database = {
+		pool: createPool({
+			connectionLimit: 5,
 
-            host: cfg.DB_HOST,
-            port: cfg.DB_PORT,
-            user: cfg.DB_USERNAME,
-            password: cfg.DB_PASSWORD,
-            database: cfg.DB_DATABASE
-        })
-    };
+			host: cfg.DB_HOST,
+			port: cfg.DB_PORT,
+			user: cfg.DB_USERNAME,
+			password: cfg.DB_PASSWORD,
+			database: cfg.DB_DATABASE,
+		}),
+	};
 
-    database.query = function(query, values = []) {
-		return new Promise((resolve, reject) => {
+	database.query = (query, values = []) =>
+		new Promise((resolve, reject) => {
 			database.pool.getConnection((err, conn) => {
 				if (err) {
 					reject(err);
 
-                    logDatabaseError(cluster, err, query);
+					logDatabaseError(cluster, err, query);
 
 					return;
 				}
@@ -60,7 +60,7 @@ async function initDatabase(cluster) {
 					if (err) {
 						reject(err);
 
-                        logDatabaseError(cluster, err, query);
+						logDatabaseError(cluster, err, query);
 
 						return;
 					}
@@ -69,21 +69,23 @@ async function initDatabase(cluster) {
 				});
 			});
 		});
-	};
 
-    if (!await testConnection(database)) {
-        console.warn(`Failed to connect to database ${cluster}, trying again in 5 minutes...`);
+	if (!(await testConnection(database))) {
+		console.warn(`Failed to connect to database ${cluster}, trying again in 5 minutes...`);
 
-        setTimeout(() => {
-            initDatabase(cluster);
-        }, 5 * 60 * 1000);
+		setTimeout(
+			() => {
+				initDatabase(cluster);
+			},
+			5 * 60 * 1000
+		);
 
-        return;
-    }
+		return;
+	}
 
-    databases[cluster] = database;
+	databases[cluster] = database;
 
-    console.log(success(`Successfully connected to database for ${cluster}...`));
+	console.log(success(`Successfully connected to database for ${cluster}...`));
 }
 
 async function testConnection(database) {
@@ -92,12 +94,12 @@ async function testConnection(database) {
 
 		return true;
 	} catch {
-        // Don't care
-    }
+		// Don't care
+	}
 
 	return false;
 }
 
 function logDatabaseError(cluster, err, query) {
-    console.log(`${danger(`${cluster} database error`)}\n - ${muted(query)}\n - ${error(err.message)}`);
+	console.log(`${danger(`${cluster} database error`)}\n - ${muted(query)}\n - ${error(err.message)}`);
 }
