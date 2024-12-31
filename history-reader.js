@@ -103,7 +103,7 @@ async function size(path) {
 	if (!existsSync(path)) return 0;
 
 	try {
-		const output = await $`du -sb "${path}"`.text(),
+		const output = await $`du -sbL "${path}"`.text(),
 			size = output.split(" ").shift();
 
 		return parseInt(size) || 0;
