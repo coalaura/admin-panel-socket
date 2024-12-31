@@ -108,12 +108,14 @@ async function size(path) {
 
 		return parseInt(size) || 0;
 	} catch (err) {
+		console.log(danger(`Failed to get history size: ${err}`));
+
 		return 0;
 	}
 }
 
 export async function historyStatistics(server) {
-	const [total, local] = await Promise.all([size("./history"), size(`./history/${server}`)]);
+	const local = await size(`./history/${server}`);
 
-	return [`+ history size (all): ${formatBytes(total)}`, `+ history size (${server}): ${formatBytes(local)}`];
+	return [`+ history size (${server}): ${formatBytes(local)}`];
 }
