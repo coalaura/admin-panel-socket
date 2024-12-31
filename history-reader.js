@@ -1,26 +1,31 @@
 import { getHistoryPath } from "./history-bin.js";
 import { formatBytes } from "./functions.js";
 
-import { existsSync, readFileSync, readdirSync } from "node:fs";
+import { existsSync } from "node:fs";
+import { readdir } from "node:fs/promises";
 import { $ } from "bun";
 
-function read(path, min, max) {
-	if (!existsSync(path)) return [];
+async function read(file, license, min, max) {
+	if (!await file.exists())
+		return {
+			license: license,
+			data: [],
+		};
 
-	const data = readFileSync(path),
-		view = new DataView(data.buffer),
+	const buffer = await file.arrayBuffer(),
+		view = new DataView(buffer),
 		entries = [];
 
 	if (view.byteLength % 36 !== 0) {
-		console.log(danger(`Corrupt history file: ${path}`));
+		console.log(danger(`Corrupt history file: ${file.name}`));
 
 		return [];
 	}
 
 	for (let i = 0; i < view.byteLength; i += 36) {
 		/**
-         * | Timestamp (ui32) | character_id (ui32) | x (f32) | y (f32) | z (f32) | heading (f32) | speed (f32) | character_flags (ui32) | user_flags (ui32) |
-         */
+		 * | Timestamp (ui32) | character_id (ui32) | x (f32) | y (f32) | z (f32) | heading (f32) | speed (f32) | character_flags (ui32) | user_flags (ui32) |
+		 */
 		const timestamp = view.getUint32(i, true),
 			character_id = view.getUint32(i + 4, true),
 			x = view.getFloat32(i + 8, true),
@@ -37,44 +42,58 @@ function read(path, min, max) {
 		entries.push({ timestamp, character_id, x, y, z, heading, speed, character_flags, user_flags });
 	}
 
-	return entries;
+	return {
+		license: license,
+		data: entries,
+	};
 }
 
-function paths(server, license, from, till) {
+function bunFiles(server, license, from, till) {
 	const files = [];
 
 	for (let i = from; i <= till; i += 86400) {
-		files.push(getHistoryPath(server, i, license));
+		const path = getHistoryPath(server, i, license);
+
+		files.push(Bun.file(path));
 	}
 
 	return files;
 }
 
-export function range(server, license, start, end) {
-	const files = paths(server, license, start, end),
+export async function range(server, license, start, end) {
+	const files = bunFiles(server, license, start, end),
 		entries = [];
 
-	for (const path of files) {
-		entries.push(...read(path, start, end));
+	for (const file of files) {
+		const entry = await read(file, license, start, end);
+
+		entries.push(...entry.data);
 	}
 
 	return entries;
 }
 
-export function single(server, timestamp) {
+export async function single(server, timestamp) {
 	const path = getHistoryPath(server, timestamp, null);
 
 	if (!existsSync(path)) return {};
 
-	const licenses = readdirSync(path),
-		entries = {};
+	const licenses = await readdir(path),
+		promises = [];
 
 	for (const license of licenses) {
-		const entry = read(`${path}/${license}`, timestamp, timestamp);
+		const file = Bun.file(`${path}/${license}`);
 
-		if (!entry.length) continue;
+		promises.push(read(file, license, timestamp, timestamp));
+	}
 
-		entries[license] = entry[0];
+	const results = await Promise.all(promises),
+		entries = {};
+
+	for (const result of results) {
+		if (!result.data.length) continue;
+
+		entries[result.license] = result.data[0];
 	}
 
 	return entries;
@@ -94,13 +113,7 @@ async function size(path) {
 }
 
 export async function historyStatistics(server) {
-	const [ total, local ] = await Promise.all([
-		size("./history"),
-		size(`./history/${server}`)
-	])
+	const [total, local] = await Promise.all([size("./history"), size(`./history/${server}`)]);
 
-	return [
-		`+ history size (all): ${formatBytes(total)}`,
-		`+ history size (${server}): ${formatBytes(local)}`
-	];
+	return [`+ history size (all): ${formatBytes(total)}`, `+ history size (${server}): ${formatBytes(local)}`];
 }

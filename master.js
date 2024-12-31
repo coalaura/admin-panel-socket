@@ -73,7 +73,7 @@ export function initMasterRoutes(app) {
 	});
 
 	// History route
-	app.get("/socket/:server/history/:license/:from/:till", authenticate, (req, resp) => {
+	app.get("/socket/:server/history/:license/:from/:till", authenticate, async (req, resp) => {
 		const params = req.params,
 			license = req.license,
 			server = req.server;
@@ -86,7 +86,7 @@ export function initMasterRoutes(app) {
 		}
 
 		try {
-			const data = resolveHistoricData(server, license, from, till);
+			const data = await resolveHistoricData(server, license, from, till);
 
 			resp.json({
 				status: true,
@@ -98,7 +98,7 @@ export function initMasterRoutes(app) {
 	});
 
 	// Timestamp route
-	app.get("/socket/:server/timestamp/:timestamp", authenticate, (req, resp) => {
+	app.get("/socket/:server/timestamp/:timestamp", authenticate, async (req, resp) => {
 		const params = req.params,
 			server = req.server;
 
@@ -107,7 +107,7 @@ export function initMasterRoutes(app) {
 		if (!timestamp) return abort(resp, "Invalid request");
 
 		try {
-			const data = resolveTimestampData(server, timestamp);
+			const data = await resolveTimestampData(server, timestamp);
 
 			resp.json({
 				status: true,
