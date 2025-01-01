@@ -6,7 +6,7 @@ const reset = "\x1b[0m",
 	muted = "\x1b[38;5;243m";
 
 const levels = {
-	log: "\x1b[38;5;216m",
+	note: "\x1b[38;5;216m",
 	debug: "\x1b[38;5;188m",
 	info: "\x1b[38;5;117m",
 	warn: "\x1b[38;5;202m",
