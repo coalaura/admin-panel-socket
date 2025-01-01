@@ -1,5 +1,5 @@
 import { getServerByName } from "./server.js";
-import { getLogs } from "./logging.js";
+import { getLogs } from "./console.js";
 import { isValidLicense } from "./auth.js";
 import { getAverage } from "./average.js";
 import { closeHistory } from "./history-bin.js";
@@ -17,7 +17,7 @@ export class SlaveHandler {
 	handle(message) {
 		// Special handling for termination message
 		if (message === "terminate") {
-			console.log(info("Received terminate message, terminating..."));
+			console.info(info("Received terminate message, terminating..."));
 
 			closeHistory();
 

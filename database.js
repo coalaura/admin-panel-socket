@@ -21,7 +21,7 @@ export async function initDatabases(only = null) {
 
 	await Promise.all(promises);
 
-	console.log(success("All databases initialized successfully!"));
+	console.info(success("All databases initialized successfully!"));
 }
 
 async function initDatabase(cluster) {
@@ -101,5 +101,5 @@ async function testConnection(database) {
 }
 
 function logDatabaseError(cluster, err, query) {
-	console.log(`${danger(`${cluster} database error`)}\n - ${muted(query)}\n - ${error(err.message)}`);
+	console.error(`${danger(`${cluster} database error`)}\n - ${muted(query)}\n - ${error(err.message)}`);
 }

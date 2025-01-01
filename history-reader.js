@@ -15,7 +15,7 @@ async function read(file, license, min, max) {
 		entries = [];
 
 	if (view.byteLength % 36 !== 0) {
-		console.log(danger(`Corrupt history file: ${file.name}`));
+		console.error(danger(`Corrupt history file: ${file.name}`));
 
 		return [];
 	}

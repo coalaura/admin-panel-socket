@@ -54,13 +54,13 @@ export class Slave {
 
 			this.#online = true;
 
-			console.log(`${success(`Cluster ${this.#server} is up`)}`);
+			console.info(`${success(`Cluster ${this.#server} is up`)}`);
 		} else if (event === "down") {
 			if (!this.#online) return;
 
 			this.#online = false;
 
-			console.log(`${danger(`Cluster ${this.#server} is down`)}`);
+			console.info(`${danger(`Cluster ${this.#server} is down`)}`);
 		}
 
 		const callbacks = this.#callbacks[event];
@@ -87,7 +87,7 @@ export class Slave {
 
 				resolve();
 
-				console.log(`${danger(`Cluster ${this.#server} terminated forcefully after 5 seconds`)}`);
+				console.warn(`${danger(`Cluster ${this.#server} terminated forcefully after 5 seconds`)}`);
 			}, 5000);
 
 			this.on("down", () => {
@@ -119,7 +119,7 @@ export class Slave {
 		});
 
 		this.#cluster.on("online", () => {
-			console.log(`${success(`Cluster ${this.#server} online`)}`);
+			console.info(`${success(`Cluster ${this.#server} online`)}`);
 		});
 
 		this.#cluster.on("message", message => {
@@ -231,7 +231,7 @@ export class Slave {
 			timeout: setTimeout(() => {
 				finish(false);
 
-				console.log(`${warning(`Cluster ${this.#server} timeout`)}`);
+				console.warn(`${warning(`Cluster ${this.#server} timeout`)}`);
 			}, 5000),
 		};
 

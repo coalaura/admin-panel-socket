@@ -6,7 +6,7 @@ import { checkAuth, parseServer, isValidLicense } from "./auth.js";
 import { getSlaveData } from "./slave.js";
 import { initServer } from "./server.js";
 import { rejectClient } from "./functions.js";
-import { registerErrorHandlers, registerConsole, initializeLogs } from "./logging.js";
+import { registerErrorHandlers, registerConsole } from "./console.js";
 import { initDatabases } from "./database.js";
 import { SlaveHandler } from "./slave-handler.js";
 import { success, warning } from "./colors.js";
@@ -30,16 +30,16 @@ registerErrorHandlers();
 
 // Master handles all connections
 if (cluster.isPrimary) {
+	registerConsole(false);
+
 	const { only } = parseArguments();
 
 	if (only) {
-		console.log(warning(`Only initializing cluster ${only}!`));
+		console.warn(warning(`Only initializing cluster ${only}!`));
 	}
 
 	// This is only needed once so its on the master too
 	startTwitchUpdateLoop();
-
-	initializeLogs();
 	initializeHistory();
 
 	// Initialize express server
@@ -95,29 +95,29 @@ if (cluster.isPrimary) {
 
 	// Start the server
 	xp.listen(9999, () => {
-		console.log(success("Listening on port 9999."));
+		console.info(success("Listening on port 9999."));
 	});
 } else {
 	// Get slave data first
 	const slave = getSlaveData();
 
-	// Register console logging
+	// Register console overrides
 	registerConsole(slave.server);
 
 	// Initialize the server (async deferred, no await)
-	console.log("Initializing server...");
+	console.info("Initializing server...");
 	initServer(slave.server);
 
 	// Initialize handler
-	console.log("Initializing handler...");
+	console.info("Initializing handler...");
 	new SlaveHandler();
 
 	// Initialize data-loop
-	console.log("Initializing data-loop...");
+	console.info("Initializing data-loop...");
 	initDataLoop();
 
 	// Start cleanup loop
-	console.log("Starting cleanup loop...");
+	console.info("Starting cleanup loop...");
 	cleanupHistory(slave.cluster);
 
 	// Start the server
@@ -125,5 +125,5 @@ if (cluster.isPrimary) {
 		type: "hello",
 	});
 
-	console.log("Startup complete");
+	console.info("Startup complete");
 }

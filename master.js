@@ -32,12 +32,12 @@ export function initSlaves(only = null) {
 	}
 
 	process.on("SIGTERM", async () => {
-		console.log(warning("Terminating (SIGTERM)..."));
+		console.warn(warning("Terminating (SIGTERM)..."));
 		await terminateAll();
 	});
 
 	process.on("SIGINT", async () => {
-		console.log(warning("Terminating (SIGINT)..."));
+		console.warn(warning("Terminating (SIGINT)..."));
 
 		await terminateAll();
 	});

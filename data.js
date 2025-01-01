@@ -69,7 +69,7 @@ export async function checkIfServerIsUp(server) {
 	}
 
 	if (success && server.down) {
-		console.log(`Server ${server.url} is up again! (uptime=${uptime}, name=${name})`);
+		console.info(`Server ${server.url} is up again! (uptime=${uptime}, name=${name})`);
 	}
 
 	if (!success) {

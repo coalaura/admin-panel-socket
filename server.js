@@ -61,14 +61,14 @@ export function initServer(cluster) {
 
 			console.log(success(`Successfully initialized server ${serverName}...`));
 		} catch (e) {
-			console.log(danger(`Failed establish database connection with ${serverName}!`));
-			console.log(error(e.message));
+			console.error(danger(`Failed establish database connection with ${serverName}!`));
+			console.error(error(e.message));
 
 			servers[serverName] = {
 				failed: true
 			};
 
-			console.log(danger(`Failed to initialize server ${serverName}!`));
+			console.warn(danger(`Failed to initialize server ${serverName}!`));
 
 			process.exit(1);
 		}

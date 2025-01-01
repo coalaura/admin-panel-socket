@@ -17,7 +17,7 @@ export function startTwitchUpdateLoop() {
 
 	updateTwitchData(api, streamers);
 
-	console.log(`${success("Started Twitch update loop")}`);
+	console.info(`${success("Started Twitch update loop")}`);
 }
 
 async function updateTwitchData(api, streamers) {
