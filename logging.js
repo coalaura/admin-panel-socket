@@ -10,7 +10,7 @@ export function getLogs() {
 	return reverse(logs);
 }
 
-const _consoleLog = console.log,
+const _consoleLog = console.log.bind(console),
 	isDev = process.argv.includes("--dev");
 
 function log(server, level, msg) {
@@ -63,12 +63,10 @@ function cycleFile(server) {
 }
 
 export function registerErrorHandlers() {
-	const console_log = console.log.bind(console);
-
 	function unhandled(type, err) {
 		const trace = err instanceof Error ? err.stack : String(err);
 
-		console_log(`- - - Unhandled ${type} - - -\n${trace}\n`);
+		_consoleLog(`- - - Unhandled ${type} - - -\n${trace}\n`);
 	}
 
 	process.on("uncaughtException", err => {
