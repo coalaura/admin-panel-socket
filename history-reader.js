@@ -1,9 +1,7 @@
 import { getHistoryPath } from "./history-bin.js";
-import { formatBytes } from "./functions.js";
 
 import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";
-import { $ } from "bun";
 
 async function read(file, license, min, max) {
 	if (!await file.exists())
@@ -97,25 +95,4 @@ export async function single(server, timestamp) {
 	}
 
 	return entries;
-}
-
-async function size(path) {
-	if (!existsSync(path)) return 0;
-
-	try {
-		const output = await $`du -sbL "${path}"`.text(),
-			size = output.split(" ").shift();
-
-		return parseInt(size) || 0;
-	} catch (err) {
-		console.log(danger(`Failed to get history size: ${err}`));
-
-		return 0;
-	}
-}
-
-export async function historyStatistics(server) {
-	const local = await size(`./history/${server}`);
-
-	return [`+ history size (${server}): ${formatBytes(local)}`];
 }

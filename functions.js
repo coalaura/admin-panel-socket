@@ -37,15 +37,6 @@ export function reverse(array) {
 	return reversed;
 }
 
-export function formatBytes(bytes) {
-	if (bytes === 0) return "0 B";
-
-	const sizes = ["B", "KB", "MB", "GB", "TB"],
-        i = Math.floor(Math.log(bytes) / Math.log(1024));
-
-	return `${(bytes / (1024 ** i)).toFixed(2)} ${sizes[i]}`;
-}
-
 export function formatUptime(since) {
 	let seconds = Math.floor((Date.now() - since) / 1000);
 

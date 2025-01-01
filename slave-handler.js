@@ -2,7 +2,6 @@ import { getServerByName } from "./server.js";
 import { getLogs } from "./logging.js";
 import { isValidLicense } from "./auth.js";
 import { getAverage } from "./average.js";
-import { historyStatistics } from "./history-reader.js";
 import { closeHistory } from "./history-bin.js";
 import { formatUptime } from "./functions.js";
 
@@ -188,10 +187,6 @@ export class SlaveHandler {
 		logs.push(`+ worker pid is ${process.pid}`);
 		logs.push(avgWorld ? `+ world.json API average is ${avgWorld}ms` : "- world.json API average is not set");
 		logs.push(avgStaff ? `+ staff.json API average is ${avgStaff}ms` : "- staff.json API average is not set");
-
-		const history = await historyStatistics(srv.cluster);
-
-		logs.push(...history);
 
 		logs.push(`+ startup was ${startup.toUTCString()}`);
 		logs.push(`+ uptime is ${formatUptime(startup)}`);
