@@ -6,6 +6,8 @@ import { getStreamerData } from "./twitch.js";
 import { resolveHistoricData, resolveTimestampData } from "./history-resolve.js";
 import { warning } from "./colors.js";
 
+import { existsSync } from "node:fs";
+
 const slaves = {};
 
 async function terminateAll() {
@@ -85,6 +87,10 @@ export function initMasterRoutes(app) {
 			return abort(resp, "Invalid request");
 		}
 
+		if (existsSync(".no_history")) {
+			return abort(resp, "History is temporarily disabled, please try again later.");
+		}
+
 		try {
 			const data = await resolveHistoricData(server, license, from, till);
 
@@ -105,6 +111,10 @@ export function initMasterRoutes(app) {
 		const timestamp = "timestamp" in params ? parseInt(params.timestamp) : false;
 
 		if (!timestamp) return abort(resp, "Invalid request");
+
+		if (existsSync(".no_history")) {
+			return abort(resp, "History is temporarily disabled, please try again later.");
+		}
 
 		try {
 			const data = await resolveTimestampData(server, timestamp);
