@@ -6,7 +6,7 @@ import { checkAuth, parseServer, isValidLicense } from "./auth.js";
 import { getSlaveData } from "./slave.js";
 import { initServer } from "./server.js";
 import { rejectClient } from "./functions.js";
-import { registerConsole, initializeLogs } from "./logging.js";
+import { registerErrorHandlers, registerConsole, initializeLogs } from "./logging.js";
 import { initDatabases } from "./database.js";
 import { SlaveHandler } from "./slave-handler.js";
 import { success, warning } from "./colors.js";
@@ -25,6 +25,8 @@ if (!semver.satisfies(Bun.version, "^1.1.34")) {
 
 	process.exit(1);
 }
+
+registerErrorHandlers();
 
 // Master handles all connections
 if (cluster.isPrimary) {

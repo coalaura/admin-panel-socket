@@ -62,6 +62,24 @@ function cycleFile(server) {
 	}
 }
 
+export function registerErrorHandlers() {
+	const console_log = console.log.bind(console);
+
+	function unhandled(type, err) {
+		const trace = err instanceof Error ? err.stack : String(err);
+
+		console_log(`- - - Unhandled ${type} - - -\n${trace}\n`);
+	}
+
+	process.on("uncaughtException", err => {
+		unhandled("Exception", err);
+	});
+
+	process.on("unhandledRejection", err => {
+		unhandled("Rejection", err);
+	});
+}
+
 export function initializeLogs() {
 	if (existsSync("logs")) return;
 
