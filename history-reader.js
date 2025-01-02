@@ -1,4 +1,4 @@
-import { getHistoryPath } from "./history-bin.js";
+import { HistoryStorage } from "./storage.js";
 
 import { existsSync } from "node:fs";
 import { readdir } from "node:fs/promises";

@@ -1,7 +1,7 @@
 import { requestOpFwApi } from "./http.js";
 import { loadOnDutyData } from "./duty.js";
 import { decompressPlayers } from "./decompressor.js";
-import { writeHistory } from "./history-bin.js";
+import { HistoryBin } from "./history-bin.js";
 
 import { getServers, promises as dns } from "node:dns";
 
@@ -18,7 +18,9 @@ export async function updateWorldJSON(server) {
 		clientData[player.source] = cleanupPlayer(player, dutyMap);
 	}
 
-	writeHistory(server.server, data.players);
+	const bin = HistoryBin.getInstance(server.server);
+
+	await bin.writeAll(data.players);
 
 	server.players = data.players;
 	server.world = data.world;

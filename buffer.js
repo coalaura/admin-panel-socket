@@ -1,109 +1,72 @@
-import { info, muted } from "./colors.js";
-
-import { appendFile, appendFileSync, existsSync, mkdirSync } from "node:fs";
-import { dirname } from "node:path";
-
 export class BufferedWriter {
-    static EntryCount = 120; // 120 seconds for minimal data loss
-    static EntrySize = 36; // 4 ui32 + 5 f32
+	static EntryCount = 120; // 120 seconds for minimal data loss
+	static EntrySize = 36; // 4 ui32 + 5 f32
 
-    #offset = 0;
-    #buffer;
-    #view;
+	#offset = 0;
+	#buffer;
+	#view;
 
-    #path;
-    #directory;
-    #timeout;
+	#server;
+	#timestamp;
+	#license;
+	#timeout;
 
-    constructor(path) {
-        this.#path = path;
-        this.#directory = dirname(path);
+	constructor(server, timestamp, license) {
+		this.#server = server;
+		this.#timestamp = timestamp;
+		this.#license = license;
 
-        this.#reset();
-    }
+		this.#reset();
+	}
 
-    setPath(path) {
-        if (this.#path === path) return;
+	setTimestamp(timestamp) {
+		this.#timestamp = timestamp;
+	}
 
-        this.#flush();
+	#reset() {
+		this.#offset = 0;
 
-        this.#path = path;
-        this.#directory = dirname(path);
-    }
+		if (!this.#buffer) {
+			const staggering = Math.floor(Math.random() * 30);
 
-    #reset() {
-        this.#offset = 0;
+			this.#buffer = new ArrayBuffer((BufferedWriter.EntryCount + staggering) * BufferedWriter.EntrySize);
 
-        if (!this.#buffer) {
-            const staggering = Math.floor(Math.random() * 30);
+			this.#view = new DataView(this.#buffer);
+		}
+	}
 
-            this.#buffer = new ArrayBuffer((BufferedWriter.EntryCount + staggering) * BufferedWriter.EntrySize);
+	async #flush(storage) {
+		if (this.#offset === 0) return;
 
-            this.#view = new DataView(this.#buffer);
-        }
-    }
+		const data = this.#buffer.slice(0, this.#offset);
 
-    #flush(wait = false) {
-        if (this.#offset === 0) return;
+		this.#reset();
 
-        if (!existsSync(this.#directory)) {
-            mkdirSync(this.#directory, {
-                recursive: true
-            });
-        }
+		storage.store(this.#server, this.#timestamp, this.#license, data).catch(error => {
+			console.error(`Failed to persist buffered data: ${error.message}`);
+		});
+	}
 
-        const data = this.#buffer.slice(0, this.#offset);
+	writeUint32(ui32) {
+		this.#view.setUint32(this.#offset, ui32, true);
+		this.#offset += 4;
+	}
 
-        if (wait) {
-            try {
-                appendFileSync(this.#path, data);
-            } catch (err) {
-                console.warn(`${info(`Failed to flush ${this.#path}:`)} ${muted(err.message)}`);
-            }
-        } else {
-            appendFile(this.#path, data, err => {
-                if (!err) return;
+	writeFloat32(f32) {
+		this.#view.setFloat32(this.#offset, f32, true);
+		this.#offset += 4;
+	}
 
-                console.warn(`${info(`Failed to flush ${this.#path}:`)} ${muted(err.message)}`);
-            });
-        }
+	async persist(storage) {
+        console.log(`${this.#offset} / ${this.#buffer.byteLength}`);
+		if (this.#offset < this.#buffer.byteLength) return;
 
-        this.#reset();
-    }
+        await this.#flush(storage);
+	}
 
-    #schedule() {
-        clearTimeout(this.#timeout);
+	async close(storage) {
+		clearTimeout(this.#timeout);
 
-        this.#timeout = setTimeout(() => {
-            this.#flush();
-        }, 30 * 1000); // 30 seconds of inactivity
-    }
-
-    writeUint32(ui32) {
-        if (this.#offset + 4 > this.#buffer.byteLength) {
-            this.#flush();
-        }
-
-        this.#view.setUint32(this.#offset, ui32, true);
-        this.#offset += 4;
-
-        this.#schedule();
-    }
-
-    writeFloat32(f32) {
-        if (this.#offset + 4 > this.#buffer.byteLength) {
-            this.#flush();
-        }
-
-        this.#view.setFloat32(this.#offset, f32, true);
-        this.#offset += 4;
-
-        this.#schedule();
-    }
-
-    close() {
-        clearTimeout(this.#timeout);
-
-        this.#flush(true);
-    }
-};
+		await this.#flush(storage, true);
+	}
+}

@@ -1,10 +1,9 @@
 import { BufferedWriter } from "./buffer.js";
+import { HistoryStorage } from "./storage.js";
 
-import { readdirSync, rmdirSync, existsSync, mkdirSync } from "node:fs";
+export class HistoryBin {
+	static #instance;
 
-let bin;
-
-class HistoryBin {
 	#server;
 	#closed = false;
 	#writers = {};
@@ -13,22 +12,29 @@ class HistoryBin {
 		this.#server = server;
 	}
 
+	static getInstance(server) {
+		if (!HistoryBin.#instance) {
+			HistoryBin.#instance = new HistoryBin(server);
+		}
+
+		return HistoryBin.#instance;
+	}
+
 	#writer(timestamp, license) {
-		const path = getHistoryPath(this.#server, timestamp, license),
-			writer = this.#writers[license];
+		const writer = this.#writers[license];
 
 		if (writer) {
-			writer.setPath(path);
+			writer.setTimestamp(timestamp);
 
 			return writer;
 		}
 
-		this.#writers[license] = new BufferedWriter(path);
+		this.#writers[license] = new BufferedWriter(this.#server, timestamp, license);
 
 		return this.#writers[license];
 	}
 
-	#write(timestamp, player) {
+	#write(storage, timestamp, player) {
 		const coords = player.coords,
 			character = player.character;
 
@@ -52,17 +58,20 @@ class HistoryBin {
 		writer.writeUint32(character.flags);
 		writer.writeUint32(player.flags);
 
+		writer.persist(storage);
+
 		return license;
 	}
 
-	writeAll(players) {
-		if (this.#closed) return;
+	async writeAll(players) {
+		if (this.#closed || !players?.length) return;
 
-		const timestamp = Math.floor(Date.now() / 1000),
+		const storage = await HistoryStorage.getInstance(),
+			timestamp = Math.floor(Date.now() / 1000),
 			active = {};
 
 		for (const player of players) {
-			const license = this.#write(timestamp, player);
+			const license = this.#write(storage, timestamp, player);
 
 			if (license) {
 				active[license] = true;
@@ -73,76 +82,27 @@ class HistoryBin {
 			if (!active[license]) {
 				const writer = this.#writers[license];
 
-				writer.close();
+				writer.close(storage);
 
 				delete this.#writers[license];
 			}
 		}
 	}
 
-	close() {
+	async close() {
 		if (this.#closed) return;
 
 		this.#closed = true;
 
+		const storage = await HistoryStorage.getInstance(),
+			promises = [];
+
 		for (const license in this.#writers) {
 			const writer = this.#writers[license];
 
-			writer.close();
+			promises.push(writer.close(storage));
 		}
+
+		await Promise.all(promises);
 	}
-}
-
-export function getHistoryPath(server, timestamp, license = null) {
-	const date = new Date(timestamp * 1000).toISOString().slice(0, 10);
-
-	return `./history/${server}/${date}${license ? `/${license}` : ""}`;
-}
-
-export function writeHistory(server, players) {
-	if (!bin) {
-		bin = new HistoryBin(server);
-	}
-
-	bin.writeAll(players);
-}
-
-export function closeHistory() {
-	if (!bin) return;
-
-	bin.close();
-
-	bin = null;
-}
-
-export function initializeHistory() {
-	if (existsSync("./history")) return;
-
-	mkdirSync("./history");
-}
-
-export function cleanupHistory(server) {
-	const path = `./history/${server}`;
-
-	if (!existsSync(path)) return;
-
-	const min = new Date(Date.now() - 30 * 86400 * 1000), // 30 days
-		days = readdirSync(path);
-
-	for (const day of days) {
-		const date = new Date(day);
-
-		if (date >= min) continue;
-
-		rmdirSync(`${path}/${day}`, {
-			recursive: true,
-		});
-	}
-
-	setTimeout(
-		() => {
-			cleanup(server);
-		},
-		12 * 60 * 60 * 1000
-	); // 12 hours
 }

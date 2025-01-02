@@ -2,7 +2,7 @@ import { getServerByName } from "./server.js";
 import { getLogs } from "./console.js";
 import { isValidLicense } from "./auth.js";
 import { getAverage } from "./average.js";
-import { closeHistory } from "./history-bin.js";
+import { HistoryBin } from "./history-bin.js";
 import { formatUptime } from "./functions.js";
 
 const startup = new Date();
@@ -14,12 +14,14 @@ export class SlaveHandler {
 		});
 	}
 
-	handle(message) {
+	async handle(message) {
 		// Special handling for termination message
 		if (message === "terminate") {
 			console.info(info("Received terminate message, terminating..."));
 
-			closeHistory();
+			const storage = await HistoryBin.getInstance();
+
+			await storage.close();
 
 			process.exit(0);
 		}

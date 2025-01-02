@@ -72,6 +72,11 @@ function resolveLogFile(name) {
         return process.stdout;
     }
 
+	// For development purposes windows always prints to stdout
+	if (process.platform === "win32") {
+		return process.stdout;
+	}
+
 	if (!existsSync("./logs")) {
 		mkdirSync("./logs");
 	}

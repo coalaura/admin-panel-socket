@@ -24,6 +24,7 @@ async function worldJSON(serverName) {
 			server.downError = e.message;
 
 			console.error(`${warning("Failed to load world.json")} ${_info(String(server.url))}: ${muted(e)}`);
+			console.error(e.stack);
 		}
 
 		const took = Date.now() - start;

@@ -11,7 +11,6 @@ import { initDatabases } from "./database.js";
 import { SlaveHandler } from "./slave-handler.js";
 import { success, warning } from "./colors.js";
 import { parseArguments } from "./arguments.js";
-import { cleanupHistory, initializeHistory } from "./history-bin.js";
 
 import { createServer } from "node:http";
 import cluster from "node:cluster";
@@ -40,7 +39,6 @@ if (cluster.isPrimary) {
 
 	// This is only needed once so its on the master too
 	startTwitchUpdateLoop();
-	initializeHistory();
 
 	// Initialize express server
 	const app = express(),
@@ -115,10 +113,6 @@ if (cluster.isPrimary) {
 	// Initialize data-loop
 	console.info("Initializing data-loop...");
 	initDataLoop();
-
-	// Start cleanup loop
-	console.info("Starting cleanup loop...");
-	cleanupHistory(slave.cluster);
 
 	// Start the server
 	process.send({
