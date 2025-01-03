@@ -1,4 +1,4 @@
-import { existsSync, statSync, createWriteStream } from "node:fs";
+import { existsSync, statSync, createWriteStream, mkdirSync } from "node:fs";
 
 const logs = [];
 
