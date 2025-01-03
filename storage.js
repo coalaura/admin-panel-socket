@@ -150,6 +150,7 @@ class SecureConnection {
 }
 
 export class HistoryStorage {
+	#disabled = false;
 	#connection;
 
 	static #instance = null;
@@ -165,12 +166,19 @@ export class HistoryStorage {
 	}
 
 	async #connect() {
-		if (this.#connection) {
+		if (this.#connection || this.#disabled) {
 			return;
 		}
 
-		const host = configData.storage?.host || "127.0.0.1",
-			port = configData.storage?.port || 4994;
+		const storage = configData.storage || "",
+			match = storage.match(/^([^:]+):(\d+)$/);
+
+		if (!storage || !match) {
+			this.#disabled = true;
+		}
+
+		const host = match[1],
+			port = parseInt(match[2]) || 4994;
 
 		this.#connection = await SecureConnection.connect(host, port, () => {
             console.warn("Storage connection closed");
@@ -206,6 +214,10 @@ export class HistoryStorage {
 		return Buffer.concat([header, data]);
 	}
 
+	available() {
+		return !this.#disabled;
+	}
+
 	close() {
 		if (!this.#connection) {
 			return;
@@ -215,6 +227,10 @@ export class HistoryStorage {
 	}
 
 	async store(server, timestamp, license, data) {
+		if (this.#disabled) {
+			return;
+		}
+
 		await this.#connect();
 
 		// Send the request
@@ -238,6 +254,10 @@ export class HistoryStorage {
 	}
 
 	async readOne(server, start, end, license) {
+		if (this.#disabled) {
+			throw new Error("Storage disabled");
+		}
+
 		await this.#connect();
 
 		// Send the request
@@ -257,6 +277,10 @@ export class HistoryStorage {
 	}
 
     async readAll(server, timestamp) {
+		if (this.#disabled) {
+			throw new Error("Storage disabled");
+		}
+
         await this.#connect();
 
         // Send the request

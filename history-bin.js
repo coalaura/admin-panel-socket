@@ -66,8 +66,13 @@ export class HistoryBin {
 	async writeAll(players) {
 		if (this.#closed || !players?.length) return;
 
-		const storage = await HistoryStorage.getInstance(),
-			timestamp = Math.floor(Date.now() / 1000),
+		const storage = await HistoryStorage.getInstance();
+
+		if (!storage.available()) {
+			return;
+		}
+
+		const timestamp = Math.floor(Date.now() / 1000),
 			active = {};
 
 		for (const player of players) {
