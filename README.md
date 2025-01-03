@@ -7,7 +7,7 @@ OP-FW Socket is a bun application designed to integrate with the [OP-FW Admin](h
 ## Requirements
 - [bun](https://bun.sh/) v1.1.34 or higher
 - At least 2GB of memory (or swap)
-- A decent bit of space depending on how many servers (for historic data)
+- The [storage server](https://github.com/coalaura/admin-panel-storage)
 
 ## Configuration
 Create a file in the root of the directory called `_config.json`. This is how it should look like (configure to your environment):
@@ -15,6 +15,7 @@ Create a file in the root of the directory called `_config.json`. This is how it
 ```json
 {
     "panel": "/path/to/opfw-admin",
+    "storage": "localhost:4994",
     "servers": [
         "c1", "c2"
     ],
@@ -31,13 +32,15 @@ Create a file in the root of the directory called `_config.json`. This is how it
 }
 ```
 
+**NOTE:** Make sure the `storage` points to the [storage server](https://github.com/coalaura/admin-panel-storage), otherwise historic data will not be available. Leave it empty to not store any historic data at all.
+
 ## Swap Space Configuration
 ```bash
 # Check if you already have swap space
 swapon --show
 
-# Allocate 8G of swap space
-sudo fallocate -l 8G /swapfile
+# Allocate 2G of swap space
+sudo fallocate -l 2G /swapfile
 sudo chmod 600 /swapfile
 sudo mkswap /swapfile
 sudo swapon /swapfile
