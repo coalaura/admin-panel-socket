@@ -6,8 +6,6 @@ import { getStreamerData } from "./twitch.js";
 import { resolveHistoricData, resolveTimestampData } from "./history-resolve.js";
 import { warning } from "./colors.js";
 
-import { existsSync } from "node:fs";
-
 const slaves = {};
 
 async function terminateAll() {
@@ -87,8 +85,8 @@ export function initMasterRoutes(app) {
 			return abort(resp, "Invalid request");
 		}
 
-		if (existsSync(".no_history")) {
-			return abort(resp, "History is temporarily disabled, please try again later.");
+		if (!config.storage) {
+			return abort(resp, "History is unavailable.");
 		}
 
 		try {
@@ -112,8 +110,8 @@ export function initMasterRoutes(app) {
 
 		if (!timestamp) return abort(resp, "Invalid request");
 
-		if (existsSync(".no_history")) {
-			return abort(resp, "History is temporarily disabled, please try again later.");
+		if (config.storage) {
+			return abort(resp, "Timestamp is unavailable.");
 		}
 
 		try {
