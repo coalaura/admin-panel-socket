@@ -171,9 +171,9 @@ export class HistoryStorage {
 		}
 
 		const storage = configData.storage || "",
-			match = storage.match(/^([^:]+):(\d+)$/);
+			match = storage?.match(/^([^:]+):(\d+)$/);
 
-		if (!storage || !match) {
+		if (!storage || !match || match.length < 3) {
 			this.#disabled = true;
 		}
 
