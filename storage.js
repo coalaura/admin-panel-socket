@@ -314,8 +314,8 @@ function readFromSocket(socket) {
 			reject(new Error("Timeout"));
 		}, 5000);
 
-		socket.once("data", data => {
-			clearTimeout(timeout);
+		const onData = data => {
+			completed();
 
 			// Read the length
 			const length = data.readUInt32LE(0);
@@ -329,13 +329,23 @@ function readFromSocket(socket) {
 
 			// Read the message
 			resolve(data.slice(4, 4 + length));
-		});
+		};
 
-		socket.once("error", err => {
-			clearTimeout(timeout);
+		const onError = err => {
+			completed();
 
 			reject(err);
-		});
+		};
+
+		const completed = () => {
+			clearTimeout(timeout);
+
+			socket.off("data", onData);
+			socket.off("error", onError);
+		};
+
+		socket.once("data", onData);
+		socket.once("error", onError);
 	});
 }
 
@@ -356,11 +366,11 @@ function createPacket(data) {
 function establishTCPConnection(host, port) {
 	return new Promise((resolve, reject) => {
 		const socket = net.createConnection({ host, port }, () => {
+			socket.off("error", reject);
+
 			resolve(socket);
 		});
 
-		socket.on("error", err => {
-			reject(err);
-		});
+		socket.once("error", reject);
 	});
 }
