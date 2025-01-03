@@ -1,21 +1,11 @@
 import { HistoryStorage } from "./storage.js";
+import { danger } from "./colors.js";
 
-import { existsSync } from "node:fs";
-import { readdir } from "node:fs/promises";
-
-async function read(file, license, min, max) {
-	if (!await file.exists())
-		return {
-			license: license,
-			data: [],
-		};
-
-	const buffer = await file.arrayBuffer(),
-		view = new DataView(buffer),
-		entries = [];
+function read(view, license) {
+	const entries = [];
 
 	if (view.byteLength % 36 !== 0) {
-		console.error(danger(`Corrupt history file: ${file.name}`));
+		console.warn(danger(`Corrupt history file for ${license} (${view.byteLength} bytes)`));
 
 		return [];
 	}
@@ -34,64 +24,43 @@ async function read(file, license, min, max) {
 			character_flags = view.getUint32(i + 28, true),
 			user_flags = view.getUint32(i + 32, true);
 
-		if (timestamp < min) continue;
-		else if (timestamp > max) break;
-
 		entries.push({ timestamp, character_id, x, y, z, heading, speed, character_flags, user_flags });
-	}
-
-	return {
-		license: license,
-		data: entries,
-	};
-}
-
-function bunFiles(server, license, from, till) {
-	const files = [];
-
-	for (let i = from; i <= till; i += 86400) {
-		const path = getHistoryPath(server, i, license);
-
-		files.push(Bun.file(path));
-	}
-
-	return files;
-}
-
-export async function range(server, license, start, end) {
-	const files = bunFiles(server, license, start, end),
-		entries = [];
-
-	for (const file of files) {
-		const entry = await read(file, license, start, end);
-
-		entries.push(...entry.data);
 	}
 
 	return entries;
 }
 
+export async function range(server, license, start, end) {
+	const storage = await HistoryStorage.getInstance(),
+		buffer = await storage.readOne(server, start, end, license);
+
+	return read(new DataView(buffer.buffer), license);
+}
+
 export async function single(server, timestamp) {
-	const path = getHistoryPath(server, timestamp, null);
+	const storage = await HistoryStorage.getInstance(),
+		buffer = await storage.readAll(server, timestamp),
+		view = new DataView(buffer.buffer);
 
-	if (!existsSync(path)) return {};
-
-	const licenses = await readdir(path),
-		promises = [];
-
-	for (const license of licenses) {
-		const file = Bun.file(`${path}/${license}`);
-
-		promises.push(read(file, license, timestamp, timestamp));
-	}
-
-	const results = await Promise.all(promises),
+	const amount = view.getUint32(0, true),
 		entries = {};
 
-	for (const result of results) {
-		if (!result.data.length) continue;
+	let offset = 4;
 
-		entries[result.license] = result.data[0];
+	for (let i = 0; i < amount; i++) {
+		const license = buffer.slice(offset, offset + 40).toString("utf8");
+		offset += 40;
+
+		const length = view.getUint32(offset, true);
+		offset += 4;
+
+		const entry = read(new DataView(buffer.buffer, offset, length), license).shift();
+
+		if (entry) {
+			entries[license] = entry;
+		}
+
+		offset += length;
 	}
 
 	return entries;

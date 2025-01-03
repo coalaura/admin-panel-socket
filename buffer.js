@@ -58,7 +58,6 @@ export class BufferedWriter {
 	}
 
 	async persist(storage) {
-        console.log(`${this.#offset} / ${this.#buffer.byteLength}`);
 		if (this.#offset < this.#buffer.byteLength) return;
 
         await this.#flush(storage);

@@ -5,7 +5,13 @@ export async function resolveHistoricData(server, license, from, till) {
 		throw Error("From must be before till");
 	}
 
-	const data = await range(server, license, from, till);
+	let data;
+
+	try {
+		data = await range(server, license, from, till);
+	} catch (err) {
+		console.warn(err.stack);
+	}
 
 	if (!data || data.length === 0) {
 		throw Error("No data for the selected period");
@@ -21,7 +27,13 @@ export async function resolveHistoricData(server, license, from, till) {
 }
 
 export async function resolveTimestampData(server, timestamp) {
-	const data = await single(server, timestamp);
+	let data;
+
+	try {
+		data = await single(server, timestamp);
+	} catch (err) {
+		console.warn(err.stack);
+	}
 
 	if (!data || Object.keys(data).length === 0) {
 		throw Error("No data for this timestamp");

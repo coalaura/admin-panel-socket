@@ -55,7 +55,7 @@ class SecureConnection {
 	#socket;
 	#key;
 
-	constructor(socket, key, death = false) {
+	constructor(socket, key, onDeath) {
 		this.#socket = socket;
 		this.#key = key;
 
@@ -65,20 +65,18 @@ class SecureConnection {
 
 			this.#socket = null;
 
-			if (death) {
-				death();
-			}
+            onDeath();
 		});
 	}
 
-	static async connect(host, port) {
+	static async connect(host, port, onDeath) {
 		const socket = await establishTCPConnection(host, port),
 			local = EncryptionKey.create();
 
 		// Perform the key exchange
 		const key = await SecureConnection.performKeyExchange(socket, local);
 
-		return new SecureConnection(socket, key);
+		return new SecureConnection(socket, key, onDeath);
 	}
 
 	static async performKeyExchange(socket, local) {
@@ -107,7 +105,7 @@ class SecureConnection {
 
 		decipher.setAuthTag(data.slice(-16));
 
-		return Buffer.concat([decipher.update(data.slice(12, -16)), decipher.final()]).toString("utf8");
+		return Buffer.concat([decipher.update(data.slice(12, -16)), decipher.final()]);
 	}
 
 	close() {
@@ -143,7 +141,7 @@ class SecureConnection {
         // Decrypt the packet
 		const data = this.#decrypt(encrypted);
 
-        if (data === "ERR") {
+        if (data.toString("utf8") === "ERR") {
             throw new Error("Something went wrong");
         }
 
@@ -159,28 +157,32 @@ export class HistoryStorage {
 	static async getInstance() {
 		if (!HistoryStorage.#instance) {
 			HistoryStorage.#instance = new HistoryStorage();
-
-			await HistoryStorage.#instance.#connect();
 		}
+
+        await HistoryStorage.#instance.#connect();
 
 		return HistoryStorage.#instance;
 	}
 
 	async #connect() {
 		if (this.#connection) {
-			return true;
+			return;
 		}
 
 		const host = configData.storage?.host || "127.0.0.1",
 			port = configData.storage?.port || 4994;
 
 		this.#connection = await SecureConnection.connect(host, port, () => {
+            console.warn("Storage connection closed");
+
 			this.#connection = null;
 		});
+
+        console.info("Storage connection established");
 	}
 
 	#request(type, server, timestamp1, timestamp2, license, data = null) {
-		const header = Buffer.alloc(1 + 1 + 4 + 4 + 20);
+		const header = Buffer.alloc(1 + 1 + 4 + 4 + 40);
 
 		// Type (uint8)
 		header.writeUInt8(type, 0);
@@ -194,11 +196,9 @@ export class HistoryStorage {
 		// Timestamp 2 (uint32)
 		header.writeUInt32LE(timestamp2, 6);
 
-		// License (20 bytes)
+		// License (40 bytes)
 		if (license) {
-			const buffer = Buffer.from(license, "hex");
-
-			header.write(buffer, 10);
+            header.write(Buffer.from(license, "utf8"), 10);
 		}
 
 		if (!data) return header;
@@ -232,7 +232,7 @@ export class HistoryStorage {
 		// Wait for the acknowledgement
 		const ack = await this.#connection.read();
 
-		if (ack !== "ACK") {
+		if (ack.toString("utf8") !== "ACK") {
 			throw new Error("Invalid or missing ACK");
 		}
 	}
@@ -256,7 +256,7 @@ export class HistoryStorage {
 		return await this.#connection.read();
 	}
 
-    async readAll(server, start, end) {
+    async readAll(server, timestamp) {
         await this.#connect();
 
         // Send the request
@@ -264,8 +264,8 @@ export class HistoryStorage {
             this.#request(
                 3, // ReadAll = 3
                 server,
-                start,
-                end,
+                timestamp,
+                timestamp,
                 null,
                 null
             )

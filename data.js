@@ -18,9 +18,13 @@ export async function updateWorldJSON(server) {
 		clientData[player.source] = cleanupPlayer(player, dutyMap);
 	}
 
-	const bin = HistoryBin.getInstance(server.server);
+	try {
+		const bin = HistoryBin.getInstance(server.server);
 
-	await bin.writeAll(data.players);
+		await bin.writeAll(data.players);
+	} catch (err) {
+		console.warn(`Failed to write to history bin: ${err.message}`);
+	}
 
 	server.players = data.players;
 	server.world = data.world;
