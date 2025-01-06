@@ -178,6 +178,8 @@ export class SlaveHandler {
 		const avgWorld = getAverage("world"),
 			avgStaff = getAverage("staff");
 
+		const storage = await HistoryBin.getInstance();
+
 		const logs = [];
 
 		logs.push(srv ? "+ server object found" : "- server object not found");
@@ -192,6 +194,14 @@ export class SlaveHandler {
 
 		logs.push(`+ startup was ${startup.toUTCString()}`);
 		logs.push(`+ uptime is ${formatUptime(startup)}`);
+
+		const loss = storage.packetLoss();
+
+		if (loss) {
+			logs.push(`+ packet loss is ${loss.loss.toFixed(2)}% (success=${loss.success}, failed=${loss.failed})`);
+		} else {
+			logs.push("- packet loss is unavailable");
+		}
 
 		logs.push("");
 		logs.push((srv?.info ? "+ server.info = " : "- server.info = ") + JSON.stringify(srv?.info));

@@ -33,6 +33,7 @@ export function initSlaves(only = null) {
 
 	process.on("SIGTERM", async () => {
 		console.warn(warning("Terminating (SIGTERM)..."));
+
 		await terminateAll();
 	});
 

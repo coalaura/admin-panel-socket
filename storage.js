@@ -2,6 +2,7 @@ import net from "node:net";
 import { generateKeyPairSync, publicEncrypt, privateDecrypt, randomBytes, createCipheriv, createDecipheriv } from "node:crypto";
 
 import configData from "./config.js";
+import { clear } from "node:console";
 
 class EncryptionKey {
 	#public;
@@ -55,6 +56,11 @@ class SecureConnection {
 	#socket;
 	#key;
 
+	#success = 0;
+	#failed = 0;
+
+	#requests = [];
+
 	constructor(socket, key, onDeath) {
 		this.#socket = socket;
 		this.#key = key;
@@ -65,8 +71,10 @@ class SecureConnection {
 
 			this.#socket = null;
 
-            onDeath();
+			onDeath();
 		});
+
+		this.#listen();
 	}
 
 	static async connect(host, port, onDeath) {
@@ -74,22 +82,70 @@ class SecureConnection {
 			local = EncryptionKey.create();
 
 		// Perform the key exchange
-		const key = await SecureConnection.performKeyExchange(socket, local);
+		const key = await SecureConnection.#performKeyExchange(socket, local);
 
 		return new SecureConnection(socket, key, onDeath);
 	}
 
-	static async performKeyExchange(socket, local) {
+	static async #performKeyExchange(socket, local) {
 		// Send our public key
-		const packet = createPacket(local.publicKey());
+		const packet = createPacket(0, local.publicKey());
 
 		socket.write(packet);
 
 		// Read the shared session key
-		const encrypted = await readFromSocket(socket);
+		const encrypted = await SecureConnection.#readKey(socket);
 
 		// Decrypt the shared session key
 		return local.decrypt(encrypted);
+	}
+
+	static #readKey(socket) {
+		return new Promise((resolve, reject) => {
+			socket.once("data", resolve);
+			socket.once("error", reject);
+
+			setTimeout(() => {
+				socket.off("data", resolve);
+				socket.off("error", reject);
+
+				reject(new Error("Timeout"));
+			}, 5000);
+		});
+	}
+
+	#requestId() {
+		return randomBytes(4).readUInt32LE(0, true);
+	}
+
+	#listen() {
+		let buffer = Buffer.alloc(0);
+
+		this.#socket.on("data", data => {
+			buffer = Buffer.concat([buffer, data]);
+
+			while (buffer.length > 8) {
+				const requestId = buffer.readUInt32LE(0, true);
+
+				const length = buffer.readUInt32LE(4, true);
+
+				if (length > buffer.length - 8) {
+					break;
+				}
+
+				const encrypted = buffer.subarray(8, 8 + length);
+
+				buffer = buffer.subarray(8 + length);
+
+				const callback = this.#requests[requestId];
+
+				if (callback) {
+					callback(this.#decrypt(encrypted));
+
+					delete this.#requests[requestId];
+				}
+			}
+		});
 	}
 
 	#encrypt(data) {
@@ -108,6 +164,14 @@ class SecureConnection {
 		return Buffer.concat([decipher.update(data.slice(12, -16)), decipher.final()]);
 	}
 
+	packetLoss() {
+		return {
+			success: this.#success,
+			failed: this.#failed,
+			loss: (this.#failed / (this.#success + this.#failed)) * 100,
+		};
+	}
+
 	close() {
 		if (!this.#socket) {
 			return;
@@ -116,36 +180,38 @@ class SecureConnection {
 		this.#socket.destroy();
 	}
 
-	async send(data) {
+	send(data) {
 		if (!this.#socket) {
 			throw new Error("Connection closed");
 		}
 
-		// Encrypt the data
-		const encrypted = this.#encrypt(data);
+		return new Promise((resolve, reject) => {
+			const requestId = this.#requestId();
 
-		// Create the packet
-		const packet = createPacket(encrypted);
+			const finished = (data, err) => {
+				delete this.#requests[requestId];
 
-		this.#socket.write(packet);
-	}
+				if (err) {
+					this.#failed++;
 
-	async read() {
-		if (!this.#socket) {
-			throw new Error("Connection closed");
-		}
+					reject(err);
+				} else {
+					this.#success++;
 
-        // Read the packet
-		const encrypted = await readFromSocket(this.#socket);
+					resolve(data);
+				}
+			};
 
-        // Decrypt the packet
-		const data = this.#decrypt(encrypted);
+			this.#requests[requestId] = finished;
 
-        if (data.toString("utf8") === "ERR") {
-            throw new Error("Something went wrong");
-        }
+			// Encrypt the data
+			const encrypted = this.#encrypt(data);
 
-        return data;
+			// Send the packet
+			this.#socket.write(createPacket(requestId, encrypted));
+
+			setTimeout(() => finished(null, new Error("Timeout")), 5000);
+		});
 	}
 }
 
@@ -160,7 +226,7 @@ export class HistoryStorage {
 			HistoryStorage.#instance = new HistoryStorage();
 		}
 
-        await HistoryStorage.#instance.#connect();
+		await HistoryStorage.#instance.#connect();
 
 		return HistoryStorage.#instance;
 	}
@@ -183,12 +249,12 @@ export class HistoryStorage {
 			port = parseInt(match[2]) || 4994;
 
 		this.#connection = await SecureConnection.connect(host, port, () => {
-            console.warn("Storage connection closed");
+			console.warn("Storage connection closed");
 
 			this.#connection = null;
 		});
 
-        console.info("Storage connection established");
+		console.info("Storage connection established");
 	}
 
 	#request(type, server, timestamp1, timestamp2, license, data = null) {
@@ -208,12 +274,16 @@ export class HistoryStorage {
 
 		// License (40 bytes)
 		if (license) {
-            header.write(Buffer.from(license, "utf8"), 10);
+			header.write(Buffer.from(license, "utf8"), 10);
 		}
 
 		if (!data) return header;
 
 		return Buffer.concat([header, data]);
+	}
+
+	packetLoss() {
+		return this.#connection ? this.#connection.packetLoss() : false;
 	}
 
 	available() {
@@ -236,7 +306,7 @@ export class HistoryStorage {
 		await this.#connect();
 
 		// Send the request
-		await this.#connection.send(
+		const response = await this.#connection.send(
 			this.#request(
 				1, // Store = 1
 				server,
@@ -247,10 +317,8 @@ export class HistoryStorage {
 			)
 		);
 
-		// Wait for the acknowledgement
-		const ack = await this.#connection.read();
-
-		if (ack.toString("utf8") !== "ACK") {
+		// Check for the acknowledgement
+		if (response.toString("utf8") !== "ACK") {
 			throw new Error("Invalid or missing ACK");
 		}
 	}
@@ -270,7 +338,7 @@ export class HistoryStorage {
 				start,
 				end,
 				license,
-                null
+				null
 			)
 		);
 
@@ -278,28 +346,28 @@ export class HistoryStorage {
 		return await this.#connection.read();
 	}
 
-    async readAll(server, timestamp) {
+	async readAll(server, timestamp) {
 		if (this.#disabled) {
 			throw new Error("Storage disabled");
 		}
 
-        await this.#connect();
+		await this.#connect();
 
-        // Send the request
-        await this.#connection.send(
-            this.#request(
-                3, // ReadAll = 3
-                server,
-                timestamp,
-                timestamp,
-                null,
-                null
-            )
-        );
+		// Send the request
+		await this.#connection.send(
+			this.#request(
+				3, // ReadAll = 3
+				server,
+				timestamp,
+				timestamp,
+				null,
+				null
+			)
+		);
 
-        // Wait for the data
-        return await this.#connection.read();
-    }
+		// Wait for the data
+		return await this.#connection.read();
+	}
 }
 
 function asBuffer(data) {
@@ -310,57 +378,19 @@ function asBuffer(data) {
 	return Buffer.from(data, "utf8");
 }
 
-function readFromSocket(socket) {
-	return new Promise((resolve, reject) => {
-		const timeout = setTimeout(() => {
-			reject(new Error("Timeout"));
-		}, 5000);
-
-		const onData = data => {
-			completed();
-
-			// Read the length
-			const length = data.readUInt32LE(0);
-
-			// Validate packet length
-			if (length !== data.length - 4) {
-				reject(new Error(`Expected ${length} bytes, got ${data.length - 4}`));
-
-				return;
-			}
-
-			// Read the message
-			resolve(data.slice(4, 4 + length));
-		};
-
-		const onError = err => {
-			completed();
-
-			reject(err);
-		};
-
-		const completed = () => {
-			clearTimeout(timeout);
-
-			socket.off("data", onData);
-			socket.off("error", onError);
-		};
-
-		socket.once("data", onData);
-		socket.once("error", onError);
-	});
-}
-
-function createPacket(data) {
+function createPacket(requestId, data) {
 	data = asBuffer(data);
 
-	const packet = Buffer.alloc(4 + data.length);
+	const packet = Buffer.alloc(4 + 4 + data.length);
+
+	// Write the request id
+	packet.writeUInt32LE(requestId, 0);
 
 	// Write the length
-	packet.writeUInt32LE(data.length, 0);
+	packet.writeUInt32LE(data.length, 4);
 
 	// Write the data
-	data.copy(packet, 4);
+	data.copy(packet, 8);
 
 	return packet;
 }
