@@ -175,6 +175,8 @@ export class HistoryStorage {
 
 		if (!storage || !match || match.length < 3) {
 			this.#disabled = true;
+
+			return;
 		}
 
 		const host = match[1],
