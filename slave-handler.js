@@ -3,6 +3,7 @@ import { getLogs } from "./console.js";
 import { isValidLicense } from "./auth.js";
 import { getAverage } from "./average.js";
 import { HistoryBin } from "./history-bin.js";
+import { HistoryStorage } from "./storage.js";
 import { formatUptime } from "./functions.js";
 
 const startup = new Date();
@@ -178,7 +179,7 @@ export class SlaveHandler {
 		const avgWorld = getAverage("world"),
 			avgStaff = getAverage("staff");
 
-		const storage = await HistoryBin.getInstance();
+		const storage = await HistoryStorage.getInstance();
 
 		const logs = [];
 
