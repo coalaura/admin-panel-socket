@@ -186,9 +186,13 @@ class SecureConnection {
 		}
 
 		return new Promise((resolve, reject) => {
+			let timeout;
+
 			const requestId = this.#requestId();
 
 			const finished = (data, err) => {
+				clearTimeout(timeout);
+
 				delete this.#requests[requestId];
 
 				if (err) {
@@ -210,7 +214,7 @@ class SecureConnection {
 			// Send the packet
 			this.#socket.write(createPacket(requestId, encrypted));
 
-			setTimeout(() => finished(null, new Error("Timeout")), 5000);
+			timeout = setTimeout(() => finished(null, new Error("Timeout")), 5000);
 		});
 	}
 }
