@@ -1,50 +1,5 @@
 import config from "./config.js";
-
-import { decode, ExtensionCodec } from "@msgpack/msgpack";
-
-const codec = new ExtensionCodec();
-
-// vector2
-codec.register({
-	type: 20,
-	decode: data => {
-		const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-
-		return {
-			x: view.getFloat32(0, true),
-			y: view.getFloat32(4, true),
-		};
-	},
-});
-
-// vector3
-codec.register({
-	type: 21,
-	decode: data => {
-		const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-
-		return {
-			x: view.getFloat32(0, true),
-			y: view.getFloat32(4, true),
-			z: view.getFloat32(8, true),
-		};
-	},
-});
-
-// vector4
-codec.register({
-	type: 22,
-	decode: data => {
-		const view = new DataView(data.buffer, data.byteOffset, data.byteLength);
-
-		return {
-			x: view.getFloat32(0, true),
-			y: view.getFloat32(4, true),
-			z: view.getFloat32(8, true),
-			w: view.getFloat32(12, true),
-		};
-	},
-});
+import { unpack } from "./msgpack.js";
 
 export async function requestOpFwApi(url, token) {
 	const response = await fetch(url, {
@@ -67,9 +22,7 @@ export async function requestOpFwApi(url, token) {
 		case "application/msgpack": {
 			const buffer = await response.arrayBuffer();
 
-			return decode(buffer, {
-				extensionCodec: codec,
-			});
+			return unpack(buffer);
 		}
 	}
 
