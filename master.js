@@ -111,7 +111,7 @@ export function initMasterRoutes(app) {
 
 		if (!timestamp) return abort(resp, "Invalid request");
 
-		if (config.storage) {
+		if (!config.storage) {
 			return abort(resp, "Timestamp is unavailable.");
 		}
 
