@@ -186,7 +186,7 @@ class SecureConnection {
 		}
 
 		return new Promise((resolve, reject) => {
-			let timeout;
+			const timeout = setTimeout(() => finished(null, new Error("Timeout")), 5000);
 
 			const requestId = this.#requestId();
 
@@ -213,8 +213,6 @@ class SecureConnection {
 
 			// Send the packet
 			this.#socket.write(createPacket(requestId, encrypted));
-
-			timeout = setTimeout(() => finished(null, new Error("Timeout")), 5000);
 		});
 	}
 }
@@ -334,8 +332,8 @@ export class HistoryStorage {
 
 		await this.#connect();
 
-		// Send the request
-		await this.#connection.send(
+		// Send the request and wait for the data
+		return await this.#connection.send(
 			this.#request(
 				2, // ReadOne = 2
 				server,
@@ -345,9 +343,6 @@ export class HistoryStorage {
 				null
 			)
 		);
-
-		// Wait for the data
-		return await this.#connection.read();
 	}
 
 	async readAll(server, timestamp) {
@@ -357,8 +352,8 @@ export class HistoryStorage {
 
 		await this.#connect();
 
-		// Send the request
-		await this.#connection.send(
+		// Send the request and wait for the data
+		return await this.#connection.send(
 			this.#request(
 				3, // ReadAll = 3
 				server,
@@ -368,9 +363,6 @@ export class HistoryStorage {
 				null
 			)
 		);
-
-		// Wait for the data
-		return await this.#connection.read();
 	}
 }
 
