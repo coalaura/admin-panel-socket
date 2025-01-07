@@ -1,6 +1,5 @@
 import { requestOpFwApi } from "./http.js";
 import { loadOnDutyData } from "./duty.js";
-import { decompressPlayers } from "./decompressor.js";
 import { HistoryBin } from "./history-bin.js";
 
 import { getServers, promises as dns } from "node:dns";
@@ -8,15 +7,7 @@ import { getServers, promises as dns } from "node:dns";
 export async function updateWorldJSON(server) {
 	const dutyMap = await loadOnDutyData(server);
 
-	const data = decompressPlayers(await requestOpFwApi(`${server.url}/op-framework/world.json?compress=1`, server.token));
-
-	const clientData = {};
-
-	for (let x = 0; x < data.players.length; x++) {
-		const player = data.players[x];
-
-		clientData[player.source] = cleanupPlayer(player, dutyMap);
-	}
+	const data = await requestOpFwApi(`${server.url}/op-framework/world.json?pack=1`, server.token);
 
 	try {
 		const bin = HistoryBin.getInstance(server.server);
@@ -26,13 +17,19 @@ export async function updateWorldJSON(server) {
 		console.warn(`Failed to write to history bin: ${err.message}`);
 	}
 
+	const cleaned = data.players.map(player => cleanupPlayer(player, dutyMap));
+
 	server.players = data.players;
 	server.world = data.world;
 
 	return {
-		players: clientData,
+		players: cleaned,
 		instance: data.world?.instance,
 	};
+}
+
+export async function updateStaffJSON(server) {
+	return await requestOpFwApi(`${server.url}/op-framework/staffChat.json?pack=1`, server.token);
 }
 
 export async function checkIfServerIsUp(server) {
@@ -47,7 +44,7 @@ export async function checkIfServerIsUp(server) {
 			await requestOpFwApi(`${server.url}/op-framework/auth.json`, server.token);
 		}
 
-		const data = await requestOpFwApi(`${server.url}/op-framework/variables.json`, server.token);
+		const data = await requestOpFwApi(`${server.url}/op-framework/variables.json?pack=1`, server.token);
 
 		if (typeof data.serverUptimeMilliseconds === "number") {
 			uptime = data.serverUptimeMilliseconds;

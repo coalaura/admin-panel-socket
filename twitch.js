@@ -1,8 +1,6 @@
 import config from "./config.js";
 import { success } from "./colors.js";
 
-import axios from "axios";
-
 let streamerData = {};
 
 export function getStreamerData() {
@@ -22,8 +20,8 @@ export function startTwitchUpdateLoop() {
 
 async function updateTwitchData(api, streamers) {
 	try {
-		const response = await axios.get(api.replace("%s", streamers.join(","))),
-			data = response.data;
+		const response = await fetch(api.replace("%s", streamers.join(","))),
+			data = await response.json();
 
 		if (data && Array.isArray(data)) {
 			streamerData = data.filter(streamer => streamer?.live);

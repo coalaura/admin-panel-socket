@@ -1,17 +1,10 @@
 import config from "./config.js";
 
-import https from "node:https";
-import http from "node:http";
-import axios from "axios";
-
-const agents = {};
+import { unpack } from "msgpackr";
 
 export async function requestOpFwApi(url, token) {
-    const agent = getInstance(url);
-
-    const response = await axios.get(url, {
-        httpAgent: agent,
-        timeout: config.timeout || 3000,
+    const response = await fetch(url, {
+        signal: AbortSignal.timeout(config.timeout || 1500),
         headers: {
             "Authorization": `Bearer ${token}`
         }
@@ -21,7 +14,21 @@ export async function requestOpFwApi(url, token) {
         throw Error("http status code not 200");
     }
 
-    const json = response.data;
+    const contentType = response.headers.get("content-type");
+
+    switch (contentType) {
+        case "text/plain":
+            return await response.text();
+
+        case "application/msgpack": {
+            const buffer = await response.arrayBuffer();
+
+            return unpack(buffer);
+        }
+    }
+
+    // Default is JSON
+    const json = await response.json();
 
     if (!json || typeof json !== "object" || !("data" in json) || !("statusCode" in json)) {
         throw Error("invalid json returned");
@@ -32,24 +39,4 @@ export async function requestOpFwApi(url, token) {
     }
 
     return json.data;
-}
-
-function getInstance(uri) {
-    const url = new URL(uri),
-        origin = url.origin;
-
-    if (!(origin in agents)) {
-        const agent = url.scheme === "https" ? new https.Agent({
-            keepAlive: true,
-            rejectUnauthorized: false,
-            keepAliveMsecs: 5000,
-        }) : new http.Agent({
-            keepAlive: true,
-            keepAliveMsecs: 5000,
-        });
-
-        agents[origin] = agent;
-    }
-
-    return agents[origin];
 }

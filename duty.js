@@ -1,7 +1,7 @@
 import { requestOpFwApi } from "./http.js";
 
 export async function loadOnDutyData(server) {
-    const data = await requestOpFwApi(`${server.url}/op-framework/duty.json`, server.token);
+    const data = await requestOpFwApi(`${server.url}/op-framework/duty.json?pack=1`, server.token);
 
     const map = {};
 

@@ -1,5 +1,4 @@
-import { updateWorldJSON, checkIfServerIsUp } from "./data.js";
-import { updateStaffJSON } from "./staff.js";
+import { updateWorldJSON, updateStaffJSON, checkIfServerIsUp } from "./data.js";
 import { getServers, getServerByName } from "./server.js";
 import { trackAverage } from "./average.js";
 import { muted, success, warning, info as _info } from "./colors.js";
