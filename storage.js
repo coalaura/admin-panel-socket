@@ -2,7 +2,6 @@ import net from "node:net";
 import { generateKeyPairSync, publicEncrypt, privateDecrypt, randomBytes, createCipheriv, createDecipheriv } from "node:crypto";
 
 import configData from "./config.js";
-import { clear } from "node:console";
 
 class EncryptionKey {
 	#public;
@@ -66,7 +65,6 @@ class SecureConnection {
 		this.#key = key;
 
 		this.#socket.on("close", () => {
-			this.#socket.emit("error", new Error("Connection closed"));
 			this.#socket.destroy();
 
 			this.#socket = null;
@@ -198,6 +196,10 @@ class SecureConnection {
 				if (err) {
 					this.#failed++;
 
+					if (err.message === "Timeout") {
+						this.close();
+					}
+
 					reject(err);
 				} else {
 					this.#success++;
@@ -298,6 +300,8 @@ export class HistoryStorage {
 		}
 
 		this.#connection.close();
+
+		this.#connection = null;
 	}
 
 	async store(server, timestamp, license, data) {
