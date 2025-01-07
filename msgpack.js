@@ -60,7 +60,9 @@ codec.register({
 });
 
 export function unpack(data) {
-	return decode(data, codec);
+	return decode(data, {
+        extensionCodec: codec,
+    });
 }
 
 export function pack(data) {
