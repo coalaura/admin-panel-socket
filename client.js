@@ -1,5 +1,5 @@
 import { v4 } from "uuid";
-import { pack } from "msgpackr";
+import { encode } from "@msgpack/msgpack";
 
 import { getSlaveData } from "./master.js";
 import { counter, danger, muted, success, warning, info } from "./colors.js";
@@ -50,7 +50,7 @@ function sendFullData(client, server, type) {
 		return;
 	}
 
-	client.emit("reset", Uint8Array.from(pack(data)).buffer);
+	client.emit("reset", Uint8Array.from(encode(data)).buffer);
 }
 
 export function handleConnection(client, server, type, license) {
@@ -113,7 +113,7 @@ export function handleDataUpdate(type, server, data) {
 		return;
 	}
 
-	data = pack(data);
+	data = encode(data);
 
 	for (const id in connections) {
 		if (!connections.hasOwnProperty(id)) continue;
