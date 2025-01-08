@@ -46,6 +46,7 @@ function handleConnection(client, server, session) {
 			id: id,
 			client: client,
 			name: session.name,
+			discord: session.discord,
 		},
 		server
 	);
@@ -63,11 +64,11 @@ function handleConnection(client, server, session) {
 	});
 
 	const chat = chats[server],
-	    messages = chats[server].messages;
+		messages = chats[server].messages;
 
-    if (chat.clients.length) {
-        client.emit("users", pack(users(chat)));
-    }
+	if (chat.clients.length) {
+		client.emit("users", pack(users(chat)));
+	}
 
 	if (messages.length) {
 		client.emit("history", pack(messages));
@@ -111,6 +112,7 @@ function registerClient(client, server) {
 	broadcast(server, "joined", {
 		id: client.id,
 		name: client.name,
+		discord: client.discord,
 	});
 }
 
@@ -140,6 +142,7 @@ function users(chat) {
 	return chat.clients.map(client => ({
 		id: client.id,
 		name: client.name,
+		discord: client.discord,
 	}));
 }
 
