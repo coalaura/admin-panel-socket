@@ -11,6 +11,7 @@ import { initDatabases } from "./database.js";
 import { SlaveHandler } from "./slave-handler.js";
 import { success, warning } from "./colors.js";
 import { parseArguments } from "./arguments.js";
+import { initializePanelChat } from "./chat.js";
 
 import { createServer } from "node:http";
 import cluster from "node:cluster";
@@ -67,6 +68,7 @@ if (cluster.isPrimary) {
 			origin: "*",
 			methods: ["GET", "POST"],
 		},
+		path: "/",
 	});
 
 	io.on("connection", async client => {
@@ -84,12 +86,11 @@ if (cluster.isPrimary) {
 			return rejectClient(client, "Unauthorized");
 		}
 
-		if (!isValidType(type) || !isValidLicense(license)) {
-			return rejectClient(client, "Invalid request");
-		}
-
 		handleConnection(client, server.server, type, license);
 	});
+
+	// Initialize panel chat
+	initializePanelChat(xp);
 
 	// Start the server
 	xp.listen(9999, () => {
