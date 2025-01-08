@@ -3,11 +3,12 @@ import { rejectClient } from "./functions.js";
 import { pack, unpack } from "./msgpack.js";
 
 import { Server } from "socket.io";
+import { randomBytes } from "node:crypto";
 
 const chats = {};
 
 export async function initializePanelChat(app) {
-    await loadChat();
+	await loadChat();
 
 	const io = new Server(app, {
 		cors: {
@@ -27,128 +28,162 @@ export async function initializePanelChat(app) {
 			return rejectClient(client, "Invalid request");
 		}
 
-        const session = await checkAuth(server.cluster, token, client.handshake.address);
+		const session = await checkAuth(server.cluster, token, client.handshake.address);
 
 		if (!session) {
 			return rejectClient(client, "Unauthorized");
 		}
 
-        handleConnection(client, server.server, session);
+		handleConnection(client, server.server, session);
 	});
 }
 
 function handleConnection(client, server, session) {
-    registerClient(client, server);
+	const id = randomBytes(4).readUint32LE();
 
-    client.on("chat", compressed => {
-        const text = unpack(compressed)?.trim();
+	registerClient(
+		{
+			id: id,
+			client: client,
+			name: session.name,
+		},
+		server
+	);
 
-        if (!text || text.length > 256) return;
+	client.on("chat", compressed => {
+		const text = unpack(compressed)?.trim();
 
-        addMessage(server, session, text);
-    });
+		if (!text || text.length > 256) return;
 
-    client.on("disconnect", () => {
-        unregisterClient(client, server);
-    });
+		addMessage(server, session, text);
+	});
 
-    const current = chats[server].messages;
+	client.on("disconnect", () => {
+		unregisterClient(id, server);
+	});
 
-    if (current.length) {
-        client.emit("history", pack(current));
+	const chat = chats[server],
+	    messages = chats[server].messages;
+
+    if (chat.clients.length) {
+        client.emit("users", pack(chat.users()));
     }
+
+	if (messages.length) {
+		client.emit("history", pack(messages));
+	}
 }
 
 function addMessage(server, session, text) {
-    const chat = chats[server];
+	const chat = chats[server];
 
-    if (!chat) return;
+	if (!chat) return;
 
-    const message = {
-        id: ++chat.id,
-        name: session.name,
-        text: text,
-        time: Math.floor(Date.now() / 1000),
-    }
+	const message = {
+		id: ++chat.id,
+		name: session.name,
+		text: text,
+		time: Math.floor(Date.now() / 1000),
+	};
 
-    chat.messages.push(message);
+	chat.messages.push(message);
 
-    if (chat.messages.length > 100) {
-        chat.messages.shift();
-    }
+	if (chat.messages.length > 100) {
+		chat.messages.shift();
+	}
 
-    const packed = pack(message);
+	broadcast(server, "chat", message);
 
-    for (const client of chat.clients) {
-        client.emit("chat", packed);
-    }
-
-    persistChat();
+	persistChat();
 }
 
 function registerClient(client, server) {
-    if (!chats[server]) {
-        chats[server] = {
-            id: 0,
-            clients: [],
-            messages: [],
-        };
-    }
+	if (!chats[server]) {
+		chats[server] = {
+			id: 0,
+			clients: [],
+			messages: [],
 
-    chats[server].clients.push(client);
+			users: function () {
+				return this.clients.map(client => ({
+					id: client.id,
+					name: client.name,
+				}));
+			},
+		};
+	}
+
+	chats[server].clients.push(client);
+
+	broadcast(server, "joined", {
+		id: client.id,
+		name: client.name,
+	});
 }
 
-function unregisterClient(client, server) {
-    if (!chats[server]) return;
+function unregisterClient(id, server) {
+	const chat = chats[server];
 
-    const index = chats[server].clients.indexOf(client);
+	if (!chat) return;
 
-    if (index > -1) {
-        chats[server].clients.splice(index, 1);
-    }
+	chat.clients = chat.clients.filter(client => client.id !== id);
+
+	broadcast(server, "left", id);
+}
+
+function broadcast(server, channel, data) {
+	const chat = chats[server];
+
+	if (!chat) return;
+
+	const packed = pack(data);
+
+	for (const client of chat.clients) {
+		client.client.emit(channel, packed);
+	}
 }
 
 let timeout;
 
 function persistChat() {
-    clearTimeout(timeout);
+	clearTimeout(timeout);
 
-    timeout = setTimeout(() => {
-        const save = {};
+	timeout = setTimeout(() => {
+		const save = {};
 
-        for (const server in chats) {
-            const chat = chats[server];
+		for (const server in chats) {
+			const chat = chats[server];
 
-            save[server] = {
-                id: chat.id,
-                messages: chat.messages,
-            };
-        }
+			save[server] = {
+				id: chat.id,
+				messages: chat.messages,
+			};
+		}
 
-        Bun.write("_chat.json", JSON.stringify(save));
-    }, 2000);
+		Bun.write("_chat.json", JSON.stringify(save));
+	}, 2000);
 }
 
 async function loadChat() {
-    const file = Bun.file("_chat.json");
+	const file = Bun.file("_chat.json");
 
-    if (!await file.exists()) {
-        return;
-    }
+	if (!(await file.exists())) {
+		return;
+	}
 
-    const data = await file.json();
+	const data = await file.json();
 
-    if (!data || typeof data !== "object") {
-        return;
-    }
+	if (!data || typeof data !== "object") {
+		return;
+	}
 
-    for (const server in data) {
-        const chat = data[server];
+	for (const server in data) {
+		const chat = data[server];
 
-        chats[server] = {
-            id: chat.id || 0,
-            messages: chat.messages || [],
-            clients: [],
-        };
-    }
+		chats[server] = {
+			id: chat.id || 0,
+			messages: chat.messages || [],
+			clients: [],
+		};
+	}
 }
