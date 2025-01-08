@@ -1,5 +1,6 @@
 node_modules
 _config.json
+_chat.json
 historic
 generated
 bun.lockb

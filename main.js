@@ -68,7 +68,7 @@ if (cluster.isPrimary) {
 			origin: "*",
 			methods: ["GET", "POST"],
 		},
-		path: "/",
+		path: "/io",
 	});
 
 	io.on("connection", async client => {

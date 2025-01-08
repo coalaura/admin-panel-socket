@@ -6,7 +6,9 @@ import { Server } from "socket.io";
 
 const chats = {};
 
-export function initializePanelChat(app) {
+export async function initializePanelChat(app) {
+    await loadChat();
+
 	const io = new Server(app, {
 		cors: {
 			origin: "*",
@@ -80,6 +82,8 @@ function addMessage(server, session, text) {
     for (const client of chat.clients) {
         client.emit("chat", packed);
     }
+
+    persistChat();
 }
 
 function registerClient(client, server) {
@@ -101,5 +105,50 @@ function unregisterClient(client, server) {
 
     if (index > -1) {
         chats[server].clients.splice(index, 1);
+    }
+}
+
+let timeout;
+
+function persistChat() {
+    clearTimeout(timeout);
+
+    timeout = setTimeout(() => {
+        const save = {};
+
+        for (const server in chats) {
+            const chat = chats[server];
+
+            save[server] = {
+                id: chat.id,
+                messages: chat.messages,
+            };
+        }
+
+        Bun.write("_chat.json", JSON.stringify(save));
+    }, 2000);
+}
+
+async function loadChat() {
+    const file = Bun.file("_chat.json");
+
+    if (!await file.exists()) {
+        return;
+    }
+
+    const data = await file.json();
+
+    if (!data || typeof data !== "object") {
+        return;
+    }
+
+    for (const server in data) {
+        const chat = data[server];
+
+        chats[server] = {
+            id: chat.id || 0,
+            messages: chat.messages || [],
+            clients: [],
+        };
     }
 }
