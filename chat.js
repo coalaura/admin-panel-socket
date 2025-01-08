@@ -66,7 +66,7 @@ function handleConnection(client, server, session) {
 	    messages = chats[server].messages;
 
     if (chat.clients.length) {
-        client.emit("users", pack(chat.users()));
+        client.emit("users", pack(users(chat)));
     }
 
 	if (messages.length) {
@@ -103,13 +103,6 @@ function registerClient(client, server) {
 			id: 0,
 			clients: [],
 			messages: [],
-
-			users: function () {
-				return this.clients.map(client => ({
-					id: client.id,
-					name: client.name,
-				}));
-			},
 		};
 	}
 
@@ -141,6 +134,13 @@ function broadcast(server, channel, data) {
 	for (const client of chat.clients) {
 		client.client.emit(channel, packed);
 	}
+}
+
+function users(chat) {
+	return chat.clients.map(client => ({
+		id: client.id,
+		name: client.name,
+	}));
 }
 
 let timeout;
