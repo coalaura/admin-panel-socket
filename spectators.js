@@ -32,15 +32,13 @@ async function spectatorsJSON(serverName, clients) {
 			const spectators = await updateSpectatorsJSON(server);
 
 			server.spectators = clients.map(client => {
-				return {
-					license: client.licenseIdentifier,
-					name: client.playerName,
-					spectating: getPlayerInfo(server, client.spectating),
-				};
-			});
+				const spectator = spectators.find(spectator => spectator.licenseIdentifier === client.license);
 
-			server.spectators = (spectators || []).filter(spectator => {
-				return clients.some(client => client.license === spectator.licenseIdentifier);
+				return {
+					license: client.license,
+					identifier: client.identifier,
+					spectating: getPlayerInfo(server, spectator?.spectating),
+				};
 			});
 		} catch (e) {
 			server.down = true;
