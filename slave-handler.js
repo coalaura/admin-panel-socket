@@ -46,6 +46,10 @@ export class SlaveHandler {
 				this.get_online(id, srv, options);
 
 				return;
+			case "spectators":
+				this.get_spectators(id, srv);
+
+				return;
 			case "server":
 				this.get_server(id, srv);
 
@@ -77,7 +81,7 @@ export class SlaveHandler {
 	static routes() {
 		return {
 			// Data routes require authentication
-			data: ["/players", "/online"],
+			data: ["/players", "/online", "/spectators"],
 
 			// Static routes require no authentication
 			static: ["/server", "/count", "/health"],
@@ -146,6 +150,14 @@ export class SlaveHandler {
 		this.respond(id, {
 			status: true,
 			data: online,
+		});
+	}
+
+	// Get current spectators
+	get_spectators(id, srv) {
+		this.respond(id, {
+			status: true,
+			data: srv.spectators || [],
 		});
 	}
 

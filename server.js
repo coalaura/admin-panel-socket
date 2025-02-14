@@ -15,7 +15,7 @@ export function initServer(cluster) {
 	const cfg = readDotEnv(cluster);
 
 	if (!cfg) {
-		return;
+		return {};
 	}
 
 	const ips = cfg.OP_FW_SERVERS.split(";");
@@ -73,6 +73,8 @@ export function initServer(cluster) {
 			process.exit(1);
 		}
 	}
+
+	return cfg;
 }
 
 function getServerUrl(ip) {

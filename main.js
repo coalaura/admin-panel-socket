@@ -12,6 +12,7 @@ import { SlaveHandler } from "./slave-handler.js";
 import { success, warning } from "./colors.js";
 import { parseArguments } from "./arguments.js";
 import { initializePanelChat } from "./chat.js";
+import { startSpectatorLoop } from "./spectators.js";
 
 import { createServer } from "node:http";
 import cluster from "node:cluster";
@@ -105,7 +106,7 @@ if (cluster.isPrimary) {
 
 	// Initialize the server (async deferred, no await)
 	console.info("Initializing server...");
-	initServer(slave.server);
+	const env = initServer(slave.server);
 
 	// Initialize handler
 	console.info("Initializing handler...");
@@ -114,6 +115,9 @@ if (cluster.isPrimary) {
 	// Initialize data-loop
 	console.info("Initializing data-loop...");
 	initDataLoop();
+
+	// Initialize spectator-loop (if enabled)
+	startSpectatorLoop("OVERWATCH_STREAMS" in env ? env.OVERWATCH_STREAMS : "");
 
 	// Start the server
 	process.send({

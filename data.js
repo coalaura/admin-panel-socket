@@ -32,6 +32,10 @@ export async function updateStaffJSON(server) {
 	return await requestOpFwApi(`${server.url}/op-framework/staffChat.json?pack=1`, server.token);
 }
 
+export async function updateSpectatorsJSON(server) {
+	return await requestOpFwApi(`${server.url}/op-framework/spectators.json?pack=1`, server.token);
+}
+
 export async function checkIfServerIsUp(server) {
 	let uptime = false,
 		name = false,
