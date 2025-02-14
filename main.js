@@ -117,7 +117,7 @@ if (cluster.isPrimary) {
 	initDataLoop();
 
 	// Initialize spectator-loop (if enabled)
-	startSpectatorLoop("OVERWATCH_STREAMS" in env ? env.OVERWATCH_STREAMS : "");
+	startSpectatorLoop(env);
 
 	// Start the server
 	process.send({

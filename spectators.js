@@ -1,4 +1,5 @@
 import { trackAverage } from "./average.js";
+import { info, muted, warning } from "./colors.js";
 import { updateSpectatorsJSON } from "./data.js";
 import { getServerByName, getServers } from "./server.js";
 
@@ -20,7 +21,7 @@ function getPlayerInfo(server, source) {
 	};
 }
 
-async function spectatorsJSON(serverName, clients) {
+async function spectatorsJSON(serverName, url, clients) {
 	const server = getServerByName(serverName);
 
 	let timeout = 2000;
@@ -36,7 +37,7 @@ async function spectatorsJSON(serverName, clients) {
 
 				return {
 					license: client.license,
-					identifier: client.identifier,
+					stream: url.replace("%s", client.identifier),
 					spectating: getPlayerInfo(server, spectator?.spectating),
 				};
 			});
@@ -44,7 +45,7 @@ async function spectatorsJSON(serverName, clients) {
 			server.down = true;
 			server.downError = e.message;
 
-			console.error(`${warning("Failed to load spectators.json")} ${_info(String(server.url))}: ${muted(e)}`);
+			console.error(`${warning("Failed to load spectators.json")} ${info(String(server.url))}: ${muted(e)}`);
 		}
 
 		const took = Date.now() - start;
@@ -61,15 +62,16 @@ async function spectatorsJSON(serverName, clients) {
 	}, timeout);
 }
 
-export function startSpectatorLoop(streams) {
-	const clients = parseStreams(streams);
+export function startSpectatorLoop(env) {
+	const url = "OVERWATCH_URL" in env ? env.OVERWATCH_URL : "",
+		clients = parseStreams("OVERWATCH_STREAMS" in env ? env.OVERWATCH_STREAMS : "");
 
-	if (!clients.length) return;
+	if (!url ||!clients.length) return;
 
 	const servers = getServers();
 
 	for (const serverName in servers) {
-		spectatorsJSON(serverName, clients);
+		spectatorsJSON(serverName, url, clients);
 	}
 }
 
