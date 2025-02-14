@@ -1,5 +1,5 @@
 import { checkAuth, parseServer, isValidLicense, authenticate } from "./auth.js";
-import { rejectClient } from "./functions.js";
+import { abort, rejectClient } from "./functions.js";
 import { pack, unpack } from "./msgpack.js";
 
 import { Server } from "socket.io";
@@ -38,16 +38,28 @@ export async function initializePanelChat(app, xp) {
 	});
 
 	app.put("/panel_chat/:server", authenticate, async (req, res) => {
+		if (!req.session?.local) {
+			return abort(res, "Unauthorized");
+		}
+
 		const message = req.body.message;
 
 		if (!message || typeof message !== "string" || message.length > 256) {
-			return res.status(400).send("Invalid message");
+			return abort(res, "Invalid message");
 		}
 
-		addMessage(req.server, {
-			name: "System",
-			system: true,
-		}, message);
+		addMessage(
+			req.server,
+			{
+				name: "System",
+				system: true,
+			},
+			message
+		);
+
+		res.json({
+			status: true,
+		});
 	});
 }
 
