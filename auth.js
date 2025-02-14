@@ -8,7 +8,6 @@ const sessions = {};
 export async function checkAuth(cluster, token, ip) {
 	if (config.allowLocal && (ip === "127.0.0.1" || ip.endsWith(":127.0.0.1"))) {
 		return {
-			local: true,
 			name: "Local",
 			discord: "123456789012345678",
 		};

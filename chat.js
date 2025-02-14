@@ -37,25 +37,16 @@ export async function initializePanelChat(app, xp) {
 		handleConnection(client, server.server, session);
 	});
 
-	app.put("/panel_chat/:server", authenticate, async (req, res) => {
-		if (!req.session?.local) {
-			return abort(res, "Unauthorized");
-		}
-
+	app.put("/socket/:server/chat", authenticate, async (req, res) => {
 		const message = req.body.message;
 
 		if (!message || typeof message !== "string" || message.length > 256) {
 			return abort(res, "Invalid message");
 		}
 
-		addMessage(
-			req.server,
-			{
-				name: "System",
-				system: true,
-			},
-			message
-		);
+		console.log(req.server, JSON.stringify(Object.keys(chats)));
+
+		addMessage(req.server, req.session, message, true);
 
 		res.json({
 			status: true,
@@ -100,7 +91,7 @@ function handleConnection(client, server, session) {
 	}
 }
 
-function addMessage(server, session, text) {
+function addMessage(server, session, text, system = false) {
 	const chat = chats[server];
 
 	if (!chat) return;
@@ -112,7 +103,7 @@ function addMessage(server, session, text) {
 		time: Math.floor(Date.now() / 1000),
 	};
 
-	if (session.system) {
+	if (system) {
 		message.system = true;
 	}
 
