@@ -127,13 +127,11 @@ function registerClient(client, server) {
 		};
 	}
 
-	chats[server].clients.push(client);
+	const chat = chats[server]
 
-	broadcast(server, "joined", {
-		id: client.id,
-		name: client.name,
-		discord: client.discord,
-	});
+	chat.clients.push(client);
+
+	broadcast(server, "users", users(chat));
 }
 
 function unregisterClient(id, server) {
@@ -143,7 +141,7 @@ function unregisterClient(id, server) {
 
 	chat.clients = chat.clients.filter(client => client.id !== id);
 
-	broadcast(server, "left", id);
+	broadcast(server, "users", users(chat));
 }
 
 function broadcast(server, channel, data) {
