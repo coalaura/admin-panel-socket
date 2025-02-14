@@ -1,4 +1,4 @@
-import { checkAuth, parseServer, isValidLicense } from "./auth.js";
+import { checkAuth, parseServer, isValidLicense, authenticate } from "./auth.js";
 import { rejectClient } from "./functions.js";
 import { pack, unpack } from "./msgpack.js";
 
@@ -7,10 +7,10 @@ import { randomBytes } from "node:crypto";
 
 const chats = {};
 
-export async function initializePanelChat(app) {
+export async function initializePanelChat(app, xp) {
 	await loadChat();
 
-	const io = new Server(app, {
+	const io = new Server(xp, {
 		cors: {
 			origin: "*",
 			methods: ["GET", "POST"],
@@ -35,6 +35,19 @@ export async function initializePanelChat(app) {
 		}
 
 		handleConnection(client, server.server, session);
+	});
+
+	app.put("/panel_chat/:server", authenticate, async (req, res) => {
+		const message = req.body.message;
+
+		if (!message || typeof message !== "string" || message.length > 256) {
+			return res.status(400).send("Invalid message");
+		}
+
+		addMessage(req.server, {
+			name: "System",
+			system: true,
+		}, message);
 	});
 }
 
@@ -86,6 +99,10 @@ function addMessage(server, session, text) {
 		text: text,
 		time: Math.floor(Date.now() / 1000),
 	};
+
+	if (session.system) {
+		message.system = true;
+	}
 
 	chat.messages.push(message);
 

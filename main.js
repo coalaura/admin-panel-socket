@@ -91,7 +91,7 @@ if (cluster.isPrimary) {
 	});
 
 	// Initialize panel chat
-	initializePanelChat(xp);
+	initializePanelChat(app, xp);
 
 	// Start the server
 	xp.listen(9999, () => {
