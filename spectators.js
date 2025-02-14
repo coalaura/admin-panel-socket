@@ -58,7 +58,7 @@ async function spectatorsJSON(serverName, url, clients) {
 	}
 
 	setTimeout(() => {
-		spectatorsJSON(serverName, clients);
+		spectatorsJSON(serverName, url, clients);
 	}, timeout);
 }
 
