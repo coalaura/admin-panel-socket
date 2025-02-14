@@ -77,15 +77,15 @@ export function startSpectatorLoop(streams) {
 
 function parseStreams(streams) {
 	return streams.split(",").map(stream => {
-		const [license, identifier] = stream.split(":");
+		const [license, identifier] = stream.trim().split(":");
 
 		if (!license || !identifier) {
 			return false;
 		}
 
 		return {
-			license: license.trim(),
-			identifier: identifier.trim(),
+			license: `license:${license}`,
+			identifier: identifier,
 		};
 	});
 }
