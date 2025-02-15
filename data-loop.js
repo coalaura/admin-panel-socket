@@ -115,7 +115,7 @@ export function initDataLoop() {
 }
 
 export function isValidType(type) {
-	return type && ["world", "staff"].includes(type);
+	return type && ["world", "staff", "spectators"].includes(type);
 }
 
 function runIntervalDelayed(fn, delay, interval) {

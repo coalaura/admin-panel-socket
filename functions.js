@@ -37,6 +37,20 @@ export function reverse(array) {
 	return reversed;
 }
 
+export function changed(before, after) {
+	if (typeof before !== typeof after) return true;
+
+	if (typeof before === "object") {
+		for (const key in before) {
+			if (changed(before[key], after[key])) return true;
+		}
+
+		return false;
+	}
+
+	return before !== after;
+}
+
 export function formatUptime(since) {
 	let seconds = Math.floor((Date.now() - since) / 1000);
 

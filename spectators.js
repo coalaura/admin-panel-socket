@@ -1,6 +1,7 @@
 import { trackAverage } from "./average.js";
 import { info, muted, warning } from "./colors.js";
 import { updateSpectatorsJSON } from "./data.js";
+import { changed } from "./functions.js";
 import { getServerByName, getServers } from "./server.js";
 
 function getPlayerInfo(server, source) {
@@ -30,17 +31,25 @@ async function spectatorsJSON(serverName, url, clients) {
 		const start = Date.now();
 
 		try {
-			const spectators = await updateSpectatorsJSON(server);
+			const spectators = await updateSpectatorsJSON(server),
+				current = clients.map(client => {
+					const spectator = spectators.find(spectator => spectator.licenseIdentifier === client.license);
 
-			server.spectators = clients.map(client => {
-				const spectator = spectators.find(spectator => spectator.licenseIdentifier === client.license);
+					return {
+						license: client.license,
+						stream: url.replace("%s", client.identifier),
+						spectating: getPlayerInfo(server, spectator?.spectating),
+					};
+				});
 
-				return {
-					license: client.license,
-					stream: url.replace("%s", client.identifier),
-					spectating: getPlayerInfo(server, spectator?.spectating),
-				};
-			});
+			if (changed(server.spectators, current)) {
+				process.send({
+					type: "spectators",
+					data: current,
+				});
+
+				server.spectators = current;
+			}
 		} catch (e) {
 			server.down = true;
 			server.downError = e.message;
@@ -54,7 +63,7 @@ async function spectatorsJSON(serverName, url, clients) {
 
 		timeout = Math.max(0, 1000 - took);
 	} else {
-		timeout = 5000;
+		timeout = 3000;
 	}
 
 	setTimeout(() => {
