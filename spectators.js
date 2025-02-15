@@ -1,7 +1,7 @@
 import { trackAverage } from "./average.js";
 import { info, muted, warning } from "./colors.js";
 import { updateSpectatorsJSON } from "./data.js";
-import { changed } from "./functions.js";
+import { equals } from "./functions.js";
 import { getServerByName, getServers } from "./server.js";
 
 function getPlayerInfo(server, source) {
@@ -42,7 +42,7 @@ async function spectatorsJSON(serverName, url, clients) {
 					};
 				});
 
-			if (changed(server.spectators, current)) {
+			if (!equals(server.spectators, current)) {
 				process.send({
 					type: "spectators",
 					data: current,

@@ -37,18 +37,45 @@ export function reverse(array) {
 	return reversed;
 }
 
-export function changed(before, after) {
-	if (typeof before !== typeof after) return true;
+export function equals(a, b) {
+	const typeA = typeof a,
+		typeB = typeof b;
 
-	if (typeof before === "object") {
-		for (const key in before) {
-			if (changed(before[key], after[key])) return true;
+	if (typeA !== typeB) {
+		return false;
+	} else if (Array.isArray(a)) {
+		if (!Array.isArray(b) || a.length !== b.length) {
+			return false;
 		}
 
-		return false;
+		for (let x = 0; x < a.length; x++) {
+			if (!equals(a[x], b[x])) {
+				return false;
+			}
+		}
+
+		return true;
+	} else if (typeA === "object") {
+		if (a === null && b === null) {
+			return true;
+		} else if (a === null || b === null) {
+			return false;
+		}
+
+		if (Object.keys(a).length !== Object.keys(b).length) {
+			return false;
+		}
+
+		for (const key in a) {
+			if (!equals(a[key], b[key])) {
+				return false;
+			}
+		}
+
+		return true;
 	}
 
-	return before !== after;
+	return a === b;
 }
 
 export function formatUptime(since) {

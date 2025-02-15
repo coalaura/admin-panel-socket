@@ -1,6 +1,6 @@
 import cluster from "node:cluster";
 
-import { abort } from "./functions.js";
+import { abort, equals } from "./functions.js";
 import { getActiveViewers, handleDataUpdate } from "./client.js";
 import { SlaveHandler } from "./slave-handler.js";
 import { danger, success, warning } from "./colors.js";
@@ -264,47 +264,6 @@ export class Slave {
 			options
 		);
 	}
-}
-
-function equals(a, b) {
-	const typeA = typeof a,
-		typeB = typeof b;
-
-	if (typeA !== typeB) {
-		return false;
-	} else if (Array.isArray(a)) {
-		if (!Array.isArray(b) || a.length !== b.length) {
-			return false;
-		}
-
-		for (let x = 0; x < a.length; x++) {
-			if (!equals(a[x], b[x])) {
-				return false;
-			}
-		}
-
-		return true;
-	} else if (typeA === "object") {
-		if (a === null && b === null) {
-			return true;
-		} else if (a === null || b === null) {
-			return false;
-		}
-
-		if (Object.keys(a).length !== Object.keys(b).length) {
-			return false;
-		}
-
-		for (const key in a) {
-			if (!equals(a[key], b[key])) {
-				return false;
-			}
-		}
-
-		return true;
-	}
-
-	return a === b;
 }
 
 export function getSlaveData() {
