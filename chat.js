@@ -127,7 +127,11 @@ function registerClient(client, server) {
 		};
 	}
 
-	const chat = chats[server]
+	const chat = chats[server];
+
+	if (!doesUserExist(chat, session.discord)) {
+		addMessage(server, session, `${session.name} joined`, true);
+	}
 
 	chat.clients.push(client);
 
@@ -140,6 +144,10 @@ function unregisterClient(id, server) {
 	if (!chat) return;
 
 	chat.clients = chat.clients.filter(client => client.id !== id);
+
+	if (!doesUserExist(chat, session.discord)) {
+		addMessage(server, session, `${session.name} left`, true);
+	}
 
 	broadcast(server, "users", users(chat));
 }
@@ -162,6 +170,10 @@ function users(chat) {
 		name: client.name,
 		discord: client.discord,
 	}));
+}
+
+function doesUserExist(chat, discord) {
+	return chat.clients.some(client => client.discord === discord);
 }
 
 let timeout;
