@@ -36,6 +36,7 @@ async function spectatorsJSON(serverName, url, clients) {
 					const spectator = spectators.find(spectator => spectator.licenseIdentifier === client.license);
 
 					return {
+						key: client.identifier,
 						license: client.license,
 						stream: url.replace("%s", client.identifier),
 						spectating: getPlayerInfo(server, spectator?.spectating),
