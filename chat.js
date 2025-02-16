@@ -109,7 +109,7 @@ function addMessage(server, session, text, system = false) {
 
 	chat.messages.push(message);
 
-	if (chat.messages.length > 100) {
+	if (chat.messages.length > 1024) {
 		chat.messages.shift();
 	}
 
