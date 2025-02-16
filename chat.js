@@ -129,8 +129,8 @@ function registerClient(client, server) {
 
 	const chat = chats[server];
 
-	if (!doesUserExist(chat, session.discord)) {
-		addMessage(server, session, `${session.name} joined`, true);
+	if (!doesUserExist(chat, client.discord)) {
+		addMessage(server, client, `${client.name} joined`, true);
 	}
 
 	chat.clients.push(client);
@@ -143,10 +143,14 @@ function unregisterClient(id, server) {
 
 	if (!chat) return;
 
+	const client = chat.clients.find(client => client.id === id);
+
+	if (!client) return;
+
 	chat.clients = chat.clients.filter(client => client.id !== id);
 
-	if (!doesUserExist(chat, session.discord)) {
-		addMessage(server, session, `${session.name} left`, true);
+	if (!doesUserExist(chat, client.discord)) {
+		addMessage(server, client, `${client.name} left`, true);
 	}
 
 	broadcast(server, "users", users(chat));
