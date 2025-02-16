@@ -55,9 +55,7 @@ export async function initializePanelChat(app, xp) {
 			return abort(res, "Invalid message");
 		}
 
-		console.log(req.server, JSON.stringify(Object.keys(chats)));
-
-		addMessage(req.server, req.session, message, true);
+		addMessage(req.server, req.session, message, false, true);
 
 		res.json({
 			status: true,
@@ -79,11 +77,14 @@ function handleConnection(client, server, session) {
 	);
 
 	client.on("chat", compressed => {
-		const text = unpack(compressed)?.trim();
+		const msg = unpack(compressed),
+			text = msg?.text?.trim(),
+			room = msg?.room;
 
 		if (!text || text.length > 256) return;
+		if (room && (typeof room !== "string" || room.length > 32)) return;
 
-		addMessage(server, session, text);
+		addMessage(server, session, text, room);
 	});
 
 	client.on("disconnect", () => {
@@ -102,7 +103,7 @@ function handleConnection(client, server, session) {
 	}
 }
 
-function addMessage(server, session, text, system = false) {
+function addMessage(server, session, text, room = false, system = false) {
 	const chat = chats[server];
 
 	if (!chat) return;
@@ -116,6 +117,8 @@ function addMessage(server, session, text, system = false) {
 
 	if (system) {
 		message.system = true;
+	} else if (room) {
+		message.room = room;
 	}
 
 	chat.messages.push(message);
@@ -142,7 +145,7 @@ function registerClient(client, server) {
 
 	if (!doesUserExist(chat, client.discord)) {
 		if (!clearLeaveTimeout(client.discord)) {
-			addMessage(server, client, `${client.name} joined`, true);
+			addMessage(server, client, `${client.name} joined`, false, true);
 		}
 	}
 
@@ -166,7 +169,7 @@ function unregisterClient(id, server) {
 		clearLeaveTimeout(client.discord);
 
 		leaving[client.discord] = setTimeout(() => {
-			addMessage(server, client, `${client.name} left`, true);
+			addMessage(server, client, `${client.name} left`, false, true);
 
 			delete leaving[client.discord];
 		}, 5 * 1000);
