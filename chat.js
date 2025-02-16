@@ -5,7 +5,18 @@ import { pack, unpack } from "./msgpack.js";
 import { Server } from "socket.io";
 import { randomBytes } from "node:crypto";
 
-const chats = {};
+const chats = {},
+	leaving = {};
+
+function clearLeaveTimeout(discord) {
+	const timeout = leaving[discord];
+
+	if (!timeout) return false;
+
+	clearTimeout(timeout);
+
+	return true;
+}
 
 export async function initializePanelChat(app, xp) {
 	await loadChat();
@@ -130,7 +141,9 @@ function registerClient(client, server) {
 	const chat = chats[server];
 
 	if (!doesUserExist(chat, client.discord)) {
-		addMessage(server, client, `${client.name} joined`, true);
+		if (!clearLeaveTimeout(client.discord)) {
+			addMessage(server, client, `${client.name} joined`, true);
+		}
 	}
 
 	chat.clients.push(client);
@@ -150,7 +163,13 @@ function unregisterClient(id, server) {
 	chat.clients = chat.clients.filter(client => client.id !== id);
 
 	if (!doesUserExist(chat, client.discord)) {
-		addMessage(server, client, `${client.name} left`, true);
+		clearLeaveTimeout(client.discord);
+
+		leaving[client.discord] = setTimeout(() => {
+			addMessage(server, client, `${client.name} left`, true);
+
+			delete leaving[client.discord];
+		}, 5 * 1000);
 	}
 
 	broadcast(server, "users", users(chat));
