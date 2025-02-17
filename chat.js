@@ -8,6 +8,8 @@ import { randomBytes } from "node:crypto";
 const chats = {},
 	leaving = {};
 
+let started;
+
 function clearLeaveTimeout(discord) {
 	const timeout = leaving[discord];
 
@@ -20,6 +22,8 @@ function clearLeaveTimeout(discord) {
 
 export async function initializePanelChat(app, xp) {
 	await loadChat();
+
+	started = Date.now();
 
 	const io = new Server(xp, {
 		cors: {
@@ -143,10 +147,10 @@ function registerClient(client, server) {
 
 	const chat = chats[server];
 
-	if (!doesUserExist(chat, client.discord)) {
-		if (!clearLeaveTimeout(client.discord)) {
-			addMessage(server, client, `${client.name} joined`, false, true);
-		}
+	if (!doesUserExist(chat, client.discord) && !clearLeaveTimeout(client.discord)) {
+		const reconnect = !started || Date.now() - started > 5000;
+
+		addMessage(server, client, `${client.name} ${reconnect ? "reconnected" : "joined"}`, false, true);
 	}
 
 	chat.clients.push(client);
