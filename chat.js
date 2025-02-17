@@ -148,7 +148,7 @@ function registerClient(client, server) {
 	const chat = chats[server];
 
 	if (!doesUserExist(chat, client.discord) && !clearLeaveTimeout(client.discord)) {
-		const reconnect = !started || Date.now() - started > 5000;
+		const reconnect = !started || Date.now() - started < 5000;
 
 		addMessage(server, client, `${client.name} ${reconnect ? "reconnected" : "joined"}`, false, true);
 	}
