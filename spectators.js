@@ -40,6 +40,7 @@ async function spectatorsJSON(serverName, url, clients) {
 						license: client.license,
 						stream: url.replace("%s", client.identifier),
 						spectating: getPlayerInfo(server, spectator?.spectating),
+						data: spectator?.data || {},
 					};
 				});
 
