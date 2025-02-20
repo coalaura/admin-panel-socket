@@ -20,7 +20,7 @@ Create a file in the root of the directory called `_config.json`. This is how it
         "c1", "c2"
     ],
     "twitch": {
-        "api": "https://op-framework.com/api/twitch/streamer/%s",
+        "api": "https://op-framework.com/api/twitch/streamers/%s",
         "streamers": [
             "inzidiuz",
             "coalaura",
