@@ -89,8 +89,6 @@ export async function initDatabase(cluster) {
 		return;
 	}
 
-	console.log("init cluster db", cluster)
-
 	databases[cluster] = database;
 
 	console.log(success(`Successfully connected to database for ${cluster}...`));
