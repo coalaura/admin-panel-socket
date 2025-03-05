@@ -29,12 +29,12 @@ function loadCharacter(cluster, id) {
 
 	database
 		.query("SELECT character_id as id, CONCAT(first_name, ' ', last_name) as name, backstory, mugshot_url as mugshot FROM characters WHERE character_id = ?", id)
-		.then(characters => {
-			if (!characters.length) {
+		.then(results => {
+			if (!results.length) {
 				return;
 			}
 
-			characters[cluster][id] = characters[0];
+			characters[cluster][id] = results[0];
 		});
 
 	return false;
