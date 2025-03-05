@@ -24,12 +24,18 @@ export async function initDatabases(only = null) {
 	console.info(success("All databases initialized successfully!"));
 }
 
-async function initDatabase(cluster) {
+export async function initDatabase(cluster) {
+	if (cluster in databases) {
+		return;
+	}
+
 	const cfg = readDotEnv(cluster);
 
 	if (!cfg) {
 		return;
 	}
+
+	databases[cluster] = false;
 
 	const database = {
 		pool: createPool({
@@ -82,6 +88,8 @@ async function initDatabase(cluster) {
 
 		return;
 	}
+
+	console.log("init cluster db", cluster)
 
 	databases[cluster] = database;
 
