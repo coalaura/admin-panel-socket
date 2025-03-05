@@ -64,7 +64,7 @@ function getPlayerInfo(cluster, player) {
 async function spectatorsJSON(serverName, url, clients) {
 	const server = getServerByName(serverName);
 
-	let timeout = 2000;
+	let timeout = 1000;
 
 	if (!server.down && !server.failed) {
 		const start = Date.now();
@@ -103,7 +103,7 @@ async function spectatorsJSON(serverName, url, clients) {
 
 		timeout = Math.max(0, timeout - took);
 	} else {
-		timeout = 3000;
+		timeout = 4000;
 	}
 
 	setTimeout(() => {
