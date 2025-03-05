@@ -2,37 +2,42 @@ import { trackAverage } from "./average.js";
 import { info, muted, warning } from "./colors.js";
 import { updateSpectatorsJSON } from "./data.js";
 import { getDatabase, initDatabase } from "./database.js";
-import { equals } from "./functions.js";
 import { getServerByName, getServers } from "./server.js";
 
 const characters = {};
 
-function loadCharacters(cluster, characterIds) {
-	const loadIds = characterIds.filter(id => !(id in characters));
+function loadCharacter(cluster, id) {
+	if (!id) {
+		return false;
+	}
 
-	if (!loadIds.length) {
-		return;
+	if (!characters[cluster]) {
+		characters[cluster] = {};
+	}
+
+	if (id in characters[cluster]) {
+		return characters[cluster][id];
 	}
 
 	const database = getDatabase(cluster);
 
 	if (!database) {
-		return;
+		return false;
 	}
 
-	for (const id of loadIds) {
-		characters[id] = false;
-	}
+	characters[cluster][id] = false;
 
-	database.query("SELECT character_id as id, CONCAT(first_name, ' ', last_name) as name, backstory, mugshot_url as mugshot FROM characters WHERE character_id IN (?)", [loadIds]).then(results => {
-		for (const character of results) {
-			const id = character.id;
+	database
+		.query("SELECT character_id as id, CONCAT(first_name, ' ', last_name) as name, backstory, mugshot_url as mugshot FROM characters WHERE character_id = ?", id)
+		.then(characters => {
+			if (!characters.length) {
+				return;
+			}
 
-			delete character.id;
+			characters[cluster][id] = characters[0];
+		});
 
-			characters[id] = character;
-		}
-	});
+	return false;
 }
 
 function getServerPlayer(server, source) {
@@ -43,25 +48,16 @@ function getServerPlayer(server, source) {
 	return server.players.find(player => player.source === source);
 }
 
-function getPlayerInfo(server, source) {
-	if (!source || !server.players?.length) {
-		return false;
-	}
-
-	const player = server.players.find(player => player.source === source);
-
+function getPlayerInfo(cluster, player) {
 	if (!player) {
 		return false;
 	}
-
-	const id = player.character?.id,
-		character = id ? characters[id] : false;
 
 	return {
 		source: player.source,
 		name: player.name,
 		license: player.licenseIdentifier,
-		character: character
+		character: loadCharacter(cluster, player.character?.id),
 	};
 }
 
@@ -74,36 +70,26 @@ async function spectatorsJSON(serverName, url, clients) {
 		const start = Date.now();
 
 		try {
-			const characterIds = [];
-
 			const spectators = await updateSpectatorsJSON(server),
 				current = clients.map(client => {
 					const spectator = spectators.find(spectator => spectator.licenseIdentifier === client.license),
 						player = getServerPlayer(server, spectator?.spectating);
 
-					if (player.character) {
-						characterIds.push(player.character.id);
-					}
-
 					return {
 						key: client.identifier,
 						license: client.license,
 						stream: url.replace("%s", client.identifier),
-						spectating: getPlayerInfo(player),
+						spectating: getPlayerInfo(server.cluster, player),
 						data: spectator?.data || {},
 					};
 				});
 
-			loadCharacters(server.cluster, characterIds);
+			process.send({
+				type: "spectators",
+				data: current,
+			});
 
-			if (!equals(server.spectators, current)) {
-				process.send({
-					type: "spectators",
-					data: current,
-				});
-
-				server.spectators = current;
-			}
+			server.spectators = current;
 		} catch (e) {
 			server.down = true;
 			server.downError = e.message;
@@ -115,7 +101,7 @@ async function spectatorsJSON(serverName, url, clients) {
 
 		trackAverage("spectators", took);
 
-		timeout = Math.max(0, 1000 - took);
+		timeout = Math.max(0, timeout - took);
 	} else {
 		timeout = 3000;
 	}

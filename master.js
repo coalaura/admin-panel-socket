@@ -47,7 +47,9 @@ export function initSlaves(only = null) {
 export function getSlaveData(server, type) {
 	const slave = slaves[server];
 
-	if (!slave) return false;
+	if (!slave) {
+		return false;
+	}
 
 	return slave.data(type);
 }
