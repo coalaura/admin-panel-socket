@@ -35,6 +35,10 @@ function loadCharacter(cluster, id) {
 			}
 
 			characters[cluster][id] = results[0];
+
+			setTimeout(() => {
+				delete characters[cluster][id];
+			}, 20 * 60 * 1000);
 		});
 
 	return false;
