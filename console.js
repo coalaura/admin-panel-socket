@@ -111,26 +111,36 @@ export function registerErrorHandlers() {
 	process.on("unhandledRejection", unhandled);
 }
 
+function fmt(args) {
+	return args.map(val => {
+		if (typeof val === "object" || Array.isArray(val)) {
+			return JSON.stringify(val, null, 2);
+		}
+
+		return val.toString();
+	});
+}
+
 export function registerConsole(name) {
 	const target = resolveLogFile(name);
 
 	console.log = (...args) => {
-		log(target, args.join(" "));
+		log(target, fmt(args).join(" "));
 	};
 
 	console.debug = (...args) => {
-		debug(target, args.join(" "));
+		debug(target, fmt(args).join(" "));
 	};
 
 	console.info = (...args) => {
-		info(target, args.join(" "));
+		info(target, fmt(args).join(" "));
 	};
 
 	console.warn = (...args) => {
-		warn(target, args.join(" "));
+		warn(target, fmt(args).join(" "));
 	};
 
 	console.error = (...args) => {
-		error(target, args.join(" "));
+		error(target, fmt(args).join(" "));
 	};
 }

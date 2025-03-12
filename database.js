@@ -4,7 +4,9 @@ import { danger, error, muted, success } from "./colors.js";
 
 import { createPool } from "mysql2";
 
-const databases = {};
+const databases = {},
+	characters = {},
+	users = {};
 
 export function getDatabase(cluster) {
 	return databases[cluster];
@@ -47,6 +49,9 @@ export async function initDatabase(cluster) {
 			password: cfg.DB_PASSWORD,
 			database: cfg.DB_DATABASE,
 		}),
+
+		characters: {},
+		users: {},
 	};
 
 	database.query = (query, values = []) =>
@@ -75,6 +80,8 @@ export async function initDatabase(cluster) {
 				});
 			});
 		});
+
+	database.queryOne = (query, values = []) => database.query(query, values).then(results => (results.length > 0 ? results[0] : null));
 
 	if (!(await testConnection(database))) {
 		console.warn(`Failed to connect to database ${cluster}, trying again in 5 minutes...`);
@@ -108,4 +115,68 @@ async function testConnection(database) {
 
 function logDatabaseError(cluster, err, query) {
 	console.error(`${danger(`${cluster} database error`)}\n - ${muted(query)}\n - ${error(err.message)}`);
+}
+
+export function fetchCharacter(cluster, characterId) {
+	const database = cluster in databases ? databases[cluster] : false;
+
+	if (!database || !characterId) {
+		return false;
+	}
+
+	if (characterId in database.characters) {
+		return database.characters[characterId];
+	}
+
+	database.characters[characterId] = false;
+
+	database
+		.queryOne("SELECT character_id as id, CONCAT(first_name, ' ', last_name) as name, backstory, date_of_birth FROM characters WHERE character_id = ?", characterId)
+		.then(character => {
+			if (!character) {
+				return;
+			}
+
+			character.loaded = Math.floor(Date.now() / 1000);
+
+			database.characters[characterId] = character;
+
+			setTimeout(() => {
+				delete database.characters[characterId];
+			}, 20 * 60 * 1000);
+		});
+
+	return false;
+}
+
+export function fetchUser(cluster, licenseIdentifier) {
+	const database = cluster in databases ? databases[cluster] : false;
+
+	if (!database || !licenseIdentifier) {
+		return false;
+	}
+
+	if (licenseIdentifier in database.users) {
+		return database.users[licenseIdentifier];
+	}
+
+	database.users[licenseIdentifier] = false;
+
+	database
+		.queryOne("SELECT playtime FROM users WHERE license_identifier = ?", licenseIdentifier)
+		.then(user => {
+			if (!user) {
+				return;
+			}
+
+			user.loaded = Math.floor(Date.now() / 1000);
+
+			database.users[licenseIdentifier] = user;
+
+			setTimeout(() => {
+				delete database.users[licenseIdentifier];
+			}, 20 * 60 * 1000);
+		});
+
+	return false;
 }

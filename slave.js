@@ -123,7 +123,7 @@ export class Slave {
 		});
 
 		this.#cluster.on("message", message => {
-			const { id, type, data } = message;
+			const { id, type, data, forceDiff } = message;
 
 			if (type === "hello") {
 				this.#trigger("up");
@@ -142,7 +142,7 @@ export class Slave {
 				data.viewers = getActiveViewers(this.#server, "world");
 			}
 
-			handleDataUpdate(type, this.#server, this.#diff(type, data));
+			handleDataUpdate(type, this.#server, this.#diff(type, data, forceDiff));
 
 			this.#data[type] = data;
 		});
@@ -160,7 +160,7 @@ export class Slave {
 		});
 	}
 
-	#diff(type, data) {
+	#diff(type, data, forceDiff = false) {
 		const compare = (df, a, b) => {
 			if (Array.isArray(a)) {
 				if (equals(a, b)) {

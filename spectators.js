@@ -1,48 +1,8 @@
 import { trackAverage } from "./average.js";
 import { info, muted, warning } from "./colors.js";
 import { updateSpectatorsJSON } from "./data.js";
-import { getDatabase, initDatabase } from "./database.js";
+import { fetchCharacter, fetchUser, initDatabase } from "./database.js";
 import { getServerByName, getServers } from "./server.js";
-
-const characters = {};
-
-function loadCharacter(cluster, id) {
-	if (!id) {
-		return false;
-	}
-
-	if (!characters[cluster]) {
-		characters[cluster] = {};
-	}
-
-	if (id in characters[cluster]) {
-		return characters[cluster][id];
-	}
-
-	const database = getDatabase(cluster);
-
-	if (!database) {
-		return false;
-	}
-
-	characters[cluster][id] = false;
-
-	database
-		.query("SELECT character_id as id, CONCAT(first_name, ' ', last_name) as name, backstory, date_of_birth as birthday FROM characters WHERE character_id = ?", id)
-		.then(results => {
-			if (!results.length) {
-				return;
-			}
-
-			characters[cluster][id] = results[0];
-
-			setTimeout(() => {
-				delete characters[cluster][id];
-			}, 20 * 60 * 1000);
-		});
-
-	return false;
-}
 
 function getServerPlayer(server, source) {
 	if (!source || !server.players?.length) {
@@ -57,11 +17,14 @@ function getPlayerInfo(cluster, player) {
 		return false;
 	}
 
+	const user = fetchUser(cluster, player.licenseIdentifier) || {};
+
 	return {
 		source: player.source,
 		name: player.name,
 		license: player.licenseIdentifier,
-		character: loadCharacter(cluster, player.character?.id),
+		character: fetchCharacter(cluster, player.character?.id),
+		...user,
 	};
 }
 
