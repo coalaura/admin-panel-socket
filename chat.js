@@ -70,25 +70,36 @@ export async function initializePanelChat(app, xp) {
 function handleConnection(client, server, session) {
 	const id = randomBytes(4).readUint32LE();
 
-	registerClient(
-		{
-			id: id,
-			client: client,
-			name: session.name,
-			discord: session.discord,
-		},
-		server
-	);
+	session = {
+		id: id,
+		client: client,
+		room: false,
+		name: session.name,
+		discord: session.discord,
+	};
+
+	registerClient(session, server);
 
 	client.on("chat", compressed => {
-		const msg = unpack(compressed),
-			text = msg?.text?.trim(),
-			room = msg?.room;
+		const text = unpack(compressed)?.trim();
 
 		if (!text || text.length > 256) return;
-		if (room && (typeof room !== "string" || room.length > 32)) return;
 
-		addMessage(server, session, text, room);
+		addMessage(server, session, text);
+	});
+
+	client.on("room", compressed => {
+		const room = unpack(compressed)?.trim();
+
+		if (room && (typeof room !== "string" || room.length > 32)) return;
+		if (room === session.room) return;
+
+		session.room = room;
+
+		broadcast(server, "room", {
+			id: session.id,
+			room: session.room,
+		});
 	});
 
 	client.on("disconnect", () => {
@@ -107,7 +118,7 @@ function handleConnection(client, server, session) {
 	}
 }
 
-function addMessage(server, session, text, room = false, system = false) {
+function addMessage(server, session, text, system = false) {
 	const chat = chats[server];
 
 	if (!chat) return;
@@ -121,8 +132,8 @@ function addMessage(server, session, text, room = false, system = false) {
 
 	if (system) {
 		message.system = true;
-	} else if (room) {
-		message.room = room;
+	} else if (session.room) {
+		message.room = session.room;
 	}
 
 	chat.messages.push(message);
@@ -150,7 +161,7 @@ function registerClient(client, server) {
 	if (!doesUserExist(chat, client.discord) && !clearLeaveTimeout(client.discord)) {
 		const reconnect = !started || Date.now() - started < 5000;
 
-		addMessage(server, client, `${client.name} ${reconnect ? "reconnected" : "joined"}`, false, true);
+		addMessage(server, client, `${client.name} ${reconnect ? "reconnected" : "joined"}`, true);
 	}
 
 	chat.clients.push(client);
@@ -173,7 +184,7 @@ function unregisterClient(id, server) {
 		clearLeaveTimeout(client.discord);
 
 		leaving[client.discord] = setTimeout(() => {
-			addMessage(server, client, `${client.name} left`, false, true);
+			addMessage(server, client, `${client.name} left`, true);
 
 			delete leaving[client.discord];
 		}, 5 * 1000);
@@ -199,6 +210,7 @@ function users(chat) {
 		id: client.id,
 		name: client.name,
 		discord: client.discord,
+		room: client.room,
 	}));
 }
 
