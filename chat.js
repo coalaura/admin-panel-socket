@@ -59,7 +59,7 @@ export async function initializePanelChat(app, xp) {
 			return abort(res, "Invalid message");
 		}
 
-		addMessage(req.server, req.session, message, false, true);
+		addMessage(req.server, req.session, message, true);
 
 		res.json({
 			status: true,
