@@ -228,7 +228,9 @@ function users(chat) {
 		id: client.id,
 		name: client.name,
 		discord: client.discord,
+
 		room: client.room,
+		active: client.active,
 	}));
 }
 
