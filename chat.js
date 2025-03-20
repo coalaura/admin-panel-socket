@@ -85,7 +85,7 @@ function handleConnection(client, server, session) {
 
 		if (session[key] === value) return;
 
-		console.log(`Client "${id}" changed ${key} to "${value}".`);
+		console.debug(`Client ${id} ("${session.name}") changed ${key} to "${value}".`);
 
 		session[key] = value;
 
