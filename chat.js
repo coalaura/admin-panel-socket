@@ -77,10 +77,12 @@ function handleConnection(client, server, session) {
 		discord: session.discord,
 
 		room: false,
-		active: true,
+		active: false,
 	};
 
 	function set(key, value) {
+		value = value || false;
+
 		if (session[key] === value) return;
 
 		console.log(`Client "${id}" changed ${key} to "${value}".`);
