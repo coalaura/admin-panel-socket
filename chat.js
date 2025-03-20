@@ -73,10 +73,26 @@ function handleConnection(client, server, session) {
 	session = {
 		id: id,
 		client: client,
-		room: false,
 		name: session.name,
 		discord: session.discord,
+
+		room: false,
+		active: true,
 	};
+
+	function set(key, value) {
+		if (session[key] === value) return;
+
+		console.log(`Client "${id}" changed ${key} to "${value}".`);
+
+		session[key] = value;
+
+		broadcast(server, "user", {
+			id: session.id,
+			key: key,
+			value: value,
+		});
+	}
 
 	registerClient(session, server);
 
@@ -91,17 +107,17 @@ function handleConnection(client, server, session) {
 	client.on("room", compressed => {
 		const room = unpack(compressed)?.trim();
 
-		if (room && (typeof room !== "string" || room.length > 32)) return;
-		if (room === session.room) return;
+		if (typeof room !== "string" || room.length > 32) return;
 
-		console.log(`Client ${session.name} set their room to "${room}".`)
+		set("room", room);
+	});
 
-		session.room = room;
+	client.on("active", compressed => {
+		const active = unpack(compressed);
 
-		broadcast(server, "room", {
-			id: session.id,
-			room: session.room,
-		});
+		if (typeof active !== "boolean") return;
+
+		set("active", active);
 	});
 
 	client.on("disconnect", () => {
