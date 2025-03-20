@@ -94,6 +94,8 @@ function handleConnection(client, server, session) {
 		if (room && (typeof room !== "string" || room.length > 32)) return;
 		if (room === session.room) return;
 
+		console.log(`Client ${session.name} set their room to "${room}".`)
+
 		session.room = room;
 
 		broadcast(server, "room", {
