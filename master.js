@@ -78,7 +78,7 @@ export function initMasterRoutes(app) {
 	// History route
 	app.get("/socket/:server/history/:license/:from/:till", authenticate, async (req, resp) => {
 		const params = req.params,
-			license = req.license,
+			license = req.session.license,
 			server = req.server;
 
 		const from = "from" in params ? parseInt(params.from) : false,

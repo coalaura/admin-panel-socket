@@ -1,9 +1,35 @@
 import config from "./config.js";
 import { info, muted, request, warning } from "./colors.js";
-import { getDatabase } from "./database.js";
 import { abort } from "./functions.js";
 
-const sessions = {};
+import { join } from "node:path";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { randomBytes } from "node:crypto";
+import { verify } from "jsonwebtoken";
+
+const secrets = {};
+
+function resolveSecret(cluster) {
+	if (cluster in secrets) {
+		return secrets[cluster];
+	}
+
+	let secret;
+
+	const path = join(config.panel, "envs", cluster, ".jwt");
+
+	if (existsSync(path)) {
+		secret = Buffer.from(readFileSync(path, "utf8"), "base64");
+	} else {
+		secret = randomBytes(48);
+
+		writeFileSync(path, secret.toString("base64"));
+	}
+
+	secrets[cluster] = secret;
+
+	return secret;
+}
 
 export async function checkAuth(cluster, token, ip) {
 	if (config.allowLocal && (ip === "127.0.0.1" || ip.endsWith(":127.0.0.1"))) {
@@ -66,82 +92,37 @@ export async function authenticate(req, resp, next) {
 		return abort(resp, "Unauthorized");
 	}
 
-	// Validation of additional params (if sent)
-	const license = req.params.license;
-
-	if (license && !isValidLicense(license)) {
-		return abort(resp, "Invalid license");
-	}
-
 	console.log(request(req.method, req.url, session.name));
 
 	req.cluster = server.cluster;
 	req.server = server.server;
 	req.session = session;
-	req.license = license;
 
 	next();
 }
 
 async function isValidToken(cluster, token) {
-	if (!config.servers.includes(cluster)) {
+	if (!config.servers.includes(cluster) || !token) {
 		return false;
 	}
 
-	if (!token || !token.match(/^[a-z0-9]{30}$/m)) {
-		return false;
-	}
-
-	if (token in sessions) {
-		return sessions[token];
-	}
-
-	const database = getDatabase(cluster);
-
-	if (!database) {
-		return false;
-	}
+	const secret = resolveSecret(cluster);
 
 	try {
-		const sessions = await database.query("SELECT `key`, `data` FROM `webpanel_sessions` WHERE `key` = ?", [token]);
+		const verified = verify(token, secret, { algorithms: ["HS384"] });
 
-		if (!sessions || !sessions.length) {
-			return false;
+		if (!verified.dsc || !verified.nme || !verified.lic) {
+			throw new Error("missing discord, name or license in jwt token");
 		}
 
-		const session = sessions[0];
-
-		const data = JSON.parse(session.data);
-
-		if (!data || !data.user || !data.discord) {
-			return false;
-		}
-
-		sessions[token] = {
-			name: data.name,
-			discord: data.discord.id,
+		return {
+			license: verified.lic,
+			discord: verified.dsc,
+			name: verified.nme,
 		};
-
-		setTimeout(() => {
-			delete sessions[token];
-		}, 10 * 1000);
-
-		return sessions[token];
 	} catch (e) {
-		console.error(`${warning("Failed to validate session")} ${info(cluster)}: ${muted(e)}`);
-	}
+		console.error(`${warning("Failed to validate jwt")} ${info(cluster)}: ${muted(e)}`);
 
-	return false;
-}
-
-export function isValidLicense(license) {
-	if (!license) {
 		return false;
 	}
-
-	if (license.startsWith("license:")) {
-		license = license.replace("license:", "");
-	}
-
-	return license.match(/^[a-z0-9]{40}$/gm);
 }

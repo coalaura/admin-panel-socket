@@ -1,6 +1,5 @@
 import { getServerByName } from "./server.js";
 import { getLogs } from "./console.js";
-import { isValidLicense } from "./auth.js";
 import { getAverage } from "./average.js";
 import { HistoryBin } from "./history-bin.js";
 import { HistoryStorage } from "./storage.js";
@@ -116,7 +115,7 @@ export class SlaveHandler {
 
 	// Get online status of 1 or more players (cached)
 	get_online(id, srv, options) {
-		const players = options?.split(",")?.filter(player => isValidLicense(player));
+		const players = options?.split(",")?.filter(license => license?.startsWith("license:"));
 
 		if (!players || !players.length) {
 			this.respond(id, {

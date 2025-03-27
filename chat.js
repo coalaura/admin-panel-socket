@@ -1,4 +1,4 @@
-import { checkAuth, parseServer, isValidLicense, authenticate } from "./auth.js";
+import { checkAuth, parseServer, authenticate } from "./auth.js";
 import { abort, rejectClient } from "./functions.js";
 import { pack, unpack } from "./msgpack.js";
 
@@ -36,10 +36,9 @@ export async function initializePanelChat(app, xp) {
 	io.on("connection", async client => {
 		const query = client.handshake.query,
 			server = parseServer(query.server),
-			token = query.token,
-			license = query.license;
+			token = query.token;
 
-		if (!isValidLicense(license) || !token || !server) {
+		if (!token || !server) {
 			return rejectClient(client, "Invalid request");
 		}
 

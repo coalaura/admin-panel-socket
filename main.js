@@ -2,7 +2,7 @@ import { initDataLoop, isValidType } from "./data-loop.js";
 import { handleConnection } from "./client.js";
 import { initSlaves, initMasterRoutes } from "./master.js";
 import { startTwitchUpdateLoop } from "./twitch.js";
-import { checkAuth, parseServer, isValidLicense } from "./auth.js";
+import { checkAuth, parseServer } from "./auth.js";
 import { getSlaveData } from "./slave.js";
 import { initServer } from "./server.js";
 import { rejectClient } from "./functions.js";
@@ -76,18 +76,19 @@ if (cluster.isPrimary) {
 		const query = client.handshake.query,
 			server = parseServer(query.server),
 			token = query.token,
-			type = query.type,
-			license = query.license;
+			type = query.type;
 
-		if (!isValidType(type) || !isValidLicense(license) || !token || !server) {
+		if (!isValidType(type) || !token || !server) {
 			return rejectClient(client, "Invalid request");
 		}
 
-		if (!(await checkAuth(server.cluster, token, client.handshake.address))) {
+		const session = await checkAuth(server.cluster, token, client.handshake.address);
+
+		if (!session) {
 			return rejectClient(client, "Unauthorized");
 		}
 
-		handleConnection(client, server.server, type, license);
+		handleConnection(client, server.server, type, session.license);
 	});
 
 	// Initialize panel chat
