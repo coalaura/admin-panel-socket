@@ -111,12 +111,12 @@ async function isValidToken(cluster, token) {
 	try {
 		const verified = verify(token, secret, { algorithms: ["HS384"] });
 
-		if (!verified.dsc || !verified.nme || !verified.lic) {
+		if (!verified.dsc || !verified.nme || !verified.lcs) {
 			throw new Error("missing discord, name or license in jwt token");
 		}
 
 		return {
-			license: verified.lic,
+			license: verified.lcs,
 			discord: verified.dsc,
 			name: verified.nme,
 		};
