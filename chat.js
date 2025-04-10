@@ -36,7 +36,8 @@ export async function initializePanelChat(app, xp) {
 	io.on("connection", async client => {
 		const query = client.handshake.query,
 			server = parseServer(query.server),
-			token = query.token;
+			token = query.token,
+			group = query.group || false;
 
 		if (!token || !server) {
 			return rejectClient(client, "Invalid request");
@@ -48,7 +49,7 @@ export async function initializePanelChat(app, xp) {
 			return rejectClient(client, "Unauthorized");
 		}
 
-		handleConnection(client, server.server, session);
+		handleConnection(client, server.server, session, group);
 	});
 
 	app.put("/socket/:server/chat", authenticate, async (req, res) => {
@@ -66,8 +67,9 @@ export async function initializePanelChat(app, xp) {
 	});
 }
 
-function handleConnection(client, server, session) {
-	const id = randomBytes(4).readUint32LE();
+function handleConnection(client, server, session, group) {
+	const id = randomBytes(4).readUint32LE(),
+		name = group ? `${server}_${group}` : server;
 
 	session = {
 		id: id,
@@ -88,21 +90,21 @@ function handleConnection(client, server, session) {
 
 		session[key] = value;
 
-		broadcast(server, "user", {
+		broadcast(name, "user", {
 			id: session.id,
 			key: key,
 			value: value,
 		});
 	}
 
-	registerClient(session, server);
+	registerClient(session, name);
 
 	client.on("chat", compressed => {
 		const text = unpack(compressed)?.trim();
 
 		if (!text || text.length > 256) return;
 
-		addMessage(server, session, text);
+		addMessage(name, session, text);
 	});
 
 	client.on("room", compressed => {
@@ -122,11 +124,11 @@ function handleConnection(client, server, session) {
 	});
 
 	client.on("disconnect", () => {
-		unregisterClient(id, server);
+		unregisterClient(id, name);
 	});
 
-	const chat = chats[server],
-		messages = chats[server].messages;
+	const chat = chats[name],
+		messages = chats[name].messages;
 
 	if (chat.clients.length) {
 		client.emit("users", pack(users(chat)));
@@ -137,8 +139,8 @@ function handleConnection(client, server, session) {
 	}
 }
 
-function addMessage(server, session, text, system = false) {
-	const chat = chats[server];
+function addMessage(name, session, text, system = false) {
+	const chat = chats[name];
 
 	if (!chat) return;
 
@@ -161,35 +163,35 @@ function addMessage(server, session, text, system = false) {
 		chat.messages.shift();
 	}
 
-	broadcast(server, "chat", message);
+	broadcast(name, "chat", message);
 
 	persistChat();
 }
 
-function registerClient(client, server) {
-	if (!chats[server]) {
-		chats[server] = {
+function registerClient(client, name) {
+	if (!chats[name]) {
+		chats[name] = {
 			id: 0,
 			clients: [],
 			messages: [],
 		};
 	}
 
-	const chat = chats[server];
+	const chat = chats[name];
 
 	if (!doesUserExist(chat, client.discord) && !clearLeaveTimeout(client.discord)) {
 		const reconnect = !started || Date.now() - started < 5000;
 
-		addMessage(server, client, `${client.name} ${reconnect ? "reconnected" : "joined"}`, true);
+		addMessage(name, client, `${client.name} ${reconnect ? "reconnected" : "joined"}`, true);
 	}
 
 	chat.clients.push(client);
 
-	broadcast(server, "users", users(chat));
+	broadcast(name, "users", users(chat));
 }
 
-function unregisterClient(id, server) {
-	const chat = chats[server];
+function unregisterClient(id, name) {
+	const chat = chats[name];
 
 	if (!chat) return;
 
@@ -203,17 +205,17 @@ function unregisterClient(id, server) {
 		clearLeaveTimeout(client.discord);
 
 		leaving[client.discord] = setTimeout(() => {
-			addMessage(server, client, `${client.name} left`, true);
+			addMessage(name, client, `${client.name} left`, true);
 
 			delete leaving[client.discord];
 		}, 5 * 1000);
 	}
 
-	broadcast(server, "users", users(chat));
+	broadcast(name, "users", users(chat));
 }
 
-function broadcast(server, channel, data) {
-	const chat = chats[server];
+function broadcast(name, channel, data) {
+	const chat = chats[name];
 
 	if (!chat) return;
 
