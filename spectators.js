@@ -40,7 +40,7 @@ async function spectatorsJSON(serverName, url, clients) {
 			const spectators = await updateSpectatorsJSON(server),
 				current = clients.map(client => {
 					const spectator = spectators.find(spectator => spectator.licenseIdentifier === client.license),
-						self = fetchUser(server, client.license),
+						self = fetchUser(server.cluster, client.license),
 						player = getServerPlayer(server, spectator?.spectating);
 
 					return {
