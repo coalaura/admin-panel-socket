@@ -4,9 +4,7 @@ import { danger, error, muted, success } from "./colors.js";
 
 import { createPool } from "mysql2";
 
-const databases = {},
-	characters = {},
-	users = {};
+const databases = {};
 
 export function getDatabase(cluster) {
 	return databases[cluster];
@@ -166,6 +164,7 @@ export function fetchUser(cluster, licenseIdentifier) {
 		.queryOne("SELECT playtime, last_connection FROM users WHERE license_identifier = ?", licenseIdentifier)
 		.then(user => {
 			if (!user) {
+
 				return;
 			}
 
