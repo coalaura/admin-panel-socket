@@ -163,7 +163,7 @@ export function fetchUser(cluster, licenseIdentifier) {
 	database.users[licenseIdentifier] = false;
 
 	database
-		.queryOne("SELECT playtime FROM users WHERE license_identifier = ?", licenseIdentifier)
+		.queryOne("SELECT playtime, last_connection FROM users WHERE license_identifier = ?", licenseIdentifier)
 		.then(user => {
 			if (!user) {
 				return;

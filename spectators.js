@@ -17,14 +17,14 @@ function getPlayerInfo(cluster, player) {
 		return false;
 	}
 
-	const user = fetchUser(cluster, player.licenseIdentifier) || {};
+	const user = fetchUser(cluster, player.licenseIdentifier);
 
 	return {
 		source: player.source,
 		name: player.name,
 		license: player.licenseIdentifier,
 		character: fetchCharacter(cluster, player.character?.id),
-		...user,
+		playtime: user ? user.playtime : false,
 	};
 }
 
@@ -40,6 +40,7 @@ async function spectatorsJSON(serverName, url, clients) {
 			const spectators = await updateSpectatorsJSON(server),
 				current = clients.map(client => {
 					const spectator = spectators.find(spectator => spectator.licenseIdentifier === client.license),
+						self = fetchUser(server, client.license),
 						player = getServerPlayer(server, spectator?.spectating);
 
 					return {
@@ -48,6 +49,7 @@ async function spectatorsJSON(serverName, url, clients) {
 						stream: url.replace("%s", client.identifier),
 						spectating: getPlayerInfo(server.cluster, player),
 						data: spectator?.data || {},
+						session: self ? Math.floor(Date.now() / 1000) - self.last_connection : false,
 					};
 				});
 
