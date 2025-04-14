@@ -49,7 +49,7 @@ async function spectatorsJSON(serverName, url, clients) {
 						stream: url.replace("%s", client.identifier),
 						spectating: getPlayerInfo(server.cluster, player),
 						data: spectator?.data || {},
-						session: self ? self.last_connection : false,
+						session: self?.last_connection || false,
 					};
 				});
 
