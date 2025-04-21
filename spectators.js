@@ -24,7 +24,7 @@ function getPlayerInfo(cluster, player) {
 		name: player.name,
 		license: player.licenseIdentifier,
 		character: fetchCharacter(cluster, player.character?.id),
-		playtime: user ? user.playtime : false,
+		session: user?.last_connection || false,
 	};
 }
 
