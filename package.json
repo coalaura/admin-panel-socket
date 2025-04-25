@@ -11,6 +11,7 @@
     "watch": "knip --watch"
   },
   "dependencies": {
+    "@influxdata/influxdb-client": "^1.35.0",
     "@msgpack/msgpack": "^3.0.0-beta2",
     "chalk": "^5.0.1",
     "cors": "^2.8.5",

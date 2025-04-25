@@ -1,21 +1,15 @@
 import { requestOpFwApi } from "./http.js";
 import { loadOnDutyData } from "./duty.js";
-import { HistoryBin } from "./history-bin.js";
 
 import { getServers, promises as dns } from "node:dns";
+import { storePlayerPositions } from "./influx.js";
 
 export async function updateWorldJSON(server) {
 	const dutyMap = await loadOnDutyData(server);
 
 	const data = await requestOpFwApi(`${server.url}/op-framework/world.json?pack=1`, server.token);
 
-	try {
-		const bin = HistoryBin.getInstance(server.server);
-
-		await bin.writeAll(data.players);
-	} catch (err) {
-		console.warn(`Failed to write to history bin: ${err.message}`);
-	}
+	storePlayerPositions(server.server, data.players);
 
 	const cleaned = data.players.map(player => cleanupPlayer(player, dutyMap));
 

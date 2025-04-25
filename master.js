@@ -3,8 +3,8 @@ import { Slave } from "./slave.js";
 import { authenticate, parseServer } from "./auth.js";
 import { abort } from "./functions.js";
 import { getStreamerData } from "./twitch.js";
-import { resolveHistoricData, resolveTimestampData } from "./history-resolve.js";
 import { warning } from "./colors.js";
+import { loadHistoryData, loadTimestampData } from "./influx.js";
 
 const slaves = {};
 
@@ -78,22 +78,22 @@ export function initMasterRoutes(app) {
 	// History route
 	app.get("/socket/:server/history/:license/:from/:till", authenticate, async (req, resp) => {
 		const params = req.params,
-			license = req.session.license,
 			server = req.server;
 
 		const from = "from" in params ? parseInt(params.from) : false,
-			till = "till" in params ? parseInt(params.till) : false;
+			till = "till" in params ? parseInt(params.till) : false,
+			license = "license" in params ? params.license : false;
 
 		if (!license || !from || from < 0 || !till || till < 0) {
 			return abort(resp, "Invalid request");
 		}
 
-		if (!config.storage) {
+		if (!config.influx) {
 			return abort(resp, "History is unavailable.");
 		}
 
 		try {
-			const data = await resolveHistoricData(server, license, from, till);
+			const data = await loadHistoryData(server, license, from, till);
 
 			resp.json({
 				status: true,
@@ -113,12 +113,12 @@ export function initMasterRoutes(app) {
 
 		if (!timestamp) return abort(resp, "Invalid request");
 
-		if (!config.storage) {
+		if (!config.influx) {
 			return abort(resp, "Timestamp is unavailable.");
 		}
 
 		try {
-			const data = await resolveTimestampData(server, timestamp);
+			const data = await loadTimestampData(server, timestamp);
 
 			resp.json({
 				status: true,

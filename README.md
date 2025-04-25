@@ -7,7 +7,7 @@ OP-FW Socket is a bun application designed to integrate with the [OP-FW Admin](h
 ## Requirements
 - [bun](https://bun.sh/) v1.1.34 or higher
 - At least 2GB of memory (or swap)
-- The [storage server](https://github.com/coalaura/admin-panel-storage)
+- InfluxDB 2.7 ([`docker-compose.yml`](influx/docker-compose.yml))
 
 ## Configuration
 Create a file in the root of the directory called `_config.json`. This is how it should look like (configure to your environment):
@@ -15,10 +15,13 @@ Create a file in the root of the directory called `_config.json`. This is how it
 ```json
 {
     "panel": "/path/to/opfw-admin",
-    "storage": "localhost:4994",
     "servers": [
         "c1", "c2"
     ],
+    "influx": {
+        "url": "http://localhost:8086",
+        "token": "hmqCfGSRS3UUjeQmzpTaH6Qhf8avPzDC"
+    },
     "twitch": {
         "api": "https://op-framework.com/api/twitch/streamers/%s",
         "streamers": [
@@ -32,7 +35,7 @@ Create a file in the root of the directory called `_config.json`. This is how it
 }
 ```
 
-**NOTE:** Make sure the `storage` points to the [storage server](https://github.com/coalaura/admin-panel-storage), otherwise historic data will not be available. Leave it empty to not store any historic data at all.
+**NOTE:** Make sure the `influx.url` points to your [InfluxDB](influx) host and `influx.token` is the same as the `DOCKER_INFLUXDB_INIT_ADMIN_TOKEN` in the [`docker-compose.yml`](influx/docker-compose.yml).
 
 ## Swap Space Configuration
 ```bash

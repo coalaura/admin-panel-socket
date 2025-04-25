@@ -1,9 +1,8 @@
 import { getServerByName } from "./server.js";
 import { getLogs } from "./console.js";
 import { getAverage } from "./average.js";
-import { HistoryBin } from "./history-bin.js";
-import { HistoryStorage } from "./storage.js";
 import { formatUptime } from "./functions.js";
+import { closeInfluxDB } from "./influx.js";
 
 const startup = new Date();
 
@@ -19,9 +18,7 @@ export class SlaveHandler {
 		if (message === "terminate") {
 			console.info(info("Received terminate message, terminating..."));
 
-			const storage = await HistoryBin.getInstance();
-
-			await storage.close();
+			await closeInfluxDB();
 
 			process.exit(0);
 		}
@@ -190,8 +187,6 @@ export class SlaveHandler {
 		const avgWorld = getAverage("world"),
 			avgStaff = getAverage("staff");
 
-		const storage = await HistoryStorage.getInstance();
-
 		const logs = [];
 
 		logs.push(srv ? "+ server object found" : "- server object not found");
@@ -206,14 +201,6 @@ export class SlaveHandler {
 
 		logs.push(`+ startup was ${startup.toUTCString()}`);
 		logs.push(`+ uptime is ${formatUptime(startup)}`);
-
-		const loss = storage.packetLoss();
-
-		if (loss) {
-			logs.push(`+ packet loss is ${loss.loss.toFixed(2)}% (success=${loss.success}, failed=${loss.failed})`);
-		} else {
-			logs.push("- packet loss is unavailable");
-		}
 
 		logs.push("");
 		logs.push((srv?.info ? "+ server.info = " : "- server.info = ") + JSON.stringify(srv?.info));
