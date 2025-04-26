@@ -25,6 +25,8 @@ function connectToInfluxDB() {
 	});
 
 	query = influx.getQueryApi("op-fw");
+
+	console.info("Connected to InfluxDB.");
 }
 
 export async function closeInfluxDB() {
