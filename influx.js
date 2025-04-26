@@ -129,7 +129,7 @@ export async function loadTimestampData(server, timestamp) {
 		};
 	}
 
-	return rows.map(cleanRow);
+	return result;
 }
 
 export async function loadHistoryData(server, license, from, till) {
