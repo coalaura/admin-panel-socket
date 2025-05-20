@@ -1,9 +1,11 @@
 import cluster from "node:cluster";
 
-import { abort, equals } from "./functions.js";
+import { abort } from "./functions.js";
 import { getActiveViewers, handleDataUpdate } from "./client.js";
 import { SlaveHandler } from "./slave-handler.js";
 import { danger, success, warning } from "./colors.js";
+import { diff } from "./diff.js";
+import { sendSingleUpdate } from "./updates.js";
 
 const routes = SlaveHandler.routes();
 
@@ -19,6 +21,7 @@ export class Slave {
 
 	#terminating = false;
 	#online = false;
+	#status = false;
 
 	#callbacks = {
 		up: [],
@@ -32,8 +35,16 @@ export class Slave {
 		this.#fork();
 
 		this.on("down", () => {
+			this.#updateStatus(false);
+
 			this.#fork();
 		});
+	}
+
+	#updateStatus(status) {
+		this.#status = status;
+
+		sendSingleUpdate(this.#server, "status", this.#status);
 	}
 
 	on(event, callback) {
@@ -123,10 +134,14 @@ export class Slave {
 		});
 
 		this.#cluster.on("message", message => {
-			const { id, type, data, forceDiff } = message;
+			const { id, type, data } = message;
 
 			if (type === "hello") {
 				this.#trigger("up");
+
+				return;
+			} else if (type === "status") {
+				this.#updateStatus(data);
 
 				return;
 			} else if (type === "request") {
@@ -142,7 +157,7 @@ export class Slave {
 				data.viewers = getActiveViewers(this.#server, "world");
 			}
 
-			handleDataUpdate(type, this.#server, this.#diff(type, data, forceDiff));
+			handleDataUpdate(type, this.#server, this.#diff(type, data));
 
 			this.#data[type] = data;
 		});
@@ -153,61 +168,19 @@ export class Slave {
 			this.#trigger("down");
 		});
 
-		this.#cluster.on("exit", (code, signal) => {
+		this.#cluster.on("exit", () => {
 			this.#kill();
 
 			this.#trigger("down");
 		});
 	}
 
-	#diff(type, data, forceDiff = false) {
-		const compare = (df, a, b) => {
-			if (Array.isArray(a)) {
-				if (equals(a, b)) {
-					return [];
-				}
-
-				return a;
-			} else if (typeof a === "object") {
-				df = {};
-
-				const bValid = typeof b === "object" && b !== null;
-
-				for (const key in a) {
-					const newValue = a[key],
-						oldValue = bValid ? b[key] : null;
-
-					const newType = typeof newValue,
-						oldType = typeof oldValue;
-
-					if (newType !== oldType) {
-						if (newType === "undefined" || newValue === null) {
-							df[key] = null;
-						} else {
-							df[key] = newValue;
-						}
-					} else if (newType === "object") {
-						const newDiff = compare(df[key], newValue, oldValue);
-
-						if (Object.keys(newDiff).length) {
-							df[key] = newDiff;
-						}
-					} else if (newValue !== oldValue) {
-						df[key] = newValue;
-					}
-				}
-
-				return df;
-			}
-
-			return a;
-		};
-
+	#diff(type, data) {
 		if (!this.#data[type]) {
 			this.#data[type] = {};
 		}
 
-		return compare({}, data, this.#data[type]);
+		return diff(this.#data[type], data);
 	}
 
 	#ipc(resolve, func, options) {

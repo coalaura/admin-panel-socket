@@ -2,7 +2,6 @@ import config from "./config.js";
 import { Slave } from "./slave.js";
 import { authenticate, parseServer } from "./auth.js";
 import { abort } from "./functions.js";
-import { getStreamerData } from "./twitch.js";
 import { warning } from "./colors.js";
 import { loadHistoryData, loadTimestampData } from "./influx.js";
 
@@ -127,13 +126,5 @@ export function initMasterRoutes(app) {
 		} catch (e) {
 			abort(resp, e.message);
 		}
-	});
-
-	// Misc data routes (no authentication)
-	app.get("/socket/:server/misc/twitch", (req, resp) => {
-		resp.json({
-			status: true,
-			data: getStreamerData(),
-		});
 	});
 }

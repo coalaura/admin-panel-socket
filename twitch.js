@@ -1,11 +1,6 @@
 import config from "./config.js";
 import { success } from "./colors.js";
-
-let streamerData = {};
-
-export function getStreamerData() {
-	return streamerData;
-}
+import { sendFullUpdate } from "./updates.js";
 
 export function startTwitchUpdateLoop() {
 	const api = config.twitch?.api,
@@ -24,7 +19,7 @@ async function updateTwitchData(api, streamers) {
 			data = await response.json();
 
 		if (data && Array.isArray(data)) {
-			streamerData = data.filter(streamer => streamer?.live);
+			sendFullUpdate("twitch", data.filter(streamer => streamer?.live))
 		}
 	} catch {}
 

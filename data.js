@@ -85,13 +85,17 @@ export async function checkIfServerIsUp(server) {
 }
 
 async function canResolveServerDNS(url) {
-	if (!url || url.match(/\d+\.\d+\.\d+\.\d+/)) {
+	if (!url) {
 		return;
 	}
 
 	const uri = new URL(url),
 		host = uri.host,
 		servers = getServers();
+
+	if (host.match(/\d+\.\d+\.\d+\.\d+/) || host.startsWith("localhost")) {
+		return;
+	}
 
 	try {
 		const result = await dns.lookup(host);

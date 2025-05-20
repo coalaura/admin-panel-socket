@@ -3,7 +3,7 @@ import { muted, warning } from "./colors.js";
 export function abort(resp, err) {
 	resp.json({
 		status: false,
-		error: err
+		error: err,
 	});
 }
 
@@ -37,45 +37,12 @@ export function reverse(array) {
 	return reversed;
 }
 
-export function equals(a, b) {
-	const typeA = typeof a,
-		typeB = typeof b;
-
-	if (typeA !== typeB) {
-		return false;
-	} else if (Array.isArray(a)) {
-		if (!Array.isArray(b) || a.length !== b.length) {
-			return false;
-		}
-
-		for (let x = 0; x < a.length; x++) {
-			if (!equals(a[x], b[x])) {
-				return false;
-			}
-		}
-
-		return true;
-	} else if (typeA === "object") {
-		if (a === null && b === null) {
-			return true;
-		} else if (a === null || b === null) {
-			return false;
-		}
-
-		if (Object.keys(a).length !== Object.keys(b).length) {
-			return false;
-		}
-
-		for (const key in a) {
-			if (!equals(a[key], b[key])) {
-				return false;
-			}
-		}
-
-		return true;
+export function round(num, by) {
+	if (num === 0) {
+		return num;
 	}
 
-	return a === b;
+	return Math.round(num * by) / by;
 }
 
 export function formatUptime(since) {
@@ -94,6 +61,8 @@ export function formatUptime(since) {
 		days ? `${days} day${days > 1 ? "s" : ""}` : false,
 		hours ? `${hours} hour${hours > 1 ? "s" : ""}` : false,
 		minutes ? `${minutes} minute${minutes > 1 ? "s" : ""}` : false,
-		`${seconds} second${seconds > 1 ? "s" : ""}`
-	].filter(Boolean).join(" ")
+		`${seconds} second${seconds > 1 ? "s" : ""}`,
+	]
+		.filter(Boolean)
+		.join(" ");
 }

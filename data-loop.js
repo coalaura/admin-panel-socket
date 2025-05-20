@@ -2,6 +2,20 @@ import { updateWorldJSON, updateStaffJSON, checkIfServerIsUp } from "./data.js";
 import { getServers, getServerByName } from "./server.js";
 import { trackAverage } from "./average.js";
 import { muted, success, warning, info as _info } from "./colors.js";
+import { round } from "./functions.js";
+
+function bubbleStatusUpdate(server) {
+	process.send({
+		type: "status",
+		data: {
+			baseTime: round(server.world?.baseTime || 0, 10),
+			uptime: server.info?.uptime || 0,
+			name: server.info?.name || "",
+			logo: server.info?.logo || "",
+			players: Array.isArray(server.players) ? server.players.length : 0,
+		},
+	});
+}
 
 async function worldJSON(serverName) {
 	const server = getServerByName(serverName);
@@ -24,6 +38,8 @@ async function worldJSON(serverName) {
 
 			console.error(`${warning("Failed to load world.json")} ${_info(String(server.url))}: ${muted(e)}`);
 		}
+
+		bubbleStatusUpdate(server);
 
 		const took = Date.now() - start;
 
@@ -58,6 +74,8 @@ async function staffJSON(serverName) {
 			server.down = true;
 			server.downError = e.message;
 
+			bubbleStatusUpdate(server);
+
 			console.error(`${warning("Failed to load staffChat.json")} ${_info(String(server.url))}: ${muted(e)}`);
 		}
 
@@ -87,6 +105,8 @@ async function downChecker(serverName) {
 
 			server.down = false;
 			server.downError = null;
+
+			bubbleStatusUpdate(server);
 		}
 	}
 }
@@ -115,7 +135,7 @@ export function initDataLoop() {
 }
 
 export function isValidType(type) {
-	return type && ["world", "staff", "spectators"].includes(type);
+	return type && ["world", "staff", "spectators", "updates"].includes(type);
 }
 
 function runIntervalDelayed(fn, delay, interval) {

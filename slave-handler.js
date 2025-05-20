@@ -46,14 +46,6 @@ export class SlaveHandler {
 				this.get_spectators(id, srv);
 
 				return;
-			case "server":
-				this.get_server(id, srv);
-
-				return;
-			case "count":
-				this.get_count(id, srv);
-
-				return;
 			case "health":
 				this.get_health(id, srv);
 
@@ -80,7 +72,7 @@ export class SlaveHandler {
 			data: ["/players", "/online", "/spectators"],
 
 			// Static routes require no authentication
-			static: ["/server", "/count", "/health"],
+			static: ["/health"],
 		};
 	}
 
@@ -154,31 +146,6 @@ export class SlaveHandler {
 		this.respond(id, {
 			status: true,
 			data: srv.spectators || [],
-		});
-	}
-
-	// Get server info
-	get_server(id, srv) {
-		const data = {
-			baseTime: srv.world?.baseTime || 0,
-			uptime: srv.info?.uptime || 0,
-			name: srv.info?.name || "",
-			logo: srv.info?.logo || "",
-		};
-
-		this.respond(id, {
-			status: true,
-			data: data,
-		});
-	}
-
-	// Get server player count
-	get_count(id, srv) {
-		const count = srv.players?.length || 0;
-
-		this.respond(id, {
-			status: true,
-			data: count,
 		});
 	}
 

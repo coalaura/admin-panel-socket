@@ -1,5 +1,5 @@
 import { readDotEnv } from "./env.js";
-import { danger, error, success, warning } from "./colors.js";
+import { danger, error, success } from "./colors.js";
 
 const servers = {};
 

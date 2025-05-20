@@ -3,6 +3,7 @@ import { v4 } from "uuid";
 import { getSlaveData } from "./master.js";
 import { counter, danger, muted, success, warning, info } from "./colors.js";
 import { pack } from "./msgpack.js";
+import { getFullUpdateData } from "./updates.js";
 
 const connections = {},
 	total = {};
@@ -41,8 +42,16 @@ function count(server, type) {
 	return 0;
 }
 
+function getFullDataForType(server, type) {
+	if (type === "updates") {
+		return getFullUpdateData(server);
+	}
+
+	return getSlaveData(server, type);
+}
+
 function sendFullData(client, server, type) {
-	const data = getSlaveData(server, type);
+	const data = getFullDataForType(server, type);
 
 	if (!data) {
 		client.emit("no_data");
@@ -65,12 +74,14 @@ export function handleConnection(client, server, type, license) {
 	};
 
 	increment(self.server, self.type);
+
 	connections[self.id] = self;
 
 	console.log(`${success("Connected")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)} - ${counter(count(self.server, self.type))}`);
 
 	self.client.on("disconnect", () => {
 		decrement(self.server, self.type);
+
 		delete connections[self.id];
 
 		console.log(`${danger("Disconnected")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)} - ${counter(count(self.server, self.type))}`);
