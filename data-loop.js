@@ -8,7 +8,7 @@ function bubbleStatusUpdate(server) {
 	process.send({
 		type: "status",
 		data: {
-			baseTime: round(server.world?.baseTime || 0, 10),
+			baseTime: round(server.world?.baseTime || 0, 60),
 			uptime: server.info?.uptime || 0,
 			name: server.info?.name || "",
 			logo: server.info?.logo || "",

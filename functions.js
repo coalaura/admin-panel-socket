@@ -42,7 +42,7 @@ export function round(num, by) {
 		return num;
 	}
 
-	return Math.round(num * by) / by;
+	return Math.floor(Math.round(num * by) / by);
 }
 
 export function formatUptime(since) {
