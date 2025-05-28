@@ -5,7 +5,7 @@ import { abort } from "./functions.js";
 import { join } from "node:path";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
-import { verify } from "jsonwebtoken";
+import { decode, verify } from "jsonwebtoken";
 import { hasFunctioningDatabase } from "./database.js";
 
 const secrets = {};
@@ -44,13 +44,13 @@ export async function checkAuth(cluster, token, ip) {
 		return false;
 	}
 
-	const session = await isValidToken(cluster, token);
-
-	if (!session) {
+	if (!config.servers.includes(cluster) || !hasFunctioningDatabase(cluster)) {
 		return false;
 	}
 
-	if (!config.servers.includes(cluster) || !hasFunctioningDatabase(cluster)) {
+	const session = await isValidToken(cluster, token);
+
+	if (!session) {
 		return false;
 	}
 
@@ -103,10 +103,6 @@ export async function authenticate(req, resp, next) {
 }
 
 async function isValidToken(cluster, token) {
-	if (!config.servers.includes(cluster) || !token) {
-		return false;
-	}
-
 	const secret = resolveSecret(cluster);
 
 	try {
@@ -122,8 +118,18 @@ async function isValidToken(cluster, token) {
 			name: verified.nme,
 		};
 	} catch (e) {
-		console.error(`${warning("Failed to validate jwt")} ${info(cluster)}: ${muted(e)}`);
+		console.error(`${warning("Failed to validate jwt")} ${info(cluster)} (${getNameFromJwt(token) || "n/a"}): ${muted(e)}`);
 
 		return false;
 	}
+}
+
+function getNameFromJwt(token) {
+	try {
+		const decoded = decode(token);
+
+		return decoded?.nme;
+	} catch {}
+
+	return false;
 }
