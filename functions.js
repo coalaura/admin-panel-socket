@@ -8,7 +8,7 @@ export function abort(resp, err) {
 }
 
 export function rejectClient(client, err) {
-	client.emit("message", err);
+	client.emit("rejection", err);
 
 	client.disconnect(true);
 
