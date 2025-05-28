@@ -6,6 +6,7 @@ import { join } from "node:path";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
 import { verify } from "jsonwebtoken";
+import { hasFunctioningDatabase } from "./database.js";
 
 const secrets = {};
 
@@ -49,7 +50,7 @@ export async function checkAuth(cluster, token, ip) {
 		return false;
 	}
 
-	if (!config.servers.includes(cluster)) {
+	if (!config.servers.includes(cluster) || !hasFunctioningDatabase(cluster)) {
 		return false;
 	}
 

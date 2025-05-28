@@ -6,6 +6,10 @@ import { createPool } from "mysql2";
 
 const databases = {};
 
+export function hasFunctioningDatabase(cluster) {
+	return !!databases[cluster];
+}
+
 export function getDatabase(cluster) {
 	return databases[cluster];
 }

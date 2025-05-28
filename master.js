@@ -4,6 +4,7 @@ import { authenticate, parseServer } from "./auth.js";
 import { abort } from "./functions.js";
 import { warning } from "./colors.js";
 import { loadHistoryData, loadTimestampData } from "./influx.js";
+import { hasFunctioningDatabase } from "./database.js";
 
 const slaves = {};
 
@@ -23,11 +24,17 @@ async function terminateAll() {
 
 export function initSlaves(only = null) {
 	for (let i = 0; i < config.servers.length; i++) {
-		const server = config.servers[i];
+		const cluster = config.servers[i];
 
-		if (only && server !== only) continue;
+		if (only && cluster !== only) continue;
 
-		slaves[server] = new Slave(i + 1, server);
+		if (!hasFunctioningDatabase(cluster)) {
+			console.warn(warning(`Skipping ${cluster} due to database failure.`));
+
+			continue;
+		}
+
+		slaves[cluster] = new Slave(i + 1, cluster);
 	}
 
 	process.on("SIGTERM", async () => {

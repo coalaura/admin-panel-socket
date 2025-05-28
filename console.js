@@ -98,6 +98,16 @@ function resolveLogFile(name) {
 	});
 }
 
+function fmt(args) {
+	return args.map(val => {
+		if (typeof val === "object" || Array.isArray(val)) {
+			return JSON.stringify(val, null, 2);
+		}
+
+		return val.toString();
+	});
+}
+
 export function getLogs() {
 	return logs;
 }
@@ -109,16 +119,6 @@ export function registerErrorHandlers() {
 
 	process.on("uncaughtException", unhandled);
 	process.on("unhandledRejection", unhandled);
-}
-
-function fmt(args) {
-	return args.map(val => {
-		if (typeof val === "object" || Array.isArray(val)) {
-			return JSON.stringify(val, null, 2);
-		}
-
-		return val.toString();
-	});
 }
 
 export function registerConsole(name) {
