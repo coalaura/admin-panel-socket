@@ -1,5 +1,5 @@
 import config from "./config.js";
-import { info, muted, request, warning } from "./colors.js";
+import { muted, request } from "./colors.js";
 import { abort } from "./functions.js";
 
 import { join } from "node:path";
@@ -128,7 +128,13 @@ async function isValidToken(cluster, token) {
 			name: verified.nme,
 		};
 	} catch (e) {
-		console.debug(muted(`fail [${getNameFromJwt(token) || "n/a"}]: ${e}`));
+		let time;
+
+		if (e.expiredAt) {
+			time = new Date(e.expiredAt * 1000).toISOString();
+		}
+
+		console.debug(muted(`fail [${getNameFromJwt(token) || "n/a"}]: ${e.message}${time ? ` (expiry=${time})` : ""}`));
 
 		return false;
 	}
