@@ -41,10 +41,14 @@ export async function checkAuth(cluster, token, ip) {
 	}
 
 	if (!cluster || !token) {
+		console.debug(muted("fail [-]: no token or cluster"));
+
 		return false;
 	}
 
 	if (!config.servers.includes(cluster) || !hasFunctioningDatabase(cluster)) {
+		console.debug(muted(`fail [${getNameFromJwt(token) || "n/a"}]: unknown or failed cluster`));
+
 		return false;
 	}
 
@@ -84,13 +88,13 @@ export async function authenticate(req, resp, next) {
 	const server = parseServer(req.params.server);
 
 	if (!server) {
-		return abort(resp, "Invalid server");
+		return abort(resp, "invalid server");
 	}
 
 	const session = await checkAuth(server.cluster, req.query.token, req.ip);
 
 	if (!session) {
-		return abort(resp, "Unauthorized");
+		return abort(resp, "unauthorized");
 	}
 
 	console.log(request(req.method, req.url, session.name));
@@ -109,7 +113,7 @@ async function isValidToken(cluster, token) {
 		const verified = verify(token, secret, { algorithms: ["HS384"] });
 
 		if (!verified.dsc || !verified.nme || !verified.lcs) {
-			throw new Error("missing discord, name or license in jwt token");
+			throw new Error("missing discord, name or license in jwt token (how?)");
 		}
 
 		return {
@@ -118,7 +122,7 @@ async function isValidToken(cluster, token) {
 			name: verified.nme,
 		};
 	} catch (e) {
-		console.error(`${warning("Failed to validate jwt")} ${info(cluster)} (${getNameFromJwt(token) || "n/a"}): ${muted(e)}`);
+		console.debug(muted(`fail [${getNameFromJwt(token) || "n/a"}]: ${e}`));
 
 		return false;
 	}

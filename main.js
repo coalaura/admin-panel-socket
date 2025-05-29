@@ -79,13 +79,13 @@ if (cluster.isPrimary) {
 			type = query.type;
 
 		if (!isValidType(type) || !token || !server) {
-			return rejectClient(client, "Invalid request");
+			return rejectClient(client, "invalid request");
 		}
 
 		const session = await checkAuth(server.cluster, token, client.handshake.address);
 
 		if (!session) {
-			return rejectClient(client, "Unauthorized");
+			return rejectClient(client, "unauthorized");
 		}
 
 		handleConnection(client, server.server, type, session.license);
