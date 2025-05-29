@@ -54,8 +54,6 @@ export function formatDuration(amount, unit = "s") {
 			["m", 60],
 			["s", 1],
 			["ms", 0.001],
-			["us", 0.000001],
-			["ns", 0.000000001],
 		],
 		convert = units.find(ut => ut[0] === unit);
 
