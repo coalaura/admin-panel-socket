@@ -131,7 +131,7 @@ async function isValidToken(cluster, token) {
 		let time;
 
 		if (e.expiredAt) {
-			time = formatDuration(new Date().getTime() - e.expiredAt, "ms");
+			time = formatDuration(new Date().getTime() - e.expiredAt, "ms", "s");
 		}
 
 		console.debug(muted(`fail [${getNameFromJwt(token) || "n/a"}]: ${e.message}${time ? ` (expiry=${time})` : ""}`));

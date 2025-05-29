@@ -45,7 +45,7 @@ export function round(num, by) {
 	return Math.floor(Math.round(num * by) / by);
 }
 
-export function formatDuration(amount, unit = "s") {
+export function formatDuration(amount, unit = "s", min = false) {
 	const units = [
 			["yr", 31536000],
 			["mo", 2592000],
@@ -79,10 +79,12 @@ export function formatDuration(amount, unit = "s") {
 
 			seconds -= sub * multi;
 		}
+
+		if (min && name === min) break;
 	}
 
 	if (time.length === 0) {
-		return "-";
+		return min ? `~0${min}` : "-";
 	}
 
 	return (neg ? "-" : "") + time.join("");
