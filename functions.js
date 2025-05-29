@@ -63,9 +63,9 @@ export function formatDuration(amount, unit = "s") {
 		throw new Error(`invalid unit "${unit}"`);
 	}
 
-	if (amount <= 0) {
-		return "-";
-	}
+	const neg = amount < 0;
+
+	amount = neg ? -amount : amount;
 
 	let seconds = amount * convert[1];
 
@@ -87,7 +87,7 @@ export function formatDuration(amount, unit = "s") {
 		return "-";
 	}
 
-	return time.join("");
+	return (neg ? "-" : "") + time.join("");
 }
 
 export function formatUptime(since) {
