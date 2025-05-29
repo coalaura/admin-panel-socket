@@ -1,6 +1,6 @@
 import config from "./config.js";
 import { muted, request } from "./colors.js";
-import { abort } from "./functions.js";
+import { abort, formatDuration } from "./functions.js";
 
 import { join } from "node:path";
 import { existsSync, readFileSync, writeFileSync } from "node:fs";
@@ -131,7 +131,7 @@ async function isValidToken(cluster, token) {
 		let time;
 
 		if (e.expiredAt) {
-			time = new Date(e.expiredAt).toISOString();
+			time = formatDuration(Math.floor(new Date().getTime() / 1000) - e.expiredAt);
 		}
 
 		console.debug(muted(`fail [${getNameFromJwt(token) || "n/a"}]: ${e.message}${time ? ` (expiry=${time})` : ""}`));

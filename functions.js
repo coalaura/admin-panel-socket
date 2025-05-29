@@ -45,6 +45,51 @@ export function round(num, by) {
 	return Math.floor(Math.round(num * by) / by);
 }
 
+export function formatDuration(amount, unit = "s") {
+	const units = [
+			["yr", 31536000],
+			["mo", 2592000],
+			["d", 86400],
+			["h", 3600],
+			["m", 60],
+			["s", 1],
+			["ms", 0.001],
+			["us", 0.000001],
+			["ns", 0.000000001],
+		],
+		convert = units.find(ut => ut[0] === unit);
+
+	if (!convert) {
+		throw new Error(`invalid unit "${unit}"`);
+	}
+
+	if (amount <= 0) {
+		return "-";
+	}
+
+	let seconds = amount * convert[1];
+
+	const time = [];
+
+	for (const unit of units) {
+		const [name, multi] = unit;
+
+		if (seconds >= multi) {
+			const sub = Math.floor(seconds / multi);
+
+			time.push(`${sub}${name}`);
+
+			seconds -= sub * multi;
+		}
+	}
+
+	if (time.length === 0) {
+		return "-";
+	}
+
+	return time.join("");
+}
+
 export function formatUptime(since) {
 	let seconds = Math.floor((Date.now() - since) / 1000);
 
