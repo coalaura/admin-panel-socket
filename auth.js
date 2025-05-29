@@ -46,8 +46,14 @@ export async function checkAuth(cluster, token, ip) {
 		return false;
 	}
 
-	if (!config.servers.includes(cluster) || !hasFunctioningDatabase(cluster)) {
-		console.debug(muted(`fail [${getNameFromJwt(token) || "n/a"}]: unknown or failed cluster`));
+	if (!config.servers.includes(cluster)) {
+		console.debug(muted(`fail [${getNameFromJwt(token) || "n/a"}]: unknown cluster`));
+
+		return false;
+	}
+
+	if (!hasFunctioningDatabase(cluster)) {
+		console.debug(muted(`fail [${getNameFromJwt(token) || "n/a"}]: failed cluster`));
 
 		return false;
 	}
