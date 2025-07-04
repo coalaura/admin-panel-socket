@@ -8,6 +8,7 @@
   "dependencies": {
     "@influxdata/influxdb-client": "^1.35.0",
     "@msgpack/msgpack": "^3.0.0-beta2",
+    "bufferutil": "^4.0.9",
     "chalk": "^5.0.1",
     "cors": "^2.8.5",
     "dotenv": "^16.0.3",
@@ -16,10 +17,8 @@
     "moment": "^2.29.4",
     "mysql2": "^3.6.3",
     "pako": "^2.0.4",
-    "socket.io": "^4.8.1",
-    "uuid": "^8.3.2"
-  },
-  "devDependencies": {
-    "@types/node": "^22.5.5"
+    "utf-8-validate": "^6.0.5",
+    "uuid": "^8.3.2",
+    "ws": "^8.18.3"
   }
 }

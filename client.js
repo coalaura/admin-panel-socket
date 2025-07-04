@@ -2,8 +2,8 @@ import { v4 } from "uuid";
 
 import { getSlaveData } from "./master.js";
 import { counter, danger, muted, success, warning, info } from "./colors.js";
-import { pack } from "./msgpack.js";
 import { getFullUpdateData } from "./updates.js";
+import { Client } from "./io.js";
 
 const connections = {},
 	total = {};
@@ -59,16 +59,16 @@ function sendFullData(client, server, type) {
 		return;
 	}
 
-	client.emit("reset", Uint8Array.from(pack(data)).buffer);
+	client.emit("reset", data);
 }
 
-export function handleConnection(client, server, type, license) {
+export function handleConnection(ws, server, session, type) {
 	const self = {
 		id: v4(),
-		client: client,
+		client: new Client(ws),
 		server: server,
 		type: type,
-		license: license,
+		license: session.license,
 
 		paused: false,
 	};
@@ -84,7 +84,7 @@ export function handleConnection(client, server, type, license) {
 
 		delete connections[self.id];
 
-		console.log(`${danger("Disconnected")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)} - ${counter(count(self.server, self.type))}: ${muted(reason || "no_reason")}`);
+		console.log(`${danger("Disconnected")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)} - ${counter(count(self.server, self.type))}`);
 	});
 
 	self.client.on("pause", paused => {
@@ -124,15 +124,13 @@ export function handleDataUpdate(type, server, data) {
 		return;
 	}
 
-	data = pack(data);
-
 	for (const id in connections) {
 		if (!connections.hasOwnProperty(id)) continue;
 
 		const client = connections[id];
 
 		if (!client.paused && client.type === type && client.server === server) {
-			client.client.emit("message", Uint8Array.from(data).buffer);
+			client.client.emit("message", data);
 		}
 	}
 }

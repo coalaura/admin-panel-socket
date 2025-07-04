@@ -7,12 +7,11 @@ export function abort(resp, err) {
 	});
 }
 
-export function rejectClient(client, err) {
-	client.emit("rejection", err);
+export function rejectClient(socket, code, err) {
+	socket.write(`HTTP/1.1 ${code} ${err}\r\n\r\n`);
+	socket.destroy();
 
-	client.disconnect(true);
-
-	console.log(`${warning("Rejected connection")} ${muted(`from ${client.handshake.address} for: ${err}`)}`);
+	console.log(`${warning("Rejected connection")} ${muted(`from ${socket.remoteAddress} for: ${err}`)}`);
 }
 
 export function formatNumber(pNumber, pDecimals) {

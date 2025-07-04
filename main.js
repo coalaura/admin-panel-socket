@@ -5,21 +5,21 @@ import { startTwitchUpdateLoop } from "./twitch.js";
 import { checkAuth, parseServer } from "./auth.js";
 import { getSlaveData } from "./slave.js";
 import { initServer } from "./server.js";
-import { rejectClient } from "./functions.js";
 import { registerErrorHandlers, registerConsole } from "./console.js";
 import { initDatabases } from "./database.js";
 import { SlaveHandler } from "./slave-handler.js";
-import { success, warning } from "./colors.js";
+import { success, warning, muted } from "./colors.js";
 import { parseArguments } from "./arguments.js";
-import { initializePanelChat } from "./chat.js";
+import { handleChatConnection, initializePanelChat } from "./chat.js";
 import { startSpectatorLoop } from "./spectators.js";
 
 import { createServer } from "node:http";
 import cluster from "node:cluster";
 import express from "express";
-import { Server } from "socket.io";
+import { WebSocketServer } from "ws";
 import cors from "cors";
 import { semver } from "bun";
+import { rejectClient } from "./functions.js";
 
 if (!semver.satisfies(Bun.version, "^1.1.34")) {
 	console.error("Please use bun v1.1.34 or higher.");
@@ -64,35 +64,60 @@ if (cluster.isPrimary) {
 	initMasterRoutes(app);
 
 	// Initialize socket.io server
-	const io = new Server(xp, {
-		cors: {
-			origin: "*",
-			methods: ["GET", "POST"],
-		},
-		path: "/io",
+	const wss = new WebSocketServer({
+		noServer: true,
 	});
 
-	io.on("connection", async client => {
-		const query = client.handshake.query,
-			server = parseServer(query.server),
+	xp.on("upgrade", async (request, socket, head) => {
+		const url = new URL(request.url, `http://${request.headers.host}`),
+			query = Object.fromEntries(url.searchParams.entries());
+
+		const server = parseServer(query.server),
 			token = query.token,
 			type = query.type;
 
-		if (!isValidType(type) || !token || !server) {
-			return rejectClient(client, "invalid request");
+		if (!token || !server) {
+			rejectClient(socket, 401, "unauthorized");
+
+			return;
 		}
 
-		const session = await checkAuth(server.cluster, token, client.handshake.address);
+		let handler;
+
+		switch (url.pathname) {
+			case "/io":
+				if (!isValidType(type)) {
+					rejectClient(socket, 400, "invalid request");
+				}
+
+				handler = handleConnection;
+
+				break;
+			case "/panel_chat":
+				handler = handleChatConnection;
+
+				break;
+			default:
+				rejectClient(socket, 404, "unknown path");
+
+				return;
+		}
+
+		const session = await checkAuth(server.cluster, token, socket.remoteAddress);
 
 		if (!session) {
-			return rejectClient(client, "unauthorized");
+			rejectClient(socket, 401, "unauthorized");
+
+			return;
 		}
 
-		handleConnection(client, server.server, type, session.license);
+		wss.handleUpgrade(request, socket, head, ws => {
+			handler(ws, server.server, session, type);
+		});
 	});
 
 	// Initialize panel chat
-	initializePanelChat(app, xp);
+	initializePanelChat(app);
 
 	// Start the server
 	xp.listen(9999, () => {

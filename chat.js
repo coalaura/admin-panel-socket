@@ -1,9 +1,9 @@
-import { checkAuth, parseServer, authenticate } from "./auth.js";
-import { abort, rejectClient } from "./functions.js";
-import { pack, unpack } from "./msgpack.js";
-
-import { Server } from "socket.io";
 import { randomBytes } from "node:crypto";
+
+import { authenticate } from "./auth.js";
+import { abort } from "./functions.js";
+import { danger, muted, success, info } from "./colors.js";
+import { Client } from "./io.js";
 
 const chats = {},
 	leaving = {};
@@ -20,37 +20,10 @@ function clearLeaveTimeout(discord) {
 	return true;
 }
 
-export async function initializePanelChat(app, xp) {
+export async function initializePanelChat(app) {
 	await loadChat();
 
 	started = Date.now();
-
-	const io = new Server(xp, {
-		cors: {
-			origin: "*",
-			methods: ["GET", "POST"],
-		},
-		path: "/panel_chat",
-	});
-
-	io.on("connection", async client => {
-		const query = client.handshake.query,
-			server = parseServer(query.server),
-			token = query.token,
-			group = query.group || false;
-
-		if (!token || !server) {
-			return rejectClient(client, "Invalid request");
-		}
-
-		const session = await checkAuth(server.cluster, token, client.handshake.address);
-
-		if (!session) {
-			return rejectClient(client, "Unauthorized");
-		}
-
-		handleConnection(client, server.server, session, group);
-	});
 
 	app.put("/socket/:server/chat", authenticate, async (req, res) => {
 		const message = req.body.message;
@@ -67,19 +40,21 @@ export async function initializePanelChat(app, xp) {
 	});
 }
 
-function handleConnection(client, server, session, group) {
+export function handleChatConnection(ws, server, session, group) {
 	const id = randomBytes(4).readUint32LE(),
 		name = group ? `${server}_${group}` : server;
 
 	session = {
 		id: id,
-		client: client,
+		client: new Client(ws),
 		name: session.name,
 		discord: session.discord,
 
 		room: false,
 		active: false,
 	};
+
+	console.log(`${success("Connected")} ${muted(`{${session.discord}}`)} ${info(`chat/${group || "-"}`)}`);
 
 	function set(key, value) {
 		value = value || false;
@@ -99,31 +74,27 @@ function handleConnection(client, server, session, group) {
 
 	registerClient(session, name);
 
-	client.on("chat", compressed => {
-		const text = unpack(compressed)?.trim();
-
+	session.client.on("chat", text => {
 		if (!text || text.length > 256) return;
 
 		addMessage(name, session, text);
 	});
 
-	client.on("room", compressed => {
-		const room = unpack(compressed)?.trim();
-
+	session.client.on("room", room => {
 		if (typeof room !== "string" || room.length > 32) return;
 
 		set("room", room);
 	});
 
-	client.on("active", compressed => {
-		const active = unpack(compressed);
-
+	session.client.on("active", active => {
 		if (typeof active !== "boolean") return;
 
 		set("active", active);
 	});
 
-	client.on("disconnect", () => {
+	session.client.on("disconnect", () => {
+		console.log(`${danger("Disconnected")} ${muted(`{${session.discord}}`)} ${info(`chat/${session.group}`)}`);
+
 		unregisterClient(id, name);
 	});
 
@@ -131,11 +102,11 @@ function handleConnection(client, server, session, group) {
 		messages = chats[name].messages;
 
 	if (chat.clients.length) {
-		client.emit("users", pack(users(chat)));
+		session.client.emit("users", users(chat));
 	}
 
 	if (messages.length) {
-		client.emit("history", pack(messages));
+		session.client.emit("history", messages);
 	}
 }
 
@@ -219,10 +190,8 @@ function broadcast(name, channel, data) {
 
 	if (!chat) return;
 
-	const packed = pack(data);
-
 	for (const client of chat.clients) {
-		client.client.emit(channel, packed);
+		client.client.emit(channel, data);
 	}
 }
 
