@@ -2,7 +2,7 @@ import { readFileSync } from "node:fs";
 
 const configData = JSON.parse(readFileSync("./_config.json", "utf8"));
 
-if (process.env.DOCKER_MODE) {
+if (process.argv.includes("--docker")) {
 	const cluster = process.env.CLUSTER;
 
 	if (!cluster) throw new Error("missing cluster");
