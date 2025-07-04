@@ -79,16 +79,16 @@ export function handleConnection(client, server, type, license) {
 
 	console.log(`${success("Connected")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)} - ${counter(count(self.server, self.type))}`);
 
-	self.client.on("disconnect", () => {
+	self.client.on("disconnect", reason => {
 		decrement(self.server, self.type);
 
 		delete connections[self.id];
 
-		console.log(`${danger("Disconnected")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)} - ${counter(count(self.server, self.type))}`);
+		console.log(`${danger("Disconnected")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)} - ${counter(count(self.server, self.type))}: ${muted(reason || "no_reason")}`);
 	});
 
-	self.client.on("pause", pPause => {
-		self.paused = pPause;
+	self.client.on("pause", paused => {
+		self.paused = paused;
 
 		if (self.paused) {
 			console.log(`${warning("Paused")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)}`);
