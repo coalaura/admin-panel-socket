@@ -16,7 +16,7 @@
     "moment": "^2.29.4",
     "mysql2": "^3.6.3",
     "pako": "^2.0.4",
-    "socket.io": "^4.7.2",
+    "socket.io": "^4.8.1",
     "uuid": "^8.3.2"
   },
   "devDependencies": {
