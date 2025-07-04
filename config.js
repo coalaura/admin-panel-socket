@@ -3,7 +3,7 @@ import { readFileSync } from "node:fs";
 const configData = JSON.parse(readFileSync("./_config.json", "utf8"));
 
 if (process.env.DOCKER_MODE) {
-	const cluster = process.env.CLUSTER;
+	const cluster = process.env.DOCKER_CLUSTER;
 
 	if (!cluster) throw new Error("missing cluster");
 
