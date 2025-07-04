@@ -10,6 +10,8 @@ if (process.env.DOCKER_MODE === "true") {
 	configData.docker = true;
 	configData.panel = "/etc/opfw-config";
 	configData.servers = [cluster];
+
+	console.log(`Docker mode enabled with cluster ${cluster}!`);
 }
 
 export default configData;
