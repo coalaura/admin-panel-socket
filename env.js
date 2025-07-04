@@ -5,11 +5,12 @@ import * as dotenv from "dotenv";
 import { danger } from "./colors.js";
 
 export function readDotEnv(cluster) {
-    const envPath = join(config.panel, "envs", cluster, ".env"),
-		env = dotenv.config({
-			path: envPath,
-			override: true
-		});
+	const path = config.docker ? join(config.panel, ".env") : join(config.panel, "envs", cluster, ".env");
+
+	const env = dotenv.config({
+		path: path,
+		override: true,
+	});
 
 	if (env.error) {
 		throw env.error;
@@ -23,5 +24,5 @@ export function readDotEnv(cluster) {
 		return false;
 	}
 
-    return cfg;
+	return cfg;
 }
