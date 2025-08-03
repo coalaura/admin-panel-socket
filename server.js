@@ -78,7 +78,7 @@ export function initServer(cluster) {
 }
 
 function getServerUrl(ip) {
-	if (ip.match(/^[0-9.]+(:[0-9]+)?$/gm) || ip.startsWith("localhost")) {
+	if (ip.match(/^[0-9.]+(:[0-9]+)?$/gm) || ip.startsWith("localhost") || ip.startsWith("host.docker.internal")) {
 		return `http://${ip}`;
 	}
 

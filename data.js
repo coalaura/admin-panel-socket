@@ -93,7 +93,7 @@ async function canResolveServerDNS(url) {
 		host = uri.host,
 		servers = getServers();
 
-	if (host.match(/\d+\.\d+\.\d+\.\d+/) || host.startsWith("localhost")) {
+	if (host.match(/\d+\.\d+\.\d+\.\d+/) || host.startsWith("localhost") || host.startsWith("host.docker.internal")) {
 		return;
 	}
 
