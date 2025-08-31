@@ -8,7 +8,7 @@ import { initServer } from "./server.js";
 import { registerErrorHandlers, registerConsole } from "./console.js";
 import { initDatabases } from "./database.js";
 import { SlaveHandler } from "./slave-handler.js";
-import { success, warning, muted } from "./colors.js";
+import { success, warning } from "./colors.js";
 import { parseArguments } from "./arguments.js";
 import { handleChatConnection, initializePanelChat } from "./chat.js";
 import { startSpectatorLoop } from "./spectators.js";
