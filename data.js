@@ -7,7 +7,7 @@ import { storePlayerPositions } from "./influx.js";
 export async function updateWorldJSON(server) {
 	const dutyMap = await loadOnDutyData(server);
 
-	const data = await requestOpFwApi(`${server.url}/op-framework/world.json?pack=1`, server.token);
+	const data = await requestOpFwApi(`${server.url}/op-framework/world.json?pack=1&timer=${server.world?.timer || ""}`, server.token);
 
 	storePlayerPositions(server.server, data.players);
 
