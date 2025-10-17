@@ -58,6 +58,7 @@ export function storePlayerPositions(server, players) {
 		point.tag("player", cleanLicense(player.licenseIdentifier));
 
 		point.intField("player_flags", player.flags);
+		point.intField("damage_flags", player.damage);
 		point.intField("character_flags", character.flags);
 		point.intField("character", character.id);
 
@@ -126,6 +127,7 @@ export async function loadTimestampData(server, timestamp) {
 
 			cf: row.character_flags,
 			uf: row.player_flags,
+			df: row.damage_flags,
 		};
 	}
 
@@ -179,10 +181,12 @@ export async function loadHistoryData(server, license, from, till) {
 			z: row.z,
 			s: row.speed,
 
+			df: row.damage_flags,
+
+			d: !!(cFlags & 1), // dead
 			i: !!(cFlags & 8), // invisible
 			c: !!(cFlags & 16), // invincible
 			f: !!(cFlags & 32), // frozen
-			d: !!(cFlags & 1), // dead
 		};
 	}
 
@@ -217,23 +221,4 @@ function cleanTimestamp(time) {
 	const date = new Date(time);
 
 	return Math.floor(date.getTime() / 1000);
-}
-
-function cleanRow(row) {
-	const date = new Date(row._time);
-
-	return {
-		timestamp: Math.floor(date.getTime() / 1000),
-		license: row.player,
-		character: row.character,
-
-		x: row.x,
-		y: row.y,
-		z: row.z,
-		w: row.w,
-		speed: row.speed,
-
-		character_flags: row.character_flags,
-		player_flags: row.player_flags,
-	};
 }

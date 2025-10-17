@@ -125,6 +125,7 @@ function cleanupPlayer(player, dutyMap) {
 		coords: player.coords,
 		speed: player.speed,
 		flags: player.flags,
+		damage: player.damage,
 		instance: {
 			id: player.instanceId,
 			name: player.instance,
