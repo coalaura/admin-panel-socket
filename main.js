@@ -1,25 +1,24 @@
-import { initDataLoop, isValidType } from "./data-loop.js";
-import { handleConnection } from "./client.js";
-import { initSlaves, initMasterRoutes } from "./master.js";
-import { startTwitchUpdateLoop } from "./twitch.js";
-import { checkAuth, parseServer } from "./auth.js";
-import { getSlaveData } from "./slave.js";
-import { initServer } from "./server.js";
-import { registerErrorHandlers, registerConsole } from "./console.js";
-import { initDatabases } from "./database.js";
-import { SlaveHandler } from "./slave-handler.js";
-import { success, warning } from "./colors.js";
-import { parseArguments } from "./arguments.js";
-import { handleChatConnection, initializePanelChat } from "./chat.js";
-import { startSpectatorLoop } from "./spectators.js";
-
-import { createServer } from "node:http";
 import cluster from "node:cluster";
+import { createServer } from "node:http";
+import { semver } from "bun";
+import cors from "cors";
 import express from "express";
 import { WebSocketServer } from "ws";
-import cors from "cors";
-import { semver } from "bun";
+import { parseArguments } from "./arguments.js";
+import { checkAuth, parseServer } from "./auth.js";
+import { handleChatConnection, initializePanelChat } from "./chat.js";
+import { handleConnection } from "./client.js";
+import { success, warning } from "./colors.js";
+import { registerConsole, registerErrorHandlers } from "./console.js";
+import { initDataLoop, isValidType } from "./data-loop.js";
+import { initDatabases } from "./database.js";
 import { rejectClient } from "./functions.js";
+import { initMasterRoutes, initSlaves } from "./master.js";
+import { initServer } from "./server.js";
+import { getSlaveData } from "./slave.js";
+import { SlaveHandler } from "./slave-handler.js";
+import { startSpectatorLoop } from "./spectators.js";
+import { startTwitchUpdateLoop } from "./twitch.js";
 
 if (!semver.satisfies(Bun.version, "^1.1.34")) {
 	console.error("Please use bun v1.1.34 or higher.");

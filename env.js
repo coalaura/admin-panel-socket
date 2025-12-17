@@ -1,8 +1,7 @@
-import config from "./config.js";
-
 import { join } from "node:path";
 import * as dotenv from "dotenv";
 import { danger } from "./colors.js";
+import config from "./config.js";
 
 export function readDotEnv(cluster) {
 	const path = config.docker ? join(config.panel, ".env") : join(config.panel, "envs", cluster, ".env");

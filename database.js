@@ -1,8 +1,7 @@
+import { createPool } from "mysql2";
+import { danger, error, muted, success } from "./colors.js";
 import config from "./config.js";
 import { readDotEnv } from "./env.js";
-import { danger, error, muted, success } from "./colors.js";
-
-import { createPool } from "mysql2";
 
 const databases = {};
 
@@ -18,7 +17,9 @@ export async function initDatabases(only = null) {
 	const promises = [];
 
 	for (const cluster of config.servers) {
-		if (only && cluster !== only) continue;
+		if (only && cluster !== only) {
+			continue;
+		}
 
 		promises.push(initDatabase(cluster));
 	}
@@ -143,9 +144,12 @@ export function fetchCharacter(cluster, characterId) {
 
 			database.characters[characterId] = character;
 
-			setTimeout(() => {
-				delete database.characters[characterId];
-			}, 20 * 60 * 1000);
+			setTimeout(
+				() => {
+					delete database.characters[characterId];
+				},
+				20 * 60 * 1000
+			);
 		});
 
 	return false;
@@ -164,22 +168,22 @@ export function fetchUser(cluster, licenseIdentifier) {
 
 	database.users[licenseIdentifier] = false;
 
-	database
-		.queryOne("SELECT playtime, last_connection FROM users WHERE license_identifier = ?", licenseIdentifier)
-		.then(user => {
-			if (!user) {
+	database.queryOne("SELECT playtime, last_connection FROM users WHERE license_identifier = ?", licenseIdentifier).then(user => {
+		if (!user) {
+			return;
+		}
 
-				return;
-			}
+		user.loaded = Math.floor(Date.now() / 1000);
 
-			user.loaded = Math.floor(Date.now() / 1000);
+		database.users[licenseIdentifier] = user;
 
-			database.users[licenseIdentifier] = user;
-
-			setTimeout(() => {
+		setTimeout(
+			() => {
 				delete database.users[licenseIdentifier];
-			}, 20 * 60 * 1000);
-		});
+			},
+			20 * 60 * 1000
+		);
+	});
 
 	return false;
 }

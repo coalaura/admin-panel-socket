@@ -1,16 +1,16 @@
 import { parseArgs } from "node:util";
 
 export function parseArguments() {
-	const { values, positionals } = parseArgs({
+	const { values } = parseArgs({
 		args: Bun.argv,
 		options: {
 			only: {
-				type: "string"
-			}
+				type: "string",
+			},
 		},
 		strict: true,
-		allowPositionals: true
+		allowPositionals: true,
 	});
 
-    return values;
+	return values;
 }

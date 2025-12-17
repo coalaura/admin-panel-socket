@@ -1,10 +1,10 @@
-import config from "./config.js";
-import { Slave } from "./slave.js";
 import { authenticate, parseServer } from "./auth.js";
-import { abort } from "./functions.js";
 import { warning } from "./colors.js";
-import { loadHistoryData, loadTimestampData } from "./influx.js";
+import config from "./config.js";
 import { hasFunctioningDatabase } from "./database.js";
+import { abort } from "./functions.js";
+import { loadHistoryData, loadTimestampData } from "./influx.js";
+import { Slave } from "./slave.js";
 
 const slaves = {};
 
@@ -26,7 +26,9 @@ export function initSlaves(only = null) {
 	for (let i = 0; i < config.servers.length; i++) {
 		const cluster = config.servers[i];
 
-		if (only && cluster !== only) continue;
+		if (only && cluster !== only) {
+			continue;
+		}
 
 		if (!hasFunctioningDatabase(cluster)) {
 			console.warn(warning(`Skipping ${cluster} due to database failure.`));
@@ -62,11 +64,13 @@ export function getSlaveData(server, type) {
 
 export function initMasterRoutes(app) {
 	// Data route requires authentication
-	app.get("/socket/:server/data/:route/:options?", authenticate, async (req, resp) => {
+	app.get("/socket/:server/data/:route{/:options}", authenticate, async (req, resp) => {
 		const cluster = req.cluster,
 			slave = slaves[cluster];
 
-		if (!slave) return abort(resp, "Cluster not found");
+		if (!slave) {
+			return abort(resp, "Cluster not found");
+		}
 
 		await slave.get("data", req.params.route, req.params.options, resp);
 	});
@@ -76,7 +80,9 @@ export function initMasterRoutes(app) {
 		const server = parseServer(req.params.server),
 			slave = server ? slaves[server.cluster] : false;
 
-		if (!slave) return abort(resp, "Cluster not found");
+		if (!slave) {
+			return abort(resp, "Cluster not found");
+		}
 
 		await slave.get("static", req.params.route, "", resp);
 	});
@@ -86,8 +92,8 @@ export function initMasterRoutes(app) {
 		const params = req.params,
 			server = req.server;
 
-		const from = "from" in params ? parseInt(params.from) : false,
-			till = "till" in params ? parseInt(params.till) : false,
+		const from = "from" in params ? parseInt(params.from, 10) : false,
+			till = "till" in params ? parseInt(params.till, 10) : false,
 			license = "license" in params ? params.license : false;
 
 		if (!license || !from || from < 0 || !till || till < 0) {
@@ -115,9 +121,11 @@ export function initMasterRoutes(app) {
 		const params = req.params,
 			server = req.server;
 
-		const timestamp = "timestamp" in params ? parseInt(params.timestamp) : false;
+		const timestamp = "timestamp" in params ? parseInt(params.timestamp, 10) : false;
 
-		if (!timestamp) return abort(resp, "Invalid request");
+		if (!timestamp) {
+			return abort(resp, "Invalid request");
+		}
 
 		if (!config.influx) {
 			return abort(resp, "Timestamp is unavailable.");

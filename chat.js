@@ -1,8 +1,8 @@
 import { randomBytes } from "node:crypto";
 
 import { authenticate } from "./auth.js";
+import { danger, info, muted, success } from "./colors.js";
 import { abort } from "./functions.js";
-import { danger, muted, success, info } from "./colors.js";
 import { Client } from "./io.js";
 
 const chats = {},
@@ -13,7 +13,9 @@ let started;
 function clearLeaveTimeout(discord) {
 	const timeout = leaving[discord];
 
-	if (!timeout) return false;
+	if (!timeout) {
+		return false;
+	}
 
 	clearTimeout(timeout);
 
@@ -59,7 +61,9 @@ export function handleChatConnection(ws, server, session, group) {
 	function set(key, value) {
 		value = value || false;
 
-		if (session[key] === value) return;
+		if (session[key] === value) {
+			return;
+		}
 
 		console.debug(`Client ${id} ("${session.name}") changed ${key} to "${value}".`);
 
@@ -75,19 +79,25 @@ export function handleChatConnection(ws, server, session, group) {
 	registerClient(session, name);
 
 	session.client.on("chat", text => {
-		if (!text || text.length > 256) return;
+		if (!text || text.length > 256) {
+			return;
+		}
 
 		addMessage(name, session, text);
 	});
 
 	session.client.on("room", room => {
-		if (typeof room !== "string" || room.length > 32) return;
+		if (typeof room !== "string" || room.length > 32) {
+			return;
+		}
 
 		set("room", room);
 	});
 
 	session.client.on("active", active => {
-		if (typeof active !== "boolean") return;
+		if (typeof active !== "boolean") {
+			return;
+		}
 
 		set("active", active);
 	});
@@ -113,7 +123,9 @@ export function handleChatConnection(ws, server, session, group) {
 function addMessage(name, session, text, system = false) {
 	const chat = chats[name];
 
-	if (!chat) return;
+	if (!chat) {
+		return;
+	}
 
 	const message = {
 		id: ++chat.id,
@@ -164,11 +176,15 @@ function registerClient(client, name) {
 function unregisterClient(id, name) {
 	const chat = chats[name];
 
-	if (!chat) return;
+	if (!chat) {
+		return;
+	}
 
 	const client = chat.clients.find(client => client.id === id);
 
-	if (!client) return;
+	if (!client) {
+		return;
+	}
 
 	chat.clients = chat.clients.filter(client => client.id !== id);
 
@@ -188,7 +204,9 @@ function unregisterClient(id, name) {
 function broadcast(name, channel, data) {
 	const chat = chats[name];
 
-	if (!chat) return;
+	if (!chat) {
+		return;
+	}
 
 	for (const client of chat.clients) {
 		client.client.emit(channel, data);

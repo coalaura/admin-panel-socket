@@ -25,7 +25,9 @@ export function formatInteger(pNumber) {
 }
 
 export function reverse(array) {
-	if (array.toReversed !== undefined) return array.toReversed();
+	if (array.toReversed !== undefined) {
+		return array.toReversed();
+	}
 
 	const reversed = [];
 
@@ -79,7 +81,9 @@ export function formatDuration(amount, unit = "s", min = false) {
 			seconds -= sub * multi;
 		}
 
-		if (min && name === min) break;
+		if (min && name === min) {
+			break;
+		}
 	}
 
 	if (time.length === 0) {

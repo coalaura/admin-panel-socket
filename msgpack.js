@@ -1,4 +1,4 @@
-import { encode, decode, ExtensionCodec } from "@msgpack/msgpack";
+import { decode, ExtensionCodec, encode } from "@msgpack/msgpack";
 
 const codec = new ExtensionCodec();
 
@@ -61,8 +61,8 @@ codec.register({
 
 export function unpack(data) {
 	return decode(data, {
-        extensionCodec: codec,
-    });
+		extensionCodec: codec,
+	});
 }
 
 export function pack(data) {

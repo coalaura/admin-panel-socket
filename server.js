@@ -1,5 +1,5 @@
-import { readDotEnv } from "./env.js";
 import { danger, error, success } from "./colors.js";
+import { readDotEnv } from "./env.js";
 
 const servers = {};
 
@@ -54,7 +54,7 @@ export function initServer(cluster) {
 				info: false,
 				players: [],
 				world: {},
-				models: {}
+				models: {},
 			};
 
 			servers[serverName] = srv;
@@ -65,7 +65,7 @@ export function initServer(cluster) {
 			console.error(error(e.message));
 
 			servers[serverName] = {
-				failed: true
+				failed: true,
 			};
 
 			console.warn(danger(`Failed to initialize server ${serverName}!`));

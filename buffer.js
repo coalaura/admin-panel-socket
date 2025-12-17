@@ -36,7 +36,9 @@ export class BufferedWriter {
 	}
 
 	async #flush(storage) {
-		if (this.#offset === 0) return;
+		if (this.#offset === 0) {
+			return;
+		}
 
 		const data = this.#buffer.slice(0, this.#offset);
 
@@ -58,9 +60,11 @@ export class BufferedWriter {
 	}
 
 	async persist(storage) {
-		if (this.#offset < this.#buffer.byteLength) return;
+		if (this.#offset < this.#buffer.byteLength) {
+			return;
+		}
 
-        await this.#flush(storage);
+		await this.#flush(storage);
 	}
 
 	async close(storage) {

@@ -84,7 +84,9 @@ export async function startSpectatorLoop(env) {
 	const url = "OVERWATCH_URL" in env ? env.OVERWATCH_URL : "",
 		clients = parseStreams("OVERWATCH_STREAMS" in env ? env.OVERWATCH_STREAMS : "");
 
-	if (!url || !clients.length) return;
+	if (!url || !clients.length) {
+		return;
+	}
 
 	const servers = getServers();
 

@@ -1,4 +1,4 @@
-import { existsSync, statSync, createWriteStream, mkdirSync, unlinkSync } from "node:fs";
+import { createWriteStream, existsSync, mkdirSync, statSync, unlinkSync } from "node:fs";
 
 const logs = [];
 
@@ -26,10 +26,10 @@ function write(target, message) {
 	}
 
 	try {
-        // No colors if target is not stdout
-        if (target !== process.stdout) {
-            message = stripped;
-        }
+		// No colors if target is not stdout
+		if (target !== process.stdout) {
+			message = stripped;
+		}
 
 		target.write(`${message}\n`);
 	} catch (err) {
@@ -38,7 +38,7 @@ function write(target, message) {
 }
 
 function print(target, level, message) {
-    const color = levels[level] || reset;
+	const color = levels[level] || reset;
 
 	write(target || process.stdout, `${muted}[${new Date().toISOString()}] [${color}${level.padEnd(5, " ")}${muted}] ${reset}${message}`);
 }
@@ -68,9 +68,9 @@ function fatal(...args) {
 }
 
 function resolveLogFile(name) {
-    if (!name || typeof name !== "string") {
-        return process.stdout;
-    }
+	if (!name || typeof name !== "string") {
+		return process.stdout;
+	}
 
 	// For development purposes windows always prints to stdout
 	if (process.platform === "win32") {

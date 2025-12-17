@@ -1,8 +1,8 @@
-import { updateWorldJSON, updateStaffJSON, checkIfServerIsUp } from "./data.js";
-import { getServers, getServerByName } from "./server.js";
 import { trackAverage } from "./average.js";
-import { muted, success, warning, info as _info } from "./colors.js";
+import { info as _info, muted, success, warning } from "./colors.js";
+import { checkIfServerIsUp, updateStaffJSON, updateWorldJSON } from "./data.js";
 import { round } from "./functions.js";
+import { getServerByName, getServers } from "./server.js";
 
 function bubbleStatusUpdate(server) {
 	process.send({

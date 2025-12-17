@@ -52,7 +52,8 @@ export function equals(a, b) {
 
 	if (typeA !== typeB) {
 		return false;
-	} else if (Array.isArray(a)) {
+	}
+	if (Array.isArray(a)) {
 		if (!Array.isArray(b) || a.length !== b.length) {
 			return false;
 		}
@@ -64,10 +65,12 @@ export function equals(a, b) {
 		}
 
 		return true;
-	} else if (typeA === "object") {
+	}
+	if (typeA === "object") {
 		if (a === null && b === null) {
 			return true;
-		} else if (a === null || b === null) {
+		}
+		if (a === null || b === null) {
 			return false;
 		}
 

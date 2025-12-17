@@ -1,12 +1,14 @@
-import config from "./config.js";
 import { success } from "./colors.js";
+import config from "./config.js";
 import { sendFullUpdate } from "./updates.js";
 
 export function startTwitchUpdateLoop() {
 	const api = config.twitch?.api,
 		streamers = config.twitch?.streamers;
 
-	if (!api || !streamers || !streamers.length) return;
+	if (!api || !streamers || !streamers.length) {
+		return;
+	}
 
 	updateTwitchData(api, streamers);
 
@@ -19,7 +21,10 @@ async function updateTwitchData(api, streamers) {
 			data = await response.json();
 
 		if (data && Array.isArray(data)) {
-			sendFullUpdate("twitch", data.filter(streamer => streamer?.live))
+			sendFullUpdate(
+				"twitch",
+				data.filter(streamer => streamer?.live)
+			);
 		}
 	} catch {}
 

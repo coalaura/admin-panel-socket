@@ -1,8 +1,8 @@
-import { getServerByName } from "./server.js";
-import { getLogs } from "./console.js";
 import { getAverage } from "./average.js";
+import { getLogs } from "./console.js";
 import { formatUptime } from "./functions.js";
 import { closeInfluxDB } from "./influx.js";
+import { getServerByName } from "./server.js";
 
 const startup = new Date();
 

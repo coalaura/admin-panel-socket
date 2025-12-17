@@ -1,7 +1,6 @@
-import { requestOpFwApi } from "./http.js";
+import { promises as dns, getServers } from "node:dns";
 import { loadOnDutyData } from "./duty.js";
-
-import { getServers, promises as dns } from "node:dns";
+import { requestOpFwApi } from "./http.js";
 import { storePlayerPositions } from "./influx.js";
 
 export async function updateWorldJSON(server) {

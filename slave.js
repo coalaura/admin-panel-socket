@@ -1,10 +1,9 @@
 import cluster from "node:cluster";
-
-import { abort } from "./functions.js";
 import { getActiveViewers, handleDataUpdate } from "./client.js";
-import { SlaveHandler } from "./slave-handler.js";
 import { danger, success, warning } from "./colors.js";
 import { diff } from "./diff.js";
+import { abort } from "./functions.js";
+import { SlaveHandler } from "./slave-handler.js";
 import { sendSingleUpdate } from "./updates.js";
 
 const routes = SlaveHandler.routes();
@@ -48,7 +47,9 @@ export class Slave {
 	}
 
 	on(event, callback) {
-		if (!["up", "down"].includes(event)) return;
+		if (!["up", "down"].includes(event)) {
+			return;
+		}
 
 		if (event === "up" && this.#online) {
 			callback();
@@ -61,13 +62,17 @@ export class Slave {
 
 	#trigger(event) {
 		if (event === "up") {
-			if (this.#online) return;
+			if (this.#online) {
+				return;
+			}
 
 			this.#online = true;
 
 			console.info(`${success(`Cluster ${this.#server} is up`)}`);
 		} else if (event === "down") {
-			if (!this.#online) return;
+			if (!this.#online) {
+				return;
+			}
 
 			this.#online = false;
 
@@ -112,7 +117,9 @@ export class Slave {
 	}
 
 	#kill() {
-		if (!this.#cluster) return;
+		if (!this.#cluster) {
+			return;
+		}
 
 		this.#cluster.kill();
 
@@ -120,7 +127,9 @@ export class Slave {
 	}
 
 	#fork() {
-		if (this.#terminating || this.#cluster) return;
+		if (this.#terminating || this.#cluster) {
+			return;
+		}
 
 		this.#cluster = cluster.fork({
 			stdio: [0, 1, 2, "ipc"],
@@ -140,11 +149,13 @@ export class Slave {
 				this.#trigger("up");
 
 				return;
-			} else if (type === "status") {
+			}
+			if (type === "status") {
 				this.#updateStatus(data);
 
 				return;
-			} else if (type === "request") {
+			}
+			if (type === "request") {
 				const request = this.#requests[id];
 
 				request?.resolve(data);
@@ -240,7 +251,9 @@ export class Slave {
 }
 
 export function getSlaveData() {
-	if (cluster.isPrimary) return false;
+	if (cluster.isPrimary) {
+		return false;
+	}
 
 	return {
 		id: process.env.ID,

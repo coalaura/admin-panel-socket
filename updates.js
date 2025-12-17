@@ -1,6 +1,6 @@
+import { handleDataUpdate } from "./client.js";
 import config from "./config.js";
 import { diff } from "./diff.js";
-import { handleDataUpdate } from "./client.js";
 
 const data = {};
 

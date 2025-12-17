@@ -5,7 +5,9 @@ import config from "./config.js";
 let influx, write, query;
 
 function connectToInfluxDB() {
-	if (influx || !config.influx) return;
+	if (influx || !config.influx) {
+		return;
+	}
 
 	if (!config.influx.url || !config.influx.token) {
 		console.warn("Missing influx.url or influx.token!");
@@ -30,7 +32,9 @@ function connectToInfluxDB() {
 }
 
 export async function closeInfluxDB() {
-	if (!write) return;
+	if (!write) {
+		return;
+	}
 
 	await write.flush();
 	await write.close();
@@ -39,7 +43,9 @@ export async function closeInfluxDB() {
 export function storePlayerPositions(server, players) {
 	connectToInfluxDB();
 
-	if (!write) return;
+	if (!write) {
+		return;
+	}
 
 	const timestamp = Math.floor(Date.now() / 1000);
 

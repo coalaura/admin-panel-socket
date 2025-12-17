@@ -1,12 +1,11 @@
-import config from "./config.js";
-import { muted, request } from "./colors.js";
-import { abort, formatDuration } from "./functions.js";
-
-import { join } from "node:path";
-import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { randomBytes } from "node:crypto";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { decode, verify } from "jsonwebtoken";
+import { muted, request } from "./colors.js";
+import config from "./config.js";
 import { hasFunctioningDatabase } from "./database.js";
+import { abort, formatDuration } from "./functions.js";
 
 const secrets = {};
 
@@ -82,7 +81,7 @@ export function parseServer(server) {
 
 	const match = server.match(/^(c\d+)s(\d+)$/m),
 		cluster = match[1],
-		shard = parseInt(match[2]);
+		shard = parseInt(match[2], 10);
 
 	return {
 		cluster: cluster,
@@ -131,7 +130,7 @@ async function isValidToken(cluster, token) {
 		let time;
 
 		if (e.expiredAt) {
-			time = formatDuration(new Date().getTime() - e.expiredAt, "ms", "s");
+			time = formatDuration(Date.now() - e.expiredAt, "ms", "s");
 		}
 
 		console.debug(muted(`fail [${getNameFromJwt(token) || "n/a"}]: ${e.message}${time ? ` (expiry=${time})` : ""}`));

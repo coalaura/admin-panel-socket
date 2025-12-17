@@ -1,9 +1,8 @@
 import { v4 } from "uuid";
-
-import { getSlaveData } from "./master.js";
-import { counter, danger, muted, success, warning, info } from "./colors.js";
-import { getFullUpdateData } from "./updates.js";
+import { counter, danger, info, muted, success, warning } from "./colors.js";
 import { Client } from "./io.js";
+import { getSlaveData } from "./master.js";
+import { getFullUpdateData } from "./updates.js";
 
 const connections = {},
 	total = {};
@@ -106,7 +105,9 @@ export function getActiveViewers(server, type) {
 	const viewers = [];
 
 	for (const id in connections) {
-		if (!connections.hasOwnProperty(id)) continue;
+		if (!connections.hasOwnProperty(id)) {
+			continue;
+		}
 
 		const client = connections[id],
 			license = client.license;
@@ -125,7 +126,9 @@ export function handleDataUpdate(type, server, data) {
 	}
 
 	for (const id in connections) {
-		if (!connections.hasOwnProperty(id)) continue;
+		if (!connections.hasOwnProperty(id)) {
+			continue;
+		}
 
 		const client = connections[id];
 
