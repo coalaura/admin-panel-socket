@@ -61,6 +61,31 @@ function sendFullData(client, server, type) {
 	client.emit("reset", data);
 }
 
+export function keepAliveConnection(id, type, client) {
+	let timeout, interval;
+
+	function pong() {
+		clearTimeout(timeout);
+
+		timeout = setTimeout(10000, () => {
+			console.log(`${warning("Timed out")} ${muted(`{${id}}`)} ${info(type)}`);
+		});
+	}
+
+	interval = setInterval(() => {
+		client.emit("ping");
+	}, 5000);
+
+	client.on("pong", pong);
+
+	pong();
+
+	self.client.on("disconnect", () => {
+		clearTimeout(timeout);
+		clearInterval(interval);
+	});
+}
+
 export function handleConnection(ws, server, session, type) {
 	const self = {
 		id: v4(),
@@ -78,13 +103,9 @@ export function handleConnection(ws, server, session, type) {
 
 	console.log(`${success("Connected")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)} - ${counter(count(self.server, self.type))}`);
 
-	const interval = setInterval(() => {
-		self.client.emit("ping");
-	}, 5000);
+	keepAliveConnection(self.id, `${self.server}/${self.type}`, self.client);
 
 	self.client.on("disconnect", () => {
-		clearInterval(interval);
-
 		decrement(self.server, self.type);
 
 		delete connections[self.id];

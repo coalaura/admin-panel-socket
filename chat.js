@@ -4,6 +4,7 @@ import { authenticate } from "./auth.js";
 import { danger, info, muted, success } from "./colors.js";
 import { abort } from "./functions.js";
 import { Client } from "./io.js";
+import { keepAliveConnection } from "./client.js";
 
 const chats = {},
 	leaving = {};
@@ -58,9 +59,7 @@ export function handleChatConnection(ws, server, session, group) {
 
 	console.log(`${success("Connected")} ${muted(`{${session.discord}}`)} ${info(`chat/${group || "-"}`)}`);
 
-	const interval = setInterval(() => {
-		session.client.emit("ping");
-	}, 5000);
+	keepAliveConnection(session.discord, `chat/${group || "-"}`, session.client);
 
 	function set(key, value) {
 		value = value || false;
@@ -108,8 +107,6 @@ export function handleChatConnection(ws, server, session, group) {
 
 	session.client.on("disconnect", () => {
 		console.log(`${danger("Disconnected")} ${muted(`{${session.discord}}`)} ${info(`chat/${session.group}`)}`);
-
-		clearInterval(interval);
 
 		unregisterClient(id, name);
 	});
@@ -186,13 +183,13 @@ function unregisterClient(id, name) {
 		return;
 	}
 
-	const client = chat.clients.find(client => client.id === id);
+	const client = chat.clients.find(cl => cl.id === id);
 
 	if (!client) {
 		return;
 	}
 
-	chat.clients = chat.clients.filter(client => client.id !== id);
+	chat.clients = chat.clients.filter(cl => cl.id !== id);
 
 	if (!doesUserExist(chat, client.discord)) {
 		clearLeaveTimeout(client.discord);
