@@ -69,6 +69,10 @@ export function keepAliveConnection(id, type, client) {
 
 		timeout = setTimeout(10000, () => {
 			console.log(`${warning("Timed out")} ${muted(`{${id}}`)} ${info(type)}`);
+
+			client.emit("timeout");
+
+			client.close();
 		});
 	}
 

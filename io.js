@@ -44,6 +44,10 @@ export class Client {
 		}
 	}
 
+	close() {
+		this.#ws.close();
+	}
+
 	on(type, cb) {
 		if (type in this.#listeners) {
 			this.#listeners[type].push(cb);
