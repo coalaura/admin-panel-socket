@@ -84,7 +84,7 @@ export function keepAliveConnection(id, type, client) {
 
 	pong();
 
-	self.client.on("disconnect", () => {
+	client.on("disconnect", () => {
 		clearTimeout(timeout);
 		clearInterval(interval);
 	});
