@@ -78,7 +78,13 @@ export function handleConnection(ws, server, session, type) {
 
 	console.log(`${success("Connected")} ${muted(`{${self.id}}`)} ${info(`${self.server}/${self.type}`)} - ${counter(count(self.server, self.type))}`);
 
-	self.client.on("disconnect", reason => {
+	const interval = setInterval(() => {
+		self.client.emit("ping");
+	}, 5000);
+
+	self.client.on("disconnect", () => {
+		clearInterval(interval);
+
 		decrement(self.server, self.type);
 
 		delete connections[self.id];

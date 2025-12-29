@@ -58,6 +58,10 @@ export function handleChatConnection(ws, server, session, group) {
 
 	console.log(`${success("Connected")} ${muted(`{${session.discord}}`)} ${info(`chat/${group || "-"}`)}`);
 
+	const interval = setInterval(() => {
+		session.client.emit("ping");
+	}, 5000);
+
 	function set(key, value) {
 		value = value || false;
 
@@ -104,6 +108,8 @@ export function handleChatConnection(ws, server, session, group) {
 
 	session.client.on("disconnect", () => {
 		console.log(`${danger("Disconnected")} ${muted(`{${session.discord}}`)} ${info(`chat/${session.group}`)}`);
+
+		clearInterval(interval);
 
 		unregisterClient(id, name);
 	});

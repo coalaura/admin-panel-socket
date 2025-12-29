@@ -62,7 +62,7 @@ if (cluster.isPrimary) {
 	// Initialize routes
 	initMasterRoutes(app);
 
-	// Initialize socket.io server
+	// Initialize websocket server
 	const wss = new WebSocketServer({
 		noServer: true,
 	});
