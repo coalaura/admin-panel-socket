@@ -67,13 +67,13 @@ export function keepAliveConnection(id, type, client) {
 	function pong() {
 		clearTimeout(timeout);
 
-		timeout = setTimeout(10000, () => {
+		timeout = setTimeout(() => {
 			console.log(`${warning("Timed out")} ${muted(`{${id}}`)} ${info(type)}`);
 
 			client.emit("timeout");
 
 			client.close();
-		});
+		}, 10000);
 	}
 
 	interval = setInterval(() => {
