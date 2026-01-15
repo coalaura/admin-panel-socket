@@ -216,7 +216,7 @@ export class Slave {
 				finish(false);
 
 				console.warn(`${warning(`Cluster ${this.#server} timeout`)}`);
-			}, 5000),
+			}, 10000),
 		};
 
 		this.#cluster?.send({
