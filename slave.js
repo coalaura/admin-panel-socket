@@ -150,11 +150,13 @@ export class Slave {
 
 				return;
 			}
+
 			if (type === "status") {
 				this.#updateStatus(data);
 
 				return;
 			}
+
 			if (type === "request") {
 				const request = this.#requests[id];
 
